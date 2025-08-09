@@ -1,0 +1,28 @@
+Assets/Prefabs/Battle/BattleRoot.prefab
+Assets/Prefabs/Battle/CardView.prefab
+Assets/Prefabs/UI/UpgradeButtonPrefab.prefab
+Assets/Scenes/Battle.unity
+Assets/Scenes/Start.unity
+Assets/ScriptableObjects/Battle/BattleConfig.asset
+Assets/ScriptableObjects/Cards/Attack.asset
+Assets/ScriptableObjects/Cards/Guard.asset
+Assets/ScriptableObjects/Cards/Mend.asset
+Assets/ScriptableObjects/Upgrades/BattleRewardBonus25.asset
+Assets/ScriptableObjects/Upgrades/Plus One Click.asset
+Assets/ScriptableObjects/Upgrades/Unlock Dungeon.asset
+Assets/Scripts/Battle/BattleConfigSO.cs
+Assets/Scripts/Battle/BattleManager.cs
+Assets/Scripts/Battle/BattleUI.cs
+Assets/Scripts/Battle/CardHandUI.cs
+Assets/Scripts/Battle/CardSO.cs
+Assets/Scripts/Battle/CardView.cs
+Assets/Scripts/Battle/EnemyAI.cs
+Assets/Scripts/Core/EssenceManager.cs
+Assets/Scripts/Core/GameManager.cs
+Assets/Scripts/Core/SaveSystem.cs
+Assets/Scripts/UI/DungeonGateButton.cs
+Assets/Scripts/UI/HUD.cs
+Assets/Scripts/UI/LoadSceneButton.cs
+Assets/Scripts/UI/UpgradesPanel.cs
+Assets/Scripts/Upgrades/UpgradeManager.cs
+Assets/Scripts/Upgrades/UpgradeSO.cs

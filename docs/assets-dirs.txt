@@ -1,0 +1,22 @@
+Assets Directory Tree (dirs only)
+
+[Assets/Scenes]
+[Assets/Prefabs]
+[Assets/ScriptableObjects]
+[Assets/Scripts]
+[Assets/ThirdParty]
+
+Assets/Prefabs
+Assets/Prefabs/Battle
+Assets/Prefabs/UI
+Assets/Scenes
+Assets/ScriptableObjects
+Assets/ScriptableObjects/Battle
+Assets/ScriptableObjects/Cards
+Assets/ScriptableObjects/Upgrades
+Assets/Scripts
+Assets/Scripts/Battle
+Assets/Scripts/Core
+Assets/Scripts/UI
+Assets/Scripts/Upgrades
+Assets/ThirdParty
