@@ -56,4 +56,14 @@ public class CardHandUI : MonoBehaviour
         }
         _spawned.Clear();
     }
+        /// <summary>Toggle cards based on current energy.</summary>
+    public void RefreshAffordability(int currentEnergy)
+    {
+        foreach (var v in _spawned)
+        {
+            if (!v || !v.card) continue;
+            bool canPlay = v.card.cost <= currentEnergy;
+            v.SetInteractable(canPlay);
+        }
+    }
 }

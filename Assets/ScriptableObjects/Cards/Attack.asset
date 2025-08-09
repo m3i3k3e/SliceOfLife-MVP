@@ -16,4 +16,4 @@ MonoBehaviour:
   title: Attack
   description: Deals Damage
   action: 0
-  cost: 0
+  cost: 1

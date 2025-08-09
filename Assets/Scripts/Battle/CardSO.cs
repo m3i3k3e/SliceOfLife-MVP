@@ -18,4 +18,4 @@ public class CardSO : ScriptableObject
 }
 
 /// <summary>Actions BattleManager understands.</summary>
-public enum BattleAction { Attack, Guard, Mend }
+public enum BattleAction { Attack, Guard, Mend, ApplyWeak, ApplyVulnerable }

@@ -25,4 +25,9 @@ public class BattleConfigSO : ScriptableObject
 
     [Header("Flow")]
     public float returnDelay = 1.0f;      // seconds before returning to Start scene after win/lose
+
+    [Header("Energy")]
+    [Min(0)] public int energyPerTurn = 3; // how much you refill at the start of your turn
+    [Min(0)] public int maxEnergy     = 3; // cap; upgrades can raise this later
+
 }

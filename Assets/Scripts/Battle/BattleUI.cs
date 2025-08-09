@@ -19,6 +19,11 @@ public class BattleUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI infoText;
     [SerializeField] private TextMeshProUGUI playerArmorText; // optional, can be left null
 
+    [Header("Status Labels")]
+    [SerializeField] private TextMeshProUGUI playerStatusText;
+    [SerializeField] private TextMeshProUGUI enemyStatusText;
+
+
     [Header("HP Bars")]
     [SerializeField] private Slider playerHPBar;              // new
     [SerializeField] private Slider enemyHPBar;               // new
@@ -27,6 +32,11 @@ public class BattleUI : MonoBehaviour
     [SerializeField] private Button attackButton;
     [SerializeField] private Button guardButton;
     [SerializeField] private Button mendButton;
+
+    [Header("Energy")]
+    [SerializeField] private TextMeshProUGUI energyText; // new label "Energy: X/Y"
+    [SerializeField] private CardHandUI handUI;           // to refresh affordability
+
 
     private void Awake()
     {
@@ -55,23 +65,24 @@ public class BattleUI : MonoBehaviour
     private void OnEnable()
     {
         AutoWireBattle();
-        if (!battle)
-        {
-            enabled = false;
-            return;
-        }
+        if (!battle) { enabled = false; return; }
 
-        // Subscribe to manager events so UI updates reactively
         battle.OnPlayerStatsChanged += HandlePlayerStats;
         battle.OnEnemyStatsChanged  += HandleEnemyStats;
         battle.OnInfoChanged        += HandleInfo;
         battle.OnEnemyIntentChanged += HandleIntent;
         battle.OnBattleEnded        += HandleBattleEnded;
+        battle.OnPlayerStatusChanged += HandlePlayerStatus;
+        battle.OnEnemyStatusChanged  += HandleEnemyStatus;
 
-        // Hook up button clicks
-        attackButton.onClick.AddListener(battle.PlayerAttack);
-        guardButton.onClick.AddListener(battle.PlayerGuard);
-        mendButton.onClick.AddListener(battle.PlayerMend);
+
+        // NEW
+        battle.OnEnergyChanged      += HandleEnergyChanged;
+
+        // Keep legacy buttons optional (only wire if assigned)
+        if (attackButton) attackButton.onClick.AddListener(battle.PlayerAttack);
+        if (guardButton)  guardButton.onClick.AddListener(battle.PlayerGuard);
+        if (mendButton)   mendButton.onClick.AddListener(battle.PlayerMend);
     }
 
     private void OnDisable()
@@ -83,20 +94,35 @@ public class BattleUI : MonoBehaviour
             battle.OnInfoChanged        -= HandleInfo;
             battle.OnEnemyIntentChanged -= HandleIntent;
             battle.OnBattleEnded        -= HandleBattleEnded;
+            battle.OnPlayerStatusChanged -= HandlePlayerStatus;
+            battle.OnEnemyStatusChanged  -= HandleEnemyStatus;
 
-            attackButton?.onClick.RemoveListener(battle.PlayerAttack);
-            guardButton?.onClick.RemoveListener(battle.PlayerGuard);
-            mendButton?.onClick.RemoveListener(battle.PlayerMend);
+
+            // NEW
+            battle.OnEnergyChanged      -= HandleEnergyChanged;
         }
-        else
-        {
-            attackButton?.onClick.RemoveAllListeners();
-            guardButton?.onClick.RemoveAllListeners();
-            mendButton?.onClick.RemoveAllListeners();
-        }
+
+        if (attackButton) attackButton.onClick.RemoveAllListeners();
+        if (guardButton)  guardButton.onClick.RemoveAllListeners();
+        if (mendButton)   mendButton.onClick.RemoveAllListeners();
+    }
+
+    private void HandleEnergyChanged(int current, int max)
+    {
+        if (energyText) energyText.text = $"Energy: {current}/{max}";
+        if (handUI)     handUI.RefreshAffordability(current);
     }
 
     // --- Event handlers update texts AND bars ---
+    private void HandlePlayerStatus(string s)
+    {
+        if (playerStatusText) playerStatusText.text = s;
+    }
+
+    private void HandleEnemyStatus(string s)
+    {
+        if (enemyStatusText) enemyStatusText.text = s;
+    }
 
     private void HandlePlayerStats(int hp, int maxHp, int armor)
     {

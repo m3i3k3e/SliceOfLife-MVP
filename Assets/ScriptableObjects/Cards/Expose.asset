@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 036e3adf3c6ee75459f806533a9a0eee, type: 3}
-  m_Name: Guard
+  m_Name: Expose
   m_EditorClassIdentifier: Assembly-CSharp::CardSO
-  id: Card_Gaurd
-  title: Guard
-  description: Gain Armor
-  action: 1
+  id: expose_card
+  title: Expose
+  description: Apply Vulnerable (2)
+  action: 3
   cost: 1

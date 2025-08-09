@@ -16,7 +16,7 @@ public class CardView : MonoBehaviour
     [SerializeField] private Button playButton;
 
     private BattleManager _battle;
-
+    private CanvasGroup _cg;
     private void Awake()
     {
         // Find the battle brain in our prefab root / scene
@@ -25,8 +25,18 @@ public class CardView : MonoBehaviour
 
         if (playButton == null) playButton = GetComponent<Button>(); // allow button on root
         if (playButton != null) playButton.onClick.AddListener(OnClicked);
+
+        _cg = GetComponent<CanvasGroup>(); // ok if null
+        // ...existing Awake...
     }
 
+    /// <summary>Enable/disable interaction + subtle fade for affordability.</summary>
+    public void SetInteractable(bool canPlay)
+    {
+        if (playButton) playButton.interactable = canPlay;
+        if (_cg) _cg.alpha = canPlay ? 1f : 0.6f;
+    }
+    
     public void Bind(CardSO data)
     {
         card = data;

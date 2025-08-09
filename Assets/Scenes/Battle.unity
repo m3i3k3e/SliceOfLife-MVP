@@ -219,40 +219,8 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1417025479422219718, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1417025479422219718, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1417025479422219718, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1417025479422219718, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 3248735267802189565, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4820032123384645420, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4820032123384645420, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4820032123384645420, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4820032123384645420, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
-      propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5007642094672645462, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
@@ -306,22 +274,6 @@ PrefabInstance:
     - target: {fileID: 5875216467960200433, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
       propertyPath: m_Name
       value: BattleRoot
-      objectReference: {fileID: 0}
-    - target: {fileID: 6124460360329649463, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6124460360329649463, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6124460360329649463, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6124460360329649463, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8851586506229103802, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
       propertyPath: m_AnchorMax.y
