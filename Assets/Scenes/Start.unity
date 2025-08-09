@@ -132,6 +132,7 @@ GameObject:
   - component: {fileID: 105587509}
   - component: {fileID: 105587508}
   - component: {fileID: 105587507}
+  - component: {fileID: 105587511}
   m_Layer: 5
   m_Name: EnterDungeon
   m_TagString: Untagged
@@ -215,7 +216,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 105587509}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 105587511}
+        m_TargetAssemblyTypeName: LoadSceneButton, Assembly-CSharp
+        m_MethodName: LoadScene
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &105587509
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -254,6 +267,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 105587505}
   m_CullTransparentMesh: 1
+--- !u!114 &105587511
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 105587505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ec6fef3e723ed64fb798859c77a615c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LoadSceneButton
+  sceneName: Battle
 --- !u!1 &105971846
 GameObject:
   m_ObjectHideFlags: 0
@@ -303,6 +329,7 @@ MonoBehaviour:
   available:
   - {fileID: 11400000, guid: 638c0565ebfc1b5468e40c4611843ec6, type: 2}
   - {fileID: 11400000, guid: 28c454ab5b267c24caf5985969c986b5, type: 2}
+  - {fileID: 11400000, guid: 55d3a0ba3b892c343a168f914aaf9bbd, type: 2}
 --- !u!114 &105971849
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -4,15 +4,18 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// Public surface that other systems (UI, battle, etc.) use.
-/// Keeping this small keeps everything loosely coupled.
+/// Public surface other systems read/use (UI, battle, GameManager).
+/// Keeping an interface helps you swap implementations or mock in tests.
 /// </summary>
 public interface IUpgradeProvider
 {
-    bool TryPurchase(UpgradeSO upgrade);         // Attempt to buy an upgrade
-    bool IsPurchased(string upgradeId);          // Query: already bought?
+    bool TryPurchase(UpgradeSO upgrade);               // Attempt to buy an upgrade
+    bool IsPurchased(string upgradeId);                // Query: already bought?
     IReadOnlyCollection<string> PurchasedIds { get; }  // For saving
-    IReadOnlyList<UpgradeSO> Available { get; }        // Upgrades UI will list
+    IReadOnlyList<UpgradeSO> Available { get; }        // Catalog for UI
+
+    // NEW: multiplicative bonus for battle win rewards (1.0 = no change)
+    float RewardMultiplier { get; }
 
     /// <summary>Fired after a successful purchase so UI can refresh buttons, gates, etc.</summary>
     event Action<UpgradeSO> OnPurchased;
@@ -20,76 +23,142 @@ public interface IUpgradeProvider
 
 /// <summary>
 /// Owns the upgrade catalog & purchase logic.
-/// - Checks affordability via Essence
-/// - Applies the effect
-/// - Remembers purchased IDs
+/// - "One-shot" effects (e.g., +click power, +passive) immediately mutate game state
+///   and must be re-applied on load.
+/// - "Derived" effects (e.g., multipliers) are recomputed from PurchasedIds so they
+///   never double-apply.
 /// </summary>
 public class UpgradeManager : MonoBehaviour, IUpgradeProvider
 {
     [Tooltip("Drag your UpgradeSO assets here in the Inspector.")]
     [SerializeField] private List<UpgradeSO> available = new();
 
-    // Quick lookup of what the player already owns.
+    // Tracks what the player owns (IDs only, safe to save).
     private readonly HashSet<string> _purchased = new();
 
+    // ---- IUpgradeProvider surface ----
     public IReadOnlyList<UpgradeSO> Available => available;
     public IReadOnlyCollection<string> PurchasedIds => _purchased;
 
+    /// <summary>
+    /// Multiplicative battle reward multiplier (1.0 = no change).
+    /// Computed from purchased upgrades in RecalculateDerivedStats().
+    /// </summary>
+    public float RewardMultiplier { get; private set; } = 1f;
+
     public event Action<UpgradeSO> OnPurchased;
 
+    // ---- Purchase flow ----
     public bool TryPurchase(UpgradeSO upgrade)
     {
         if (upgrade == null) return false;
-        if (_purchased.Contains(upgrade.id)) return false; // no double-buy
+        if (_purchased.Contains(upgrade.id)) return false; // already bought
 
         var essence = GameManager.Instance.Essence;
-        if (!essence.TrySpend(upgrade.cost)) return false; // not enough money
+        if (!essence.TrySpend(upgrade.cost)) return false; // can't afford
 
-        Apply(upgrade);                 // actually grant the benefit
-        _purchased.Add(upgrade.id);     // remember it
-        OnPurchased?.Invoke(upgrade);   // let UI react
+        // 1) Apply one-shot effects immediately (persist via SaveSystem downstream)
+        ApplyOneShot(upgrade);
+
+        // 2) Remember ownership
+        _purchased.Add(upgrade.id);
+
+        // 3) Update derived stats that depend on the purchased set (e.g., multipliers)
+        ApplyDerivedEffect(upgrade); // incremental update for snappy UI
+
+        OnPurchased?.Invoke(upgrade);
         SaveSystem.Save(GameManager.Instance);
         return true;
     }
 
     public bool IsPurchased(string upgradeId) => _purchased.Contains(upgradeId);
 
-    private void Apply(UpgradeSO up)
+    // ---- Effect application helpers ----
+
+    /// <summary>
+    /// Apply effects that alter persistent numbers once (e.g., click power, passive rate).
+    /// These must be re-applied on load to reconstruct runtime state.
+    /// </summary>
+    private void ApplyOneShot(UpgradeSO up)
     {
         var essence = GameManager.Instance.Essence;
 
         switch (up.effect)
         {
             case UpgradeEffect.IncreaseClick:
+                // Treat value as a flat increase to essence-per-click
                 essence.AddEssencePerClick(Mathf.RoundToInt(up.value));
                 break;
 
             case UpgradeEffect.IncreasePassive:
+                // Treat value as flat passive essence per second
                 essence.AddPassivePerSecond(up.value);
                 break;
 
             case UpgradeEffect.UnlockBattle:
-                // Nothing to do here. UI will query IsPurchased("unlock_battle") to enable the Dungeon button.
+                // No numeric state; UI checks IsPurchased("unlock_battle") to enable the button
                 break;
 
             case UpgradeEffect.BattleRewardBonus:
-                // Placeholder for later when battle rewards exist.
+                // IMPORTANT: Do NOT bake multipliers into saved numbers here.
+                // Handled in ApplyDerivedEffect/RecalculateDerivedStats.
                 break;
         }
     }
 
-    // Called by SaveSystem to rehydrate
+    /// <summary>
+    /// Apply effects that should be *derived* from the purchased set (not baked),
+    /// such as multiplicative reward bonuses.
+    /// </summary>
+    private void ApplyDerivedEffect(UpgradeSO up)
+    {
+        switch (up.effect)
+        {
+            case UpgradeEffect.BattleRewardBonus:
+                // Interpret UpgradeSO.value as a percentage (25 => +25% => x1.25)
+                // Stacks multiplicatively with other bonuses.
+                RewardMultiplier *= 1f + (up.value / 100f);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Rebuild all derived stats based on PurchasedIds.
+    /// Call after loading a save (after restoring PurchasedIds).
+    /// </summary>
+    public void RecalculateDerivedStats()
+    {
+        RewardMultiplier = 1f; // reset to neutral
+
+        foreach (var id in _purchased)
+        {
+            var so = available.FirstOrDefault(u => u != null && u.id == id);
+            if (so != null)
+                ApplyDerivedEffect(so);
+        }
+    }
+
+    // ---- Save/Load integration ----
+
+    /// <summary>
+    /// Called by SaveSystem to rehydrate from disk.
+    /// Rebuilds one-shot effects first, then recomputes derived stats.
+    /// </summary>
     public void LoadPurchased(IEnumerable<string> ids)
     {
         _purchased.Clear();
+
+        // Restore ownership & reapply one-shot effects so live numbers are correct.
         foreach (var id in ids ?? Enumerable.Empty<string>())
         {
-            var up = available.FirstOrDefault(u => u.id == id);
-            if (up != null)
-            {
-                _purchased.Add(id);
-                Apply(up); // re-apply effects
-            }
+            var up = available.FirstOrDefault(u => u != null && u.id == id);
+            if (up == null) continue;
+
+            _purchased.Add(id);
+            ApplyOneShot(up); // rebuild persistent numbers (click power, passive, etc.)
         }
+
+        // Then recompute all derived stats from the set (so multipliers are correct, with no double-apply).
+        RecalculateDerivedStats();
     }
 }

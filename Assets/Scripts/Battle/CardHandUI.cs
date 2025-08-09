@@ -1,0 +1,59 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+/// <summary>
+/// Spawns a simple "hand" from a list of CardSOs and binds each to a CardView.
+/// MVP: static hand (Attack, Guard, Mend) shown on player's turn.
+/// Later: plug in draw/discard/energy.
+/// </summary>
+public class CardHandUI : MonoBehaviour
+{
+    [Header("Setup")]
+    [SerializeField] private BattleManager battle;     // auto-wire if left null
+    [SerializeField] private Transform handParent;     // where to spawn cards (e.g., a Horizontal/Vertical Layout)
+    [SerializeField] private CardView cardViewPrefab;  // the prefab you just made
+
+    [Header("Hand Definition (MVP)")]
+    [SerializeField] private List<CardSO> startingHand = new(); // assign Attack/Guard/Mend here
+
+    private readonly List<CardView> _spawned = new();
+
+    private void Awake()
+    {
+        if (!battle) battle = GetComponentInParent<BattleManager>();
+        if (!battle) battle = FindFirstObjectByType<BattleManager>();
+    }
+
+    private void OnEnable()
+    {
+        // On scene enter we can spawn once; for future turns you could listen to a "OnPlayerTurnStarted" event.
+        BuildHand();
+    }
+
+    private void OnDisable()
+    {
+        Clear();
+    }
+
+    private void BuildHand()
+    {
+        if (!handParent || !cardViewPrefab) { Debug.LogError("CardHandUI: Missing handParent or cardViewPrefab", this); return; }
+        Clear();
+
+        foreach (var card in startingHand)
+        {
+            var view = Instantiate(cardViewPrefab, handParent);
+            view.Bind(card);
+            _spawned.Add(view);
+        }
+    }
+
+    private void Clear()
+    {
+        for (int i = _spawned.Count - 1; i >= 0; i--)
+        {
+            if (_spawned[i]) Destroy(_spawned[i].gameObject);
+        }
+        _spawned.Clear();
+    }
+}
