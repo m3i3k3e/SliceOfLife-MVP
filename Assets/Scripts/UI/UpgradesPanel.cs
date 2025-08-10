@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic; // for Dictionary<TKey, TValue>
 
 /// <summary>
 /// Spawns one button per UpgradeSO and updates their state when currency/purchases change.
@@ -15,6 +16,16 @@ public class UpgradesPanel : MonoBehaviour
     private IUpgradeProvider Upgrades => GameManager.Instance.Upgrades;
     private IEssenceProvider Essence  => GameManager.Instance.Essence;
 
+    /// <summary>
+    /// Maps each UpgradeSO.id to its instantiated Button for quick lookups.
+    /// </summary>
+    private readonly Dictionary<string, Button> _buttonsById = new();
+
+    /// <summary>
+    /// Cache UpgradeSO by id so we don't search the provider list repeatedly.
+    /// </summary>
+    private readonly Dictionary<string, UpgradeSO> _upgradesById = new();
+
     private void OnEnable()
     {
         BuildList();
@@ -28,10 +39,15 @@ public class UpgradesPanel : MonoBehaviour
         Essence.OnEssenceChanged -= OnEssenceChanged;
     }
 
+    /// <summary>
+    /// (Re)creates the list of upgrade rows and caches lookups for later refreshes.
+    /// </summary>
     private void BuildList()
     {
         // Clear any old rows (useful during hot reloads)
         foreach (Transform child in contentParent) Destroy(child.gameObject);
+        _buttonsById.Clear();       // stale references are not valid after rebuild
+        _upgradesById.Clear();      // keep upgrade lookup in sync with buttons
 
         foreach (var up in Upgrades.Available)
         {
@@ -62,6 +78,10 @@ public class UpgradesPanel : MonoBehaviour
                 }
             });
 
+            // Remember the mapping so later refreshes don't search by strings.
+            _buttonsById[up.id] = row;
+            _upgradesById[up.id] = up;
+
             RefreshRow(row, localUp);
         }
     }
@@ -86,38 +106,31 @@ public class UpgradesPanel : MonoBehaviour
                 t.text = $"Cost: {up.cost}";
     }
 
-    private void OnPurchased(UpgradeSO _)
+    /// <summary>
+    /// Called by UpgradeManager whenever an upgrade is successfully purchased.
+    /// Only the affected row needs to update.
+    /// </summary>
+    private void OnPurchased(UpgradeSO purchased)
     {
-        // After any purchase, rescan and refresh
-        foreach (Transform child in contentParent)
+        // Refresh only the button that belongs to the purchased upgrade
+        if (_buttonsById.TryGetValue(purchased.id, out var button))
         {
-            var btn = child.GetComponent<Button>();
-            if (!btn) continue;
-
-            // Identify the upgrade by title text (good enough for MVP)
-            var title = child.GetComponentInChildren<TextMeshProUGUI>();
-            if (!title) continue;
-
-            foreach (var up in Upgrades.Available)
-                if (title.text == up.title)
-                    RefreshRow(btn, up);
+            RefreshRow(button, purchased);
         }
     }
 
+    /// <summary>
+    /// Fired whenever the player's currency changes. Re-evaluates affordability for all upgrades.
+    /// </summary>
     private void OnEssenceChanged(int _)
     {
         // When money changes, re-evaluate affordability for all rows
-        foreach (Transform child in contentParent)
+        foreach (var kvp in _buttonsById)
         {
-            var btn = child.GetComponent<Button>();
-            if (!btn) continue;
-
-            var title = child.GetComponentInChildren<TextMeshProUGUI>();
-            if (!title) continue;
-
-            foreach (var up in Upgrades.Available)
-                if (title.text == up.title)
-                    RefreshRow(btn, up);
+            if (_upgradesById.TryGetValue(kvp.Key, out var up))
+            {
+                RefreshRow(kvp.Value, up);
+            }
         }
     }
 }
