@@ -166,7 +166,11 @@ flowchart LR
 | **Essence** | Primary currency earned from clicks or battles, spent on upgrades. |
 | **Dungeon Key** | Daily token consumed to attempt a dungeon run. |
 | **Upgrade** | ScriptableObject-driven improvement purchased with essence. |
-| **BattleManager** | Turn-based controller handling player/enemy actions and rewards. |
+| **BattleManager** | Orchestrates turn flow by composing DeckManager, EnergyPool, StatusController and BattleRewardService. |
+| **DeckManager** | Shuffles the starting deck and handles draw/discard/hand operations. |
+| **EnergyPool** | Tracks current/max energy and spending. Raises `OnEnergyChanged`. |
+| **StatusController** | Maintains Weak/Vulnerable timers and exposes formatted labels. |
+| **BattleRewardService** | Calculates victory rewards and grants essence. |
 
 \## 8) Art \& Audio Direction
 
@@ -258,13 +262,13 @@ flowchart LR
 
 
 
-\*\*BattleManager\*\*
+**BattleManager**
 
-\- `void PlayAction(BattleAction)` • `void PlayCard(CardSO)`
+- `void PlayAction(BattleAction)` • `void PlayCard(CardSO)`
 
-\- Events: `OnInfoChanged(string)`, `OnPlayerStatsChanged(int hp, int armor)`, `OnEnemyStatsChanged(int hp)`, `OnBattleEnded(bool win, int reward)`
+- Events: `OnInfoChanged(string)`, `OnPlayerStatsChanged(int hp, int maxHp, int armor)`, `OnEnemyStatsChanged(int hp, int maxHp)`, `OnEnergyChanged(int current, int max)`, `OnHandChanged(IEnumerable<CardSO>)`, `OnPlayerStatusChanged(string)`, `OnEnemyStatusChanged(string)`, `OnBattleEnded(bool win, int reward)`
 
-\- Victory: reward = `RoundToInt(config.baseEssenceReward \\\\\\\* Upgrades.RewardMultiplier)`
+- Victory rewards delegated to `BattleRewardService`
 
 
 
