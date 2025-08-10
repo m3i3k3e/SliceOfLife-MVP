@@ -1,3 +1,4 @@
+using System; // For Action delegates
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,16 +19,31 @@ public class DungeonGateButton : MonoBehaviour
     [SerializeField] private SceneLoader sceneLoader;
 
     private Button btn;
-    private IUpgradeProvider Upgrades => GameManager.Instance.Upgrades;
+
+    // Safely fetch upgrades, guarding against a missing GameManager.
+    private IUpgradeProvider Upgrades
+    {
+        get
+        {
+            var gm = GameManager.Instance; // may be null in tests or early in boot
+            return gm != null ? gm.Upgrades : null;
+        }
+    }
 
     // Cache the delegate so we unsubscribe the exact same instance.
     // Using new lambdas on both subscribe/unsubscribe would leak handlers.
-    private System.Action<UpgradeSO> _purchasedHandler;
+    private Action<UpgradeSO> _purchasedHandler;
+
+    // Cache a lambda that reacts to key count changes.
+    private Action<int, int> _keysChangedHandler;
 
     private void Awake()
     {
         btn = GetComponent<Button>();
-        _purchasedHandler = _ => Refresh();
+
+        // Cache delegates so the same instance is removed on unsubscribe.
+        _purchasedHandler   = _ => Refresh();
+        _keysChangedHandler = (_, _) => Refresh();
     }
 
     private void OnEnable()
@@ -46,6 +62,13 @@ public class DungeonGateButton : MonoBehaviour
             // Subscribe once using the cached delegate.
             upgrades.OnPurchased += _purchasedHandler;
         }
+
+        // Listen for dungeon key count changes so the button updates interactability.
+        var gm = GameManager.Instance;
+        if (gm != null && gm.Events != null)
+        {
+            gm.Events.DungeonKeysChanged += _keysChangedHandler;
+        }
     }
 
     private void OnDisable()
@@ -62,13 +85,25 @@ public class DungeonGateButton : MonoBehaviour
             // Unsubscribe using the same delegate instance we added.
             upgrades.OnPurchased -= _purchasedHandler;
         }
+
+        // Remove key change listener to avoid dangling delegates.
+        var gm = GameManager.Instance;
+        if (gm != null && gm.Events != null)
+        {
+            gm.Events.DungeonKeysChanged -= _keysChangedHandler;
+        }
     }
 
     private void Refresh()
     {
+        var gm       = GameManager.Instance; // can be null during shutdown
         var upgrades = Upgrades;
-        // Only enable the button when the upgrade is known and purchased.
-        btn.interactable = upgrades != null && upgrades.IsPurchased(requiredUpgradeId);
+
+        // Only enable the button when the gate is unlocked AND the player has keys.
+        bool hasUpgrade = upgrades != null && upgrades.IsPurchased(requiredUpgradeId);
+        bool hasKeys    = gm != null && gm.DungeonKeysRemaining > 0;
+
+        btn.interactable = hasUpgrade && hasKeys;
     }
 
     /// <summary>
