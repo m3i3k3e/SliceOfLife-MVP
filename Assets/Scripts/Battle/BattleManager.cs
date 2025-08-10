@@ -24,7 +24,10 @@ public class BattleManager : MonoBehaviour
     public event Action<string> OnPlayerStatusChanged; // e.g., "Weak (1), Vulnerable (2)"
     public event Action<string> OnEnemyStatusChanged;
     
-    // Public so UI can end the turn early.
+    /// <summary>
+    /// UI hook to end the player's turn early. Part of the public surface so
+    /// buttons remain ignorant of internal flow.
+    /// </summary>
     public void EndTurn()
     {
         if (!_playerTurn) return;
@@ -96,7 +99,11 @@ private IEnumerator AutoEndTurnAfterBeat()
     private int _currentEnergy;
     private int _maxEnergy;
 
-        public void PlayCard(CardSO card)
+    /// <summary>
+    /// Execute a specific card by reference. Used by CardView to keep the
+    /// battle brain decoupled from UI prefabs.
+    /// </summary>
+    public void PlayCard(CardSO card)
     {
         if (card == null || !_playerTurn) return;
 
@@ -190,6 +197,10 @@ private IEnumerator AutoEndTurnAfterBeat()
     /// Keeps the manager decoupled from UI implementations.
     /// </summary>
 
+    /// <summary>
+    /// High-level action entry. Implements a simple command pattern so callers
+    /// can trigger effects without referencing specific methods.
+    /// </summary>
     public void PlayAction(BattleAction action)
     {
         if (!_playerTurn) return;
@@ -333,41 +344,44 @@ private IEnumerator AutoEndTurnAfterBeat()
 
     }
 
+    /// <summary>Legacy button hook for a basic attack.</summary>
     public void PlayerAttack()
     {
         if (!_playerTurn) return;
-        if (!TrySpendEnergy(1)) return;        // <-- NEW (legacy buttons cost 1)
+        if (!TrySpendEnergy(1)) return;        // legacy buttons cost 1 energy
         ApplyActionEffect(BattleAction.Attack);
-        PostPlayerCardResolved();               // <-- NEW
+        PostPlayerCardResolved();               // may end turn
     }
 
+    /// <summary>Legacy button hook for a guard card.</summary>
     public void PlayerGuard()
     {
         if (!_playerTurn) return;
-        if (!TrySpendEnergy(1)) return;        // <-- NEW
+        if (!TrySpendEnergy(1)) return;
         ApplyActionEffect(BattleAction.Guard);
-        PostPlayerCardResolved();               // <-- NEW
+        PostPlayerCardResolved();
     }
 
+    /// <summary>Legacy button hook for a mend card.</summary>
     public void PlayerMend()
     {
         if (!_playerTurn) return;
-        if (!TrySpendEnergy(1)) return;        // <-- NEW (legacy cost)
+        if (!TrySpendEnergy(1)) return;        // legacy cost
         ApplyActionEffect(BattleAction.Mend);
-        PostPlayerCardResolved();               // <-- NEW
+        PostPlayerCardResolved();
     }
 
     // --- Turn transitions ---
 
     private void EndPlayerTurn()
     {
-        // If enemy already dead, Victory() handled elsewhere.
-        TickEndOfPlayerTurn();  // from statuses step (safe even if 0)
+        // Victory() is handled earlier; here we simply hand control to the enemy.
+        TickEndOfPlayerTurn();  // decrement player status durations
         _playerTurn = false;
 
-        DiscardHand();          // <- NEW: dump unplayed cards
+        DiscardHand();          // dump any unplayed cards so the enemy can't see them
 
-        StartCoroutine(EnemyTurn());
+        StartCoroutine(EnemyTurn()); // async to allow small pauses/FX
     }
 
 private void TickEndOfPlayerTurn()
@@ -379,17 +393,17 @@ private void TickEndOfPlayerTurn()
 
     private IEnumerator EnemyTurn()
     {
-        // Small beat for readability; optional
+        // 1) Short pause so players can read the intent telegraph
         OnInfoChanged?.Invoke($"Enemy uses {_nextEnemyIntent.label}...");
         yield return new WaitForSeconds(0.25f);
 
-        // Execute the currently previewed intent
+        // 2) Execute the telegraphed intent
         switch (_nextEnemyIntent.type)
         {
             case EnemyIntentType.LightAttack:
             case EnemyIntentType.HeavyAttack:
                 int dmg = ModEnemyToPlayerDamage(_nextEnemyIntent.magnitude);
-                // Armor reduces damage and is then consumed by the amount absorbed
+                // Armor absorbs damage first, then the remainder hits HP
                 int absorbed = Mathf.Min(_playerArmor, dmg);
                 int through = dmg - absorbed;
                 _playerArmor -= absorbed;
@@ -397,27 +411,29 @@ private void TickEndOfPlayerTurn()
                 break;
 
             case EnemyIntentType.LeechHeal:
+                // Enemy heals itself; magnitude stored in config
                 _enemyHP = Mathf.Min(config.enemyMaxHP, _enemyHP + config.enemyLeechHeal);
                 break;
         }
 
-        // Push updated stats after enemy action
+        // 3) Update UI with new stats
         PushPlayerStats();
         PushEnemyStats();
 
-        // Lose check
+        // 4) Check defeat before rolling next intent
         if (_playerHP <= 0)
         {
             Defeat();
             yield break;
         }
 
-        // Roll the next intent for preview
+        // 5) Preview next enemy move so player can plan
         _nextEnemyIntent = _enemy.DecideNextIntent(config);
         OnEnemyIntentChanged?.Invoke(_nextEnemyIntent);
 
-        TickEndOfEnemyTurn(); // statuses step (safe even if 0)
-        BeginPlayerTurn(); // refills energy + draws new hand
+        // 6) Tick statuses and return control to player
+        TickEndOfEnemyTurn();
+        BeginPlayerTurn();
     }
     
     private void TickEndOfEnemyTurn()
@@ -496,4 +512,5 @@ public struct EnemyIntent
     public string label;      // human-readable text for UI
 }
 
+/// <summary>Types of enemy actions the turn loop understands.</summary>
 public enum EnemyIntentType { LightAttack, HeavyAttack, LeechHeal }

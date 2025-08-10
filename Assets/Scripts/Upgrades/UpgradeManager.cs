@@ -9,12 +9,16 @@ using UnityEngine;
 /// </summary>
 public interface IUpgradeProvider
 {
-    bool TryPurchase(UpgradeSO upgrade);               // Attempt to buy an upgrade
-    bool IsPurchased(string upgradeId);                // Query: already bought?
-    IReadOnlyCollection<string> PurchasedIds { get; }  // For saving
-    IReadOnlyList<UpgradeSO> Available { get; }        // Catalog for UI
+    /// <summary>Attempt to buy an upgrade; returns true on success.</summary>
+    bool TryPurchase(UpgradeSO upgrade);
+    /// <summary>Query whether an upgrade ID has already been purchased.</summary>
+    bool IsPurchased(string upgradeId);
+    /// <summary>IDs of purchased upgrades (for saving).</summary>
+    IReadOnlyCollection<string> PurchasedIds { get; }
+    /// <summary>Catalog of all upgrades available to buy.</summary>
+    IReadOnlyList<UpgradeSO> Available { get; }
 
-    // NEW: multiplicative bonus for battle win rewards (1.0 = no change)
+    /// <summary>Multiplicative bonus for battle win rewards (1.0 = no change).</summary>
     float RewardMultiplier { get; }
 
     /// <summary>Fired after a successful purchase so UI can refresh buttons, gates, etc.</summary>
