@@ -24,10 +24,23 @@ public class CardHandUI : MonoBehaviour
         if (!battle) battle = FindFirstObjectByType<BattleManager>();
     }
 
-    private void OnEnable()
+    /// <summary>Rebuilds the visible hand from a manager-provided list.</summary>
+    public void Show(System.Collections.Generic.IReadOnlyList<CardSO> cards)
     {
-        // On scene enter we can spawn once; for future turns you could listen to a "OnPlayerTurnStarted" event.
-        BuildHand();
+        if (!handParent || !cardViewPrefab)
+        {
+            Debug.LogError("CardHandUI: Missing handParent or cardViewPrefab", this);
+            return;
+        }
+
+        Clear();
+
+        foreach (var c in cards)
+        {
+            var v = Instantiate(cardViewPrefab, handParent);
+            v.Bind(c);           // CardView wires its own onClick to BattleManager
+            _spawned.Add(v);
+        }
     }
 
     private void OnDisable()

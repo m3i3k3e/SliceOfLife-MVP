@@ -29,6 +29,7 @@ public class BattleUI : MonoBehaviour
     [SerializeField] private Slider enemyHPBar;               // new
 
     [Header("Buttons")]
+    [SerializeField] private UnityEngine.UI.Button endTurnButton;
     [SerializeField] private Button attackButton;
     [SerializeField] private Button guardButton;
     [SerializeField] private Button mendButton;
@@ -36,6 +37,7 @@ public class BattleUI : MonoBehaviour
     [Header("Energy")]
     [SerializeField] private TextMeshProUGUI energyText; // new label "Energy: X/Y"
     [SerializeField] private CardHandUI handUI;           // to refresh affordability
+
 
 
     private void Awake()
@@ -74,12 +76,12 @@ public class BattleUI : MonoBehaviour
         battle.OnBattleEnded        += HandleBattleEnded;
         battle.OnPlayerStatusChanged += HandlePlayerStatus;
         battle.OnEnemyStatusChanged  += HandleEnemyStatus;
-
-
-        // NEW
         battle.OnEnergyChanged      += HandleEnergyChanged;
+        battle.OnHandChanged        += HandleHandChanged;
+
 
         // Keep legacy buttons optional (only wire if assigned)
+        if (endTurnButton) endTurnButton.onClick.AddListener(battle.EndTurn);
         if (attackButton) attackButton.onClick.AddListener(battle.PlayerAttack);
         if (guardButton)  guardButton.onClick.AddListener(battle.PlayerGuard);
         if (mendButton)   mendButton.onClick.AddListener(battle.PlayerMend);
@@ -90,21 +92,28 @@ public class BattleUI : MonoBehaviour
         if (battle)
         {
             battle.OnPlayerStatsChanged -= HandlePlayerStats;
-            battle.OnEnemyStatsChanged  -= HandleEnemyStats;
-            battle.OnInfoChanged        -= HandleInfo;
+            battle.OnEnemyStatsChanged -= HandleEnemyStats;
+            battle.OnInfoChanged -= HandleInfo;
             battle.OnEnemyIntentChanged -= HandleIntent;
-            battle.OnBattleEnded        -= HandleBattleEnded;
+            battle.OnBattleEnded -= HandleBattleEnded;
             battle.OnPlayerStatusChanged -= HandlePlayerStatus;
-            battle.OnEnemyStatusChanged  -= HandleEnemyStatus;
+            battle.OnEnemyStatusChanged -= HandleEnemyStatus;
+            battle.OnEnergyChanged -= HandleEnergyChanged;
+            battle.OnHandChanged -= HandleHandChanged;
 
-
-            // NEW
-            battle.OnEnergyChanged      -= HandleEnergyChanged;
         }
 
+        if (endTurnButton) endTurnButton.onClick.RemoveListener(battle.EndTurn);
         if (attackButton) attackButton.onClick.RemoveAllListeners();
         if (guardButton)  guardButton.onClick.RemoveAllListeners();
         if (mendButton)   mendButton.onClick.RemoveAllListeners();
+    }
+    private void HandleHandChanged(System.Collections.Generic.IReadOnlyList<CardSO> cards)
+    {
+        if (handUI) handUI.Show(cards);
+        // Re-apply affordability using the last-known energy
+        // BattleManager will also fire OnEnergyChanged in BeginPlayerTurn, but this keeps mid-turn removals tidy.
+        // If you want this to be exact, you could cache current energy here; for now EnergyChanged will follow shortly.
     }
 
     private void HandleEnergyChanged(int current, int max)

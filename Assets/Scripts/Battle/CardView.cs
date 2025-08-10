@@ -39,10 +39,11 @@ public class CardView : MonoBehaviour
     
     public void Bind(CardSO data)
     {
-        card = data;
-        if (titleText) titleText.text = data ? data.title : "";
-        if (descText)  descText.text  = data ? data.description : "";
+    card = data;
+    if (titleText) titleText.text = data ? $"{data.title}  [{data.cost}]" : "";
+    if (descText)  descText.text  = data ? data.description : "";
     }
+
 
     private void OnClicked()
     {

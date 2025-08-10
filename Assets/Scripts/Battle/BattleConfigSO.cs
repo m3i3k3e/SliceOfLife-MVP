@@ -24,10 +24,14 @@ public class BattleConfigSO : ScriptableObject
     public int baseEssenceReward = 20;    // Essence granted on win (before any future multipliers)
 
     [Header("Flow")]
-    public float returnDelay = 1.0f;      // seconds before returning to Start scene after win/lose
+    public float returnDelay = 3.0f;      // seconds before returning to Start scene after win/lose
+    public float autoEndTurnDelay = 3.0f; // NEW: delay before auto end turn
 
     [Header("Energy")]
     [Min(0)] public int energyPerTurn = 3; // how much you refill at the start of your turn
-    [Min(0)] public int maxEnergy     = 3; // cap; upgrades can raise this later
+    [Min(0)] public int maxEnergy = 3; // cap; upgrades can raise this later
+    
+    [Header("Cards/Hand")]
+    [Min(0)] public int handSize = 3;  // how many cards you start each turn with
 
 }
