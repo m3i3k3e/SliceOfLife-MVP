@@ -128,6 +128,8 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 \- \*\*Events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged`.
 
+\- \*\*Battle subsystems\*\*: `DeckManager`, `EnergySystem`, `StatusController` handle cards, energy, and status logic. `BattleRewardService` computes victory rewards via `IUpgradeProvider`.
+
 \- \*\*Scenes\*\*: `Start`, `Battle`.
 
 \- \*\*Prefabs\*\*: `BattleRoot` (BattleManager + UI), `CardView`, `UpgradeButtonPrefab`.
