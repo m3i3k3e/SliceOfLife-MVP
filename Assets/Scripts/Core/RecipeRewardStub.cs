@@ -5,7 +5,7 @@
 public static class RecipeRewardStub
 {
     /// <summary>Grant crafted items to the player.</summary>
-    public static void Grant(ItemSO item, int quantity)
+    public static void Grant(ItemCardSO item, int quantity)
     {
         GameManager.Instance?.Inventory?.TryAdd(item, quantity);
     }

@@ -12,7 +12,7 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
 
     [Header("Catalog")]
     [Tooltip("All item definitions available. Used to resolve IDs during load.")]
-    [SerializeField] private List<ItemSO> itemCatalog = new();
+    [SerializeField] private List<ItemCardSO> itemCatalog = new();
 
     [Header("Progression")]
     [Tooltip("How many rows of slots are currently unlocked (1-5).")]
@@ -22,10 +22,10 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
     [Serializable]
     private class Slot
     {
-        public ItemSO item;
+        public ItemCardSO item;
         public int quantity;
 
-        public Slot(ItemSO item, int qty)
+        public Slot(ItemCardSO item, int qty)
         {
             this.item = item;
             quantity = qty;
@@ -42,7 +42,7 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
     public event Action OnInventoryChanged;
 
     /// <inheritdoc />
-    public bool TryAdd(ItemSO item, int quantity)
+    public bool TryAdd(ItemCardSO item, int quantity)
     {
         if (item == null || quantity <= 0) return false;
 
@@ -53,9 +53,9 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
         {
             var slot = _slots[i];
             if (slot.item != item) continue;
-            if (slot.quantity >= item.MaxStack) continue;
+            if (slot.quantity >= item.StackSize) continue;
 
-            int space = item.MaxStack - slot.quantity;
+            int space = item.StackSize - slot.quantity;
             int toAdd = Mathf.Min(space, remaining);
             slot.quantity += toAdd;
             remaining -= toAdd;
@@ -64,7 +64,7 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
         // Create new stacks while we have room and items left
         while (remaining > 0 && _slots.Count < Capacity)
         {
-            int toAdd = Mathf.Min(item.MaxStack, remaining);
+            int toAdd = Mathf.Min(item.StackSize, remaining);
             _slots.Add(new Slot(item, toAdd));
             remaining -= toAdd;
         }
@@ -75,7 +75,7 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
     }
 
     /// <inheritdoc />
-    public bool TryRemove(ItemSO item, int quantity)
+    public bool TryRemove(ItemCardSO item, int quantity)
     {
         if (item == null || quantity <= 0) return false;
         if (GetCount(item) < quantity) return false; // not enough to remove
@@ -99,7 +99,7 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
     }
 
     /// <inheritdoc />
-    public int GetCount(ItemSO item)
+    public int GetCount(ItemCardSO item)
     {
         if (item == null) return 0;
         int total = 0;
@@ -176,7 +176,7 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
     }
 
     /// <summary>Lookup helper to resolve an item ID from the catalog.</summary>
-    private ItemSO FindItem(string id)
+    private ItemCardSO FindItem(string id)
     {
         if (string.IsNullOrEmpty(id)) return null;
         for (int i = 0; i < itemCatalog.Count; i++)
