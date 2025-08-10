@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,6 +10,12 @@ using UnityEngine.UI;
 public class DungeonGateButton : MonoBehaviour
 {
     [SerializeField] private string requiredUpgradeId = UpgradeIds.UnlockBattle; // use constant to avoid typos in Inspector
+
+    [Tooltip("Scene to load when the gate is opened and clicked.")]
+    [SerializeField] private string sceneName = "Battle";
+
+    [Tooltip("Reference to the global SceneLoader. Inject via inspector.")]
+    [SerializeField] private SceneLoader sceneLoader;
 
     private Button btn;
     private IUpgradeProvider Upgrades => GameManager.Instance.Upgrades;
@@ -27,6 +34,12 @@ public class DungeonGateButton : MonoBehaviour
     {
         Refresh();
 
+        // Hook the click event so we can trigger scene loads.
+        if (btn != null)
+        {
+            btn.onClick.AddListener(OnClicked);
+        }
+
         var upgrades = Upgrades;
         if (upgrades != null)
         {
@@ -37,6 +50,12 @@ public class DungeonGateButton : MonoBehaviour
 
     private void OnDisable()
     {
+        // Unsubscribe from click event to avoid memory leaks.
+        if (btn != null)
+        {
+            btn.onClick.RemoveListener(OnClicked);
+        }
+
         var upgrades = Upgrades;
         if (upgrades != null)
         {
@@ -50,5 +69,19 @@ public class DungeonGateButton : MonoBehaviour
         var upgrades = Upgrades;
         // Only enable the button when the upgrade is known and purchased.
         btn.interactable = upgrades != null && upgrades.IsPurchased(requiredUpgradeId);
+    }
+
+    /// <summary>
+    /// Loads the dungeon scene once the button is pressed.
+    /// </summary>
+    private async void OnClicked()
+    {
+        if (sceneLoader == null)
+        {
+            Debug.LogWarning($"SceneLoader not assigned on {name}", this);
+            return;
+        }
+
+        await sceneLoader.LoadSceneAsync(sceneName);
     }
 }
