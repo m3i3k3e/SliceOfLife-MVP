@@ -3,6 +3,7 @@ Assets/Prefabs/Battle/CardView.prefab
 Assets/Prefabs/UI/UpgradeButtonPrefab.prefab
 Assets/Scenes/Battle.unity
 Assets/Scenes/Start.unity
+Assets/Scenes/Title.unity
 Assets/ScriptableObjects/Battle/BattleConfig.asset
 Assets/ScriptableObjects/Cards/Attack.asset
 Assets/ScriptableObjects/Cards/Expose.asset

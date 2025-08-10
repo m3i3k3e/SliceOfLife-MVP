@@ -1,9 +1,10 @@
 # SliceOfLife-MVP — Context Snapshot
-_Generated: 2025-08-09 21:19_
+_Generated: 2025-08-09 23:22_
 
 ## Scenes
 - Battle
 - Start
+- Title
 
 ## Prefabs
 - Prefabs/Battle/BattleRoot.prefab
