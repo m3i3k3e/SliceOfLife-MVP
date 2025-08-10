@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 [DefaultExecutionOrder(-100)]
@@ -69,7 +68,8 @@ public class GameManager : MonoBehaviour
     {
         // Give keys right away on the day you unlock
         DungeonKeysRemaining = Mathf.Max(0, dungeonKeysPerDay);
-        OnDungeonKeysChanged?.Invoke(DungeonKeysRemaining, dungeonKeysPerDay);
+        // Broadcast via the static event hub so UI stays decoupled from GameManager.
+        GameEvents.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
         ReevaluateSleepGate();
         SaveSystem.Save(this);
     }
@@ -91,8 +91,6 @@ public class GameManager : MonoBehaviour
     // -------- Day progression --------
     /// <summary>Current in-game day (starts at 1).</summary>
     public int Day { get; private set; } = 1;
-    /// <summary>Fired after Day increments.</summary>
-    public event Action<int> OnDayChanged;
 
     // -------- Daily rules / penalties --------
     [Header("Daily Rules")]
@@ -108,8 +106,6 @@ public class GameManager : MonoBehaviour
     /// <summary>Keys remaining TODAY. Reset each day to dungeonKeysPerDay (when unlocked).</summary>
     public int DungeonKeysRemaining { get; private set; }
 
-    /// <summary>Invoked when dungeon keys change; args = (current, perDay).</summary>
-    public event Action<int,int> OnDungeonKeysChanged; // (current, perDay)
 
     /// <summary>Has the player attempted the dungeon at least once today?</summary>
     public bool DungeonAttemptedToday { get; private set; }
@@ -117,8 +113,6 @@ public class GameManager : MonoBehaviour
     /// <summary>Click-cap reduction queued for the next day only.</summary>
     private int _tempNextDayClickDebuff;
 
-    /// <summary>Notifies UI whether the player can sleep and why not.</summary>
-    public event Action<bool, string> OnSleepEligibilityChanged; // (canSleep, reason)
 
     // -------- Public API used by UI / buttons --------
 
@@ -141,7 +135,8 @@ public class GameManager : MonoBehaviour
         if (DungeonKeysRemaining <= 0) return false;
 
         DungeonKeysRemaining = Mathf.Max(0, DungeonKeysRemaining - 1);
-        OnDungeonKeysChanged?.Invoke(DungeonKeysRemaining, dungeonKeysPerDay);
+        // Let listeners know key counts changed (UI, save system, etc.).
+        GameEvents.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
         ReevaluateSleepGate();
         SaveSystem.Save(this);
         return true;
@@ -223,7 +218,8 @@ public class GameManager : MonoBehaviour
             else if (IsDungeonUnlocked() && DungeonKeysRemaining > 0)
                 reason = DungeonKeysRemaining == 1 ? "Use your dungeon key" : $"Use dungeon keys ({DungeonKeysRemaining})";
         }
-        OnSleepEligibilityChanged?.Invoke(ok, reason);
+        // Tell UI whether Sleep is allowed and why not.
+        GameEvents.RaiseSleepEligibilityChanged(ok, reason);
     }
 
     // -------- Day change internals --------
@@ -241,12 +237,14 @@ public class GameManager : MonoBehaviour
 
         // Reset keys: before unlock → 0; after unlock → dungeonKeysPerDay
         DungeonKeysRemaining = IsDungeonUnlocked() ? Mathf.Max(0, dungeonKeysPerDay) : 0;
-        OnDungeonKeysChanged?.Invoke(DungeonKeysRemaining, dungeonKeysPerDay);
+        // Reset keys for the new day and notify any listeners.
+        GameEvents.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
 
         // New day → must attempt again if you want (for flavor), but Sleep gate uses keys now.
         DungeonAttemptedToday = false;
 
-        OnDayChanged?.Invoke(Day);
+        // Inform listeners of the new day index.
+        GameEvents.RaiseDayChanged(Day);
         SaveSystem.Save(this);
         ReevaluateSleepGate();
     }
