@@ -2,30 +2,49 @@ using System;
 using System.Collections;
 using UnityEngine;
 
+/// <summary>
+/// Abstraction for the currency system. Exposing an interface lets other systems depend
+/// on a small surface instead of the concrete <see cref="EssenceManager"/> implementation.
+/// </summary>
 public interface IEssenceProvider
 {
+    /// <summary>Current essence owned by the player.</summary>
     int CurrentEssence { get; }
+    /// <summary>How many manual clicks remain today.</summary>
     int DailyClicksRemaining { get; }
+    /// <summary>Essence gained per valid click.</summary>
     int EssencePerClick { get; }
+    /// <summary>Passive essence generated per second.</summary>
     float PassivePerSecond { get; }
 
+    /// <summary>Attempt a manual harvest. Returns false if the daily cap was reached.</summary>
     bool TryClickHarvest();
+    /// <summary>Try to spend a chunk of essence; returns false if insufficient funds.</summary>
     bool TrySpend(int amount);
+    /// <summary>Add essence from an external source (bypasses click cap).</summary>
     void AddExternal(int amount);
 
-    // Reset daily clicks (base cap) — existing call sites
+    /// <summary>Reset daily clicks back to the base cap.</summary>
     void ResetDailyClicks();
 
-    // New: reset to a specific cap for *today* (used by GameManager when applying debuffs)
+    /// <summary>Reset daily clicks to a specific cap for today only (e.g., debuffs).</summary>
     void ResetDailyClicks(int todayCap);
 
+    /// <summary>Increase essence granted per click.</summary>
     void AddEssencePerClick(int delta);
+    /// <summary>Increase passive essence generated per second.</summary>
     void AddPassivePerSecond(float delta);
 
+    /// <summary>Fired whenever total essence changes.</summary>
     event Action<int> OnEssenceChanged;
+    /// <summary>Fired whenever remaining clicks change.</summary>
     event Action<int> OnDailyClicksChanged;
 }
 
+/// <summary>
+/// Concrete currency manager. Implements <see cref="IEssenceProvider"/> so the rest of
+/// the game can stay decoupled from MonoBehaviour specifics.
+/// </summary>
 public class EssenceManager : MonoBehaviour, IEssenceProvider
 {
     [Header("Tuning")]
@@ -38,7 +57,7 @@ public class EssenceManager : MonoBehaviour, IEssenceProvider
     [Tooltip("Passive essence added every second. This bypasses the click cap.")]
     [SerializeField] private float passivePerSecond = 0f;
 
-    // Expose the base cap so GameManager can compute debuffs against it
+    /// <summary>Base click cap before any temporary debuffs are applied.</summary>
     public int DailyClickCap => dailyClickCap;
 
     private int _currentEssence = 0;
@@ -63,6 +82,7 @@ public class EssenceManager : MonoBehaviour, IEssenceProvider
 
     private void OnEnable() => StartPassiveIfNeeded();
 
+    /// <summary>Consume one click and add essence if under the daily cap.</summary>
     public bool TryClickHarvest()
     {
         if (_dailyClicksRemaining <= 0) return false;
@@ -73,12 +93,14 @@ public class EssenceManager : MonoBehaviour, IEssenceProvider
         return true;
     }
 
+    /// <summary>Add essence from rewards or passive income (ignores click cap).</summary>
     public void AddExternal(int amount)
     {
         if (amount == 0) return;
         AddInternal(amount);
     }
 
+    /// <summary>Attempt to subtract essence; returns false if not enough.</summary>
     public bool TrySpend(int amount)
     {
         if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount));
@@ -89,11 +111,13 @@ public class EssenceManager : MonoBehaviour, IEssenceProvider
         return true;
     }
 
+    /// <summary>Adjust the essence granted per click. Used by upgrades.</summary>
     public void AddEssencePerClick(int delta)
     {
         _essencePerClick = Mathf.Max(0, _essencePerClick + delta);
     }
 
+    /// <summary>Adjust passive essence generation and restart the tick routine if needed.</summary>
     public void AddPassivePerSecond(float delta)
     {
         passivePerSecond = Mathf.Max(0f, passivePerSecond + delta);
@@ -101,6 +125,7 @@ public class EssenceManager : MonoBehaviour, IEssenceProvider
     }
 
     // Old signature — keep for existing callers
+    /// <summary>Reset daily clicks to the base cap.</summary>
     public void ResetDailyClicks()
     {
         _dailyClicksRemaining = dailyClickCap;
@@ -108,6 +133,7 @@ public class EssenceManager : MonoBehaviour, IEssenceProvider
     }
 
     // New signature — used by GameManager when a temporary debuff applies
+    /// <summary>Reset daily clicks to a specific cap for today only.</summary>
     public void ResetDailyClicks(int todayCap)
     {
         _dailyClicksRemaining = Mathf.Max(0, todayCap);

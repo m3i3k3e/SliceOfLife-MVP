@@ -132,7 +132,36 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 \- \*\*Prefabs\*\*: `BattleRoot` (BattleManager + UI), `CardView`, `UpgradeButtonPrefab`.
 
+### Architecture Diagram
 
+```mermaid
+flowchart LR
+    GM[GameManager]
+    EM[EssenceManager]
+    UM[UpgradeManager]
+    BM[BattleManager]
+    HUD
+    BUI[BattleUI]
+    UP[UpgradesPanel]
+
+    GM --> EM
+    GM --> UM
+    GM --> BM
+    BM --> HUD
+    BM --> BUI
+    UM --> UP
+    EM --> HUD
+```
+
+### Glossary
+
+| Term | Definition |
+|---|---|
+| **GameManager** | Singleton orchestrator that mediates cross-system communication. |
+| **Essence** | Primary currency earned from clicks or battles, spent on upgrades. |
+| **Dungeon Key** | Daily token consumed to attempt a dungeon run. |
+| **Upgrade** | ScriptableObject-driven improvement purchased with essence. |
+| **BattleManager** | Turn-based controller handling player/enemy actions and rewards. |
 
 \## 8) Art \& Audio Direction
 

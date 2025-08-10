@@ -1,6 +1,10 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// Simple command-style component for scene changes. Optional key gating keeps
+/// dungeon entry logic outside of UI prefabs.
+/// </summary>
 public class LoadSceneButton : MonoBehaviour
 {
     [SerializeField] private string sceneName = "Battle";
@@ -9,6 +13,9 @@ public class LoadSceneButton : MonoBehaviour
     // For other buttons that just change scenes, uncheck in Inspector.
     [SerializeField] private bool requireDungeonKey = true;
 
+    /// <summary>
+    /// Triggered by UI. Spends a dungeon key if required before loading the target scene.
+    /// </summary>
     public void LoadScene()
     {
         if (requireDungeonKey)

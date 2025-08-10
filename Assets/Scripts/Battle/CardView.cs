@@ -37,11 +37,15 @@ public class CardView : MonoBehaviour
         if (_cg) _cg.alpha = canPlay ? 1f : 0.6f;
     }
     
+    /// <summary>
+    /// Populate the visual with card data. Simple data-binding pattern keeps
+    /// the prefab reusable across different decks.
+    /// </summary>
     public void Bind(CardSO data)
     {
-    card = data;
-    if (titleText) titleText.text = data ? $"{data.title}  [{data.cost}]" : "";
-    if (descText)  descText.text  = data ? data.description : "";
+        card = data;
+        if (titleText) titleText.text = data ? $"{data.title}  [{data.cost}]" : "";
+        if (descText)  descText.text  = data ? data.description : "";
     }
 
 

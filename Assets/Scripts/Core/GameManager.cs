@@ -2,6 +2,10 @@ using System;
 using UnityEngine;
 
 [DefaultExecutionOrder(-100)]
+/// <summary>
+/// Central orchestrator. Uses the Singleton pattern so other systems can easily locate
+/// one persistent instance that survives scene loads.
+/// </summary>
 public class GameManager : MonoBehaviour
 {
     // -------- Singleton --------
@@ -18,6 +22,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private UpgradeManager upgradeManager;
     [SerializeField] private string unlockUpgradeId = "unlock_battle";
     
+    /// <summary>How many dungeon keys the player receives each day once unlocked.</summary>
     public int DungeonKeysPerDay => dungeonKeysPerDay; // expose for HUD
 
     private UpgradeSO FindUpgradeById(string id)
@@ -69,11 +74,15 @@ public class GameManager : MonoBehaviour
         ReevaluateSleepGate();
     }
 
+    /// <summary>Read-only access to the currency system via its interface.</summary>
     public IEssenceProvider Essence => essenceManager;
+    /// <summary>Read-only access to upgrades; decoupled through an interface.</summary>
     public IUpgradeProvider Upgrades => upgradeManager;
 
     // -------- Day progression --------
+    /// <summary>Current in-game day (starts at 1).</summary>
     public int Day { get; private set; } = 1;
+    /// <summary>Fired after Day increments.</summary>
     public event Action<int> OnDayChanged;
 
     // -------- Daily rules / penalties --------
@@ -90,6 +99,7 @@ public class GameManager : MonoBehaviour
     /// <summary>Keys remaining TODAY. Reset each day to dungeonKeysPerDay (when unlocked).</summary>
     public int DungeonKeysRemaining { get; private set; }
 
+    /// <summary>Invoked when dungeon keys change; args = (current, perDay).</summary>
     public event Action<int,int> OnDungeonKeysChanged; // (current, perDay)
 
     /// <summary>Has the player attempted the dungeon at least once today?</summary>
@@ -98,16 +108,18 @@ public class GameManager : MonoBehaviour
     /// <summary>Click-cap reduction queued for the next day only.</summary>
     private int _tempNextDayClickDebuff;
 
+    /// <summary>Notifies UI whether the player can sleep and why not.</summary>
     public event Action<bool, string> OnSleepEligibilityChanged; // (canSleep, reason)
 
     // -------- Public API used by UI / buttons --------
 
+    /// <summary>Entry point from UI to advance to the next day if the gate allows it.</summary>
     public bool TrySleep()
     {
         if (!CanSleep)
         {
             ReevaluateSleepGate();
-            return false;
+            return false; // Gate denied; reason broadcast via event
         }
         AdvanceDay();
         return true;
@@ -136,6 +148,10 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Applies defeat repercussions: immediate essence loss and a temporary click-cap debuff
+    /// for the following day. Encapsulated here so battle code stays unaware of economy rules.
+    /// </summary>
     public void ApplyDungeonLossPenalty()
     {
         if (Essence != null)
@@ -158,38 +174,46 @@ public class GameManager : MonoBehaviour
         return up != null && up.IsPurchased("unlock_battle");
     }
 
-public bool CanSleep
-{
-    get
+    /// <summary>
+    /// Computed property backing the Sleep gate. Encapsulates the rules so callers don't
+    /// duplicate logic. Returns true only when all daily tasks are complete.
+    /// </summary>
+    public bool CanSleep
     {
-        if (essenceManager == null) return false;
+        get
+        {
+            if (essenceManager == null) return false;
 
-        bool clicksUsed   = essenceManager.DailyClicksRemaining <= 0;
-        bool unlocked     = IsDungeonUnlocked();
-        bool keysUsed     = !unlocked || DungeonKeysRemaining <= 0;
+            bool clicksUsed   = essenceManager.DailyClicksRemaining <= 0; // spent all manual clicks
+            bool unlocked     = IsDungeonUnlocked();                       // dungeon available yet?
+            bool keysUsed     = !unlocked || DungeonKeysRemaining <= 0;    // no keys left today
 
-        // NEW: before unlock, if you CAN afford it, you must buy it before sleeping
-        bool mustBuyUnlock = !unlocked && CanAffordUnlock();
+            // Before unlocking the dungeon, player must purchase it if affordable
+            bool mustBuyUnlock = !unlocked && CanAffordUnlock();
 
-        return clicksUsed && keysUsed && !mustBuyUnlock;
+            return clicksUsed && keysUsed && !mustBuyUnlock;
+        }
     }
-}
 
 
+    /// <summary>
+    /// Recomputes whether Sleep is allowed and tells listeners why it might be blocked.
+    /// Keeps UI logic centralized instead of polling state in Update.
+    /// </summary>
     public void ReevaluateSleepGate()
     {
         bool ok = CanSleep;
         string reason = string.Empty;
 
-if (!ok && essenceManager != null)
-    {
-    if (essenceManager.DailyClicksRemaining > 0)
-        reason = $"{essenceManager.DailyClicksRemaining} clicks remaining";
-    else if (!IsDungeonUnlocked() && CanAffordUnlock())
-        reason = "Buy 'Unlock Dungeon' to sleep";
-    else if (IsDungeonUnlocked() && DungeonKeysRemaining > 0)
-        reason = DungeonKeysRemaining == 1 ? "Use your dungeon key" : $"Use dungeon keys ({DungeonKeysRemaining})";
-    }
+        if (!ok && essenceManager != null)
+        {
+            if (essenceManager.DailyClicksRemaining > 0)
+                reason = $"{essenceManager.DailyClicksRemaining} clicks remaining";
+            else if (!IsDungeonUnlocked() && CanAffordUnlock())
+                reason = "Buy 'Unlock Dungeon' to sleep"; // gently push unlock
+            else if (IsDungeonUnlocked() && DungeonKeysRemaining > 0)
+                reason = DungeonKeysRemaining == 1 ? "Use your dungeon key" : $"Use dungeon keys ({DungeonKeysRemaining})";
+        }
         OnSleepEligibilityChanged?.Invoke(ok, reason);
     }
 
