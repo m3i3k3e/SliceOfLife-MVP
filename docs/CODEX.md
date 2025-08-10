@@ -141,6 +141,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
   - `SleepEligibilityChanged(bool canSleep, string reason)`
   - `StationUnlocked(IStation station)`
   - `CompanionRecruited(ICompanion companion)`
+  - `UpgradePurchased(UpgradeSO upgrade)`
   - `MinigameCompleted(MinigameResult result)`
   Subscribe in `OnEnable` and unsubscribe in `OnDisable`.
 \- \*\*Other events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnInventoryChanged`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
@@ -194,6 +195,8 @@ flowchart LR
 - To test: assign a `DefaultEventBus` component to `eventBusSource` fields on GameManager, HUD, and BattleManager. Run the game, unlock a station or recruit a companion, and ensure HUD and other listeners react via bus events.
 - Added `MinigameResult`, updated `IMinigame` to `PlayAsync`, and introduced `MinigameLauncher` + new `MinigameCompleted` event.
 - To test: create a scriptable object implementing `IMinigame`, then call `MinigameLauncher.LaunchAsync` and watch listeners receive the result via the event bus.
+- Added `LocationSO` data and `MapUI` that spawns buttons for unlocked locations. Event bus now exposes `UpgradePurchased` for UI refreshes.
+- To test: create LocationSO assets for Hub and Battle, assign them to MapUI, purchase the battle unlock upgrade, and verify the Battle button appears and loads the scene.
 
 \## 8) Art \& Audio Direction
 
