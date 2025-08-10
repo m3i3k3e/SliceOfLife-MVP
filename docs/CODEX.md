@@ -100,7 +100,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 |---|---|---|
 
-| \*\*GameManager\*\* | Full | Tracks essence/day/clicks; refs to Essence/Upgrades; broadcasts events. |
+| \*\*GameManager\*\* | Full | Tracks essence/day/clicks; serialized refs to Essence/Upgrades/Stations; broadcasts events. |
 
 | \*\*Essence \& Currency\*\* | Full | Manual clicks (≤10/day), dungeon rewards, passive/sec; spend/add APIs. |
 
@@ -125,6 +125,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
 \- \*\*Pattern\*\*: MVC-ish. \*\*Model\*\* = ScriptableObjects \& C# state; \*\*View\*\* = TMP UI; \*\*Controller\*\* = buttons, Battle logic; \*\*GameManager\*\* orchestrates.
 
 \- \*\*Singleton\*\*: `GameManager` (DontDestroyOnLoad).
+\- \*\*Core wiring\*\*: `GameManager` expects `EssenceManager`, `UpgradeManager`, and `StationManager` references assigned in the scene/prefab; it no longer searches at runtime.
 
 \- \*\*Stations\*\*: `StationManager` maintains `IStation`/`ICompanion` lists, exposed via `GameManager`.
 
