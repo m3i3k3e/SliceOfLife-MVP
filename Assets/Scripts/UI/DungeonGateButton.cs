@@ -13,21 +13,42 @@ public class DungeonGateButton : MonoBehaviour
     private Button btn;
     private IUpgradeProvider Upgrades => GameManager.Instance.Upgrades;
 
-    private void Awake() { btn = GetComponent<Button>(); }
+    // Cache the delegate so we unsubscribe the exact same instance.
+    // Using new lambdas on both subscribe/unsubscribe would leak handlers.
+    private System.Action<UpgradeSO> _purchasedHandler;
+
+    private void Awake()
+    {
+        btn = GetComponent<Button>();
+        _purchasedHandler = _ => Refresh();
+    }
 
     private void OnEnable()
     {
         Refresh();
-        Upgrades.OnPurchased += _ => Refresh();
+
+        var upgrades = Upgrades;
+        if (upgrades != null)
+        {
+            // Subscribe once using the cached delegate.
+            upgrades.OnPurchased += _purchasedHandler;
+        }
     }
 
     private void OnDisable()
     {
-        Upgrades.OnPurchased -= _ => Refresh(); // safe if not subscribed
+        var upgrades = Upgrades;
+        if (upgrades != null)
+        {
+            // Unsubscribe using the same delegate instance we added.
+            upgrades.OnPurchased -= _purchasedHandler;
+        }
     }
 
     private void Refresh()
     {
-        btn.interactable = Upgrades.IsPurchased(requiredUpgradeId);
+        var upgrades = Upgrades;
+        // Only enable the button when the upgrade is known and purchased.
+        btn.interactable = upgrades != null && upgrades.IsPurchased(requiredUpgradeId);
     }
 }
