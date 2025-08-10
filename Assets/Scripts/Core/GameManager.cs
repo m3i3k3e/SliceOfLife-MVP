@@ -61,6 +61,14 @@ public class GameManager : MonoBehaviour, IGameManager
 
         // Initialize UI state for the current day immediately.
         ReevaluateSleepGate();
+
+        // Bridge station/companion events onto the global bus so UI can react
+        // without referencing StationManager directly.
+        if (stationManager != null)
+        {
+            stationManager.OnStationUnlocked += HandleStationUnlocked;
+            stationManager.OnCompanionRecruited += HandleCompanionRecruited;
+        }
     }
 
     private async void HandleUpgradePurchased(UpgradeSO up)
@@ -80,6 +88,22 @@ public class GameManager : MonoBehaviour, IGameManager
     private void HandleDailyClicksChanged(int _)
     {
         ReevaluateSleepGate();
+    }
+
+    /// <summary>
+    /// Forward station unlocks to the static event hub.
+    /// </summary>
+    private void HandleStationUnlocked(IStation station)
+    {
+        GameEvents.RaiseStationUnlocked(station);
+    }
+
+    /// <summary>
+    /// Forward companion recruitment to the static event hub.
+    /// </summary>
+    private void HandleCompanionRecruited(ICompanion companion)
+    {
+        GameEvents.RaiseCompanionRecruited(companion);
     }
 
     /// <summary>Read-only access to the currency system via its interface.</summary>
@@ -298,6 +322,12 @@ public class GameManager : MonoBehaviour, IGameManager
 
         if (upgradeManager != null)
             upgradeManager.OnPurchased -= HandleUpgradePurchased;
+
+        if (stationManager != null)
+        {
+            stationManager.OnStationUnlocked -= HandleStationUnlocked;
+            stationManager.OnCompanionRecruited -= HandleCompanionRecruited;
+        }
     }
 
     private void OnApplicationQuit() => SaveSystem.SaveAsync(this).GetAwaiter().GetResult();

@@ -127,16 +127,21 @@ This file is the source of truth for design + tech. Keep it short and link out t
 \- \*\*Singleton\*\*: `GameManager` (DontDestroyOnLoad).
 \- \*\*Core wiring\*\*: `GameManager` expects `EssenceManager`, `UpgradeManager`, and `StationManager` references assigned in the scene/prefab; it no longer searches at runtime.
 
-\- \*\*Stations\*\*: `StationManager` maintains `IStation`/`ICompanion` lists, exposed via `GameManager`.
+\- \*\*Stations\*\*: `StationManager` maintains `IStation`/`ICompanion` lists, exposed via `GameManager`.  
+  `UnlockStation(id)` and `RecruitCompanion(id)` update internal collections and fire  
+  `OnStationUnlocked` / `OnCompanionRecruited` events.
 
 \- \*\*Event bus\*\*: `GameEvents` static class exposes cross-system events:
   - `DayChanged(int day)`
   - `DungeonKeysChanged(int current, int perDay)`
   - `SleepEligibilityChanged(bool canSleep, string reason)`
+  - `StationUnlocked(IStation station)`
+  - `CompanionRecruited(ICompanion companion)`
   Subscribe in `OnEnable` and unsubscribe in `OnDisable`.
 \- \*\*Other events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
 
-\- \*\*Persistence\*\*: `SaveSystem` writes a single `GameSaveData` DTO containing `Game`, `Essence`, `Upgrades`, `Stations`, and `Companions` records. Disk I/O is wrapped in try/catch and logs errors; failed loads return defaults without mutating runtime state. Async `SaveAsync`/`LoadAsync` methods return `Task` so callers can await disk operations, while legacy `Save`/`Load` wrappers block on completion. The DTO carries a `version` field for future migrations. `GameManager`, `EssenceManager`, `UpgradeManager`, and `StationManager` expose `ToData()`/`LoadFrom()` to bridge runtime and disk. Version 2 adds station unlocks and companion assignments; loading a v1 save simply starts with no stations unlocked and companions at their default assignments. **Test**: unlock a station or reassign a companion, save, then reload to confirm state persists.
+\- \*\*Persistence\*\*: `SaveSystem` writes a single `GameSaveData` DTO containing `Game`, `Essence`, `Upgrades`, `Stations`, and `Companions` records. Disk I/O is wrapped in try/catch and logs errors; failed loads return defaults without mutating runtime state. Async `SaveAsync`/`LoadAsync` methods return `Task` so callers can await disk operations, while legacy `Save`/`Load` wrappers block on completion. The DTO carries a `version` field for future migrations. `GameManager`, `EssenceManager`, `UpgradeManager`, and `StationManager` expose `ToData()`/`LoadFrom()` to bridge runtime and disk. Version 2 adds station unlocks and companion assignments; loading a v1 save simply starts with no stations unlocked and companions at their default assignments. **Test**: unlock a station or reassign a companion, save, then reload to confirm state persists.  
+\- **Test**: Call `Stations.UnlockStation("farm")` or `Stations.RecruitCompanion("alice")` in play mode and watch the console/UI react via `GameEvents.StationUnlocked` or `GameEvents.CompanionRecruited`.
 
 \- \*\*Scenes\*\*: `Start`, `Battle`.
 
