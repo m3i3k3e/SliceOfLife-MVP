@@ -3,12 +3,12 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Keeps a button disabled until a specific upgrade ID is owned.
-/// Default looks for 'unlock_battle'.
+/// Default looks for <see cref="UpgradeIds.UnlockBattle"/> to gate the dungeon door.
 /// </summary>
 [RequireComponent(typeof(Button))]
 public class DungeonGateButton : MonoBehaviour
 {
-    [SerializeField] private string requiredUpgradeId = "unlock_battle";
+    [SerializeField] private string requiredUpgradeId = UpgradeIds.UnlockBattle; // use constant to avoid typos in Inspector
 
     private Button btn;
     private IUpgradeProvider Upgrades => GameManager.Instance.Upgrades;

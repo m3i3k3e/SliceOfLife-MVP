@@ -21,7 +21,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private EssenceManager essenceManager;
     [SerializeField] private UpgradeManager upgradeManager;
     [SerializeField] private StationManager stationManager; // manages stations/companions
-    [SerializeField] private string unlockUpgradeId = "unlock_battle";
+    [SerializeField] private string unlockUpgradeId = UpgradeIds.UnlockBattle; // default to constant to avoid typos
     
     /// <summary>How many dungeon keys the player receives each day once unlocked.</summary>
     public int DungeonKeysPerDay => dungeonKeysPerDay; // expose for HUD
@@ -188,7 +188,8 @@ public class GameManager : MonoBehaviour
     private bool IsDungeonUnlocked()
     {
         var up = Upgrades;
-        return up != null && up.IsPurchased("unlock_battle");
+        // Check the upgrade using the centralized ID constant instead of a magic string.
+        return up != null && up.IsPurchased(unlockUpgradeId);
     }
 
     /// <summary>

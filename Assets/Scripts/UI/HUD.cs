@@ -84,7 +84,7 @@ public class HUD : MonoBehaviour
     if (!keysText) return;
     // Hide before unlock; show once you have the system
     if (GameManager.Instance.Upgrades != null &&
-        GameManager.Instance.Upgrades.IsPurchased("unlock_battle"))
+        GameManager.Instance.Upgrades.IsPurchased(UpgradeIds.UnlockBattle))
         keysText.text = $"Keys: {current}/{perDay}";
     else
         keysText.text = "";
