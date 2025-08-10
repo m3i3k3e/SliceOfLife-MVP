@@ -89,18 +89,21 @@ public class GameManager : MonoBehaviour, IGameManager
     }
 
     private async void HandleUpgradePurchased(UpgradeSO up)
-{
-    if (up != null && up.id == unlockUpgradeId)
     {
-        // Give keys right away on the day you unlock
-        DungeonKeysRemaining = Mathf.Max(0, dungeonKeysPerDay);
-        // Broadcast via the injected event bus so UI stays decoupled from GameManager.
-        Events?.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
-        ReevaluateSleepGate();
-        // Persist the newly unlocked state without blocking callers.
-        await SaveSystem.SaveAsync(this);
+        // Always bridge the purchase onto the global event bus so UI systems can react.
+        Events?.RaiseUpgradePurchased(up);
+
+        if (up != null && up.id == unlockUpgradeId)
+        {
+            // Give keys right away on the day you unlock
+            DungeonKeysRemaining = Mathf.Max(0, dungeonKeysPerDay);
+            // Broadcast via the injected event bus so UI stays decoupled from GameManager.
+            Events?.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
+            ReevaluateSleepGate();
+            // Persist the newly unlocked state without blocking callers.
+            await SaveSystem.SaveAsync(this);
+        }
     }
-}
 
     private void HandleDailyClicksChanged(int _)
     {

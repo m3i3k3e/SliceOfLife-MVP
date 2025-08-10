@@ -27,6 +27,9 @@ public class DefaultEventBus : MonoBehaviour, IEventBus
     public event Action<MinigameResult> MinigameCompleted;
 
     /// <inheritdoc />
+    public event Action<UpgradeSO> UpgradePurchased;
+
+    /// <inheritdoc />
     public void RaiseDayChanged(int day) => DayChanged?.Invoke(day);
 
     /// <inheritdoc />
@@ -48,4 +51,8 @@ public class DefaultEventBus : MonoBehaviour, IEventBus
     /// <inheritdoc />
     public void RaiseMinigameCompleted(MinigameResult result)
         => MinigameCompleted?.Invoke(result);
+
+    /// <inheritdoc />
+    public void RaiseUpgradePurchased(UpgradeSO upgrade)
+        => UpgradePurchased?.Invoke(upgrade);
 }

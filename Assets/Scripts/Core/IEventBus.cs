@@ -32,6 +32,12 @@ public interface IEventBus
     event Action<ICompanion> CompanionRecruited;
 
     /// <summary>
+    /// Fired whenever an upgrade is successfully purchased. Payload = upgrade data.
+    /// Lets UI refresh when new systems or locations unlock.
+    /// </summary>
+    event Action<UpgradeSO> UpgradePurchased;
+
+    /// <summary>
     /// Fired after any minigame finishes. Payload = result details.
     /// </summary>
     event Action<MinigameResult> MinigameCompleted;
@@ -60,6 +66,11 @@ public interface IEventBus
     /// Helper to invoke <see cref="CompanionRecruited"/> safely.
     /// </summary>
     void RaiseCompanionRecruited(ICompanion companion);
+
+    /// <summary>
+    /// Helper to invoke <see cref="UpgradePurchased"/> safely.
+    /// </summary>
+    void RaiseUpgradePurchased(UpgradeSO upgrade);
 
     /// <summary>
     /// Helper to invoke <see cref="MinigameCompleted"/> safely.
