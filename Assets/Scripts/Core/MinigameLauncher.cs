@@ -21,6 +21,11 @@ public static class MinigameLauncher
         // Await the mini-game; implementations decide how they complete.
         MinigameResult result = await minigame.PlayAsync();
 
+        // Deposit any item rewards straight into the global inventory.
+        var gm = GameManager.Instance;
+        if (gm?.Inventory != null && result.RewardItem != null && result.RewardQuantity > 0)
+            gm.Inventory.TryAdd(result.RewardItem, result.RewardQuantity);
+
         // Forward the outcome to any listeners on the event bus.
         events.RaiseMinigameCompleted(result);
 

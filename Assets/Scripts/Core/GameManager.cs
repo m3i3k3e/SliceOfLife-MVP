@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviour, IGameManager
     [SerializeField] private EssenceManager essenceManager;
     [SerializeField] private UpgradeManager upgradeManager;
     [SerializeField] private StationManager stationManager; // manages stations/companions
+    [SerializeField] private InventoryManager inventoryManager; // holds items
     [SerializeField] private string unlockUpgradeId = UpgradeIds.UnlockBattle; // default to constant to avoid typos
 
     [Header("Events")]
@@ -30,6 +31,9 @@ public class GameManager : MonoBehaviour, IGameManager
     // Helper to cast the serialized reference to the interface. Keeps consumers
     // ignorant of the concrete implementation while still allowing Inspector wiring.
     public IEventBus Events => eventBusSource as IEventBus;
+
+    /// <summary>Read-only inventory access for other systems.</summary>
+    public IInventory Inventory => inventoryManager;
     
     /// <summary>How many dungeon keys the player receives each day once unlocked.</summary>
     public int DungeonKeysPerDay => dungeonKeysPerDay; // expose for HUD
@@ -77,6 +81,10 @@ public class GameManager : MonoBehaviour, IGameManager
             stationManager.OnStationUnlocked += HandleStationUnlocked;
             stationManager.OnCompanionRecruited += HandleCompanionRecruited;
         }
+
+        // Persist inventory changes automatically whenever items shift.
+        if (inventoryManager != null)
+            inventoryManager.OnInventoryChanged += HandleInventoryChanged;
     }
 
     private async void HandleUpgradePurchased(UpgradeSO up)
@@ -114,6 +122,14 @@ public class GameManager : MonoBehaviour, IGameManager
     {
         // Broadcast companion recruitment through the bus for UI or analytics.
         Events?.RaiseCompanionRecruited(companion);
+    }
+
+    /// <summary>
+    /// Persist inventory whenever items are added or removed.
+    /// </summary>
+    private async void HandleInventoryChanged()
+    {
+        await SaveSystem.SaveAsync(this);
     }
 
     /// <summary>Read-only access to the currency system via its interface.</summary>
@@ -338,6 +354,9 @@ public class GameManager : MonoBehaviour, IGameManager
             stationManager.OnStationUnlocked -= HandleStationUnlocked;
             stationManager.OnCompanionRecruited -= HandleCompanionRecruited;
         }
+
+        if (inventoryManager != null)
+            inventoryManager.OnInventoryChanged -= HandleInventoryChanged;
     }
 
     private void OnApplicationQuit() => SaveSystem.SaveAsync(this).GetAwaiter().GetResult();

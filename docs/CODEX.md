@@ -114,6 +114,8 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 | \*\*Waifu Collection\*\* | Partial Stub | Placeholder waifu cards; first passive buff hook. |
 
+| \*\*Inventory\*\* | Stub | Item stacks, slot limits, add/remove APIs, emits OnInventoryChanged. |
+
 | \*\*Generational Legacy\*\* | UI Stub | “Fertilize” button + future reset/bonus flow. |
 
 | \*\*Save/Load\*\* | Full | JSON/PlayerPrefs; re-applies one-shot upgrades on load. |
@@ -125,7 +127,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
 \- \*\*Pattern\*\*: MVC-ish. \*\*Model\*\* = ScriptableObjects \& C# state; \*\*View\*\* = TMP UI; \*\*Controller\*\* = buttons, Battle logic; \*\*GameManager\*\* orchestrates.
 
 \- \*\*Singleton\*\*: `GameManager` (DontDestroyOnLoad).
-\- \*\*Core wiring\*\*: `GameManager` expects `EssenceManager`, `UpgradeManager`, and `StationManager` references assigned in the scene/prefab; it no longer searches at runtime.
+\- \*\*Core wiring\*\*: `GameManager` expects `EssenceManager`, `UpgradeManager`, `StationManager`, and `InventoryManager` references assigned in the scene/prefab; it no longer searches at runtime.
 
 \- \*\*Stations\*\*: `StationManager` maintains `IStation`/`ICompanion` lists, exposed via `GameManager`.  
   `UnlockStation(id)` and `RecruitCompanion(id)` update internal collections and fire  
@@ -139,9 +141,9 @@ This file is the source of truth for design + tech. Keep it short and link out t
   - `CompanionRecruited(ICompanion companion)`
   - `MinigameCompleted(MinigameResult result)`
   Subscribe in `OnEnable` and unsubscribe in `OnDisable`.
-\- \*\*Other events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
+\- \*\*Other events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnInventoryChanged`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
 
-\- \*\*Persistence\*\*: `SaveSystem` writes a single `GameSaveData` DTO containing `Game`, `Essence`, `Upgrades`, `Stations`, and `Companions` records. Disk I/O is wrapped in try/catch and logs errors; failed loads return defaults without mutating runtime state. Async `SaveAsync`/`LoadAsync` methods return `Task` so callers can await disk operations, while legacy `Save`/`Load` wrappers block on completion. The DTO carries a `version` field for future migrations. `GameManager`, `EssenceManager`, `UpgradeManager`, and `StationManager` expose `ToData()`/`LoadFrom()` to bridge runtime and disk. Version 2 adds station unlocks and companion assignments; loading a v1 save simply starts with no stations unlocked and companions at their default assignments. **Test**: unlock a station or reassign a companion, save, then reload to confirm state persists.  
+\- \*\*Persistence\*\*: `SaveSystem` writes a single `GameSaveData` DTO containing `Game`, `Essence`, `Upgrades`, `Stations`, `Companions`, and `Inventory` records. Disk I/O is wrapped in try/catch and logs errors; failed loads return defaults without mutating runtime state. Async `SaveAsync`/`LoadAsync` methods return `Task` so callers can await disk operations, while legacy `Save`/`Load` wrappers block on completion. The DTO carries a `version` field for future migrations. `GameManager`, `EssenceManager`, `UpgradeManager`, `StationManager`, and `InventoryManager` expose `ToData()`/`LoadFrom()` to bridge runtime and disk. Version 2 adds station unlocks, companion assignments, and inventory stacks; loading a v1 save simply starts fresh. **Test**: unlock a station, add an item to inventory, save, then reload to confirm state persists.
 \- **Test**: Call `Stations.UnlockStation("farm")` or `Stations.RecruitCompanion("alice")` in play mode and watch the console/UI react via the event bus (`StationUnlocked` or `CompanionRecruited`).
 
 \- \*\*Scenes\*\*: `Start`, `Battle`.
@@ -336,6 +338,8 @@ flowchart LR
 \## Recent Changes
 \- 2025-08-10: Added `UpgradeIds` static class to centralize upgrade ID strings.
   - How to test: project compiles; dungeon gate button and HUD use `UpgradeIds.UnlockBattle`.
+\- 2025-08-10: Introduced `ItemSO`, `InventoryManager`, and inventory persistence. `MinigameResult` can now carry item rewards which `MinigameLauncher` deposits automatically.
+  - How to test: create an `ItemSO`, assign it in a test mini-game returning `(true, 0, item, qty)`, run the mini-game and confirm the item appears in `InventoryManager` and remains after save/load.
 
 
 
