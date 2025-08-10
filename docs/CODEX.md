@@ -252,7 +252,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 \*\*Start\*\*: Systems (GameManager, EssenceManager, UpgradeManager), `HUD` (Gather/Sleep), `UpgradesPanel`, `DungeonGateButton` (needs `unlock\\\\\\\_battle`), `LoadSceneButton("Battle")`
 
-\*\*BattleRoot prefab\*\*: BattleManager + EnemyAI w/ `BattleConfig`; `BattleUI` with Player/Enemy/Info + HP bars; `HandPanel + CardHandUI` (spawns `CardView` from `CardSO`s)
+\*\*BattleRoot prefab\*\*: BattleManager + EnemyAI w/ `BattleConfig`; `BattleUI` with Player/Enemy/Info + HP bars; `HandPanel + CardHandUI` (`PopulateHand(IEnumerable<CardSO>)` + `RefreshAffordability(int)` spawns `CardView` from `CardSO`s)
 
 
 
