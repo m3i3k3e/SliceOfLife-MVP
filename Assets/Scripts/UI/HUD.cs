@@ -22,8 +22,15 @@ public class HUD : MonoBehaviour
     [Tooltip("Small label under Sleep to explain why it's disabled.")]
     [SerializeField] private TextMeshProUGUI sleepReasonText;
 
+    [Header("Dependencies")]
+    [Tooltip("Reference to a GameManager instance implementing IGameManager.")]
+    [SerializeField] private MonoBehaviour gameManagerSource;
+
+    // Cast the serialized reference to the interface so callers stay decoupled.
+    private IGameManager GM => gameManagerSource as IGameManager;
+
     // Convenience getter NOTE: do not use this in OnEnable until GM is ready.
-    private IEssenceProvider Essence => GameManager.Instance.Essence;
+    private IEssenceProvider Essence => GM?.Essence;
 
     private bool _bound; // track whether we've subscribed to events
 
@@ -36,8 +43,8 @@ public class HUD : MonoBehaviour
     private IEnumerator BindWhenReady()
     {
         // Wait until the singleton exists AND the essence provider is assigned.
-        while (GameManager.Instance == null) yield return null;
-        while (GameManager.Instance.Essence == null) yield return null;
+        while (GM == null) yield return null;                // wait for dependency
+        while (GM.Essence == null) yield return null;        // wait for Essence system
 
         if (_bound) yield break; // guard against double-binding
 
@@ -47,12 +54,13 @@ public class HUD : MonoBehaviour
 
         // Subscribe to global events instead of directly referencing GameManager.
         GameEvents.DungeonKeysChanged += HandleKeysChanged;
-        HandleKeysChanged(GameManager.Instance.DungeonKeysRemaining, GameManager.Instance.DungeonKeysPerDay); // init
+        // Initialize key label immediately.
+        HandleKeysChanged(GM.DungeonKeysRemaining, GM.DungeonKeysPerDay);
 
         // Subscribe to sleep-gate state (optional but recommended).
         GameEvents.SleepEligibilityChanged += HandleSleepEligibility;
         // Pull initial state for Sleep via GameManager so UI reflects current gate.
-        GameManager.Instance.ReevaluateSleepGate();
+        GM.ReevaluateSleepGate();
 
         _bound = true;
 
@@ -65,9 +73,9 @@ public class HUD : MonoBehaviour
 
     private void OnDisable()
     {
-        if (_bound && GameManager.Instance != null)
+        if (_bound && GM != null)
         {
-            if (GameManager.Instance.Essence != null)
+            if (GM.Essence != null)
             {
                 Essence.OnEssenceChanged -= HandleEssenceChanged;
                 Essence.OnDailyClicksChanged -= HandleClicksChanged;
@@ -83,8 +91,8 @@ public class HUD : MonoBehaviour
 {
     if (!keysText) return;
     // Hide before unlock; show once you have the system
-    if (GameManager.Instance.Upgrades != null &&
-        GameManager.Instance.Upgrades.IsPurchased(UpgradeIds.UnlockBattle))
+    if (GM?.Upgrades != null &&
+        GM.Upgrades.IsPurchased(UpgradeIds.UnlockBattle))
         keysText.text = $"Keys: {current}/{perDay}";
     else
         keysText.text = "";
@@ -95,15 +103,15 @@ public class HUD : MonoBehaviour
     /// <summary>Called by the "Gather" button (Inspector → OnClick → HUD.Gather).</summary>
     public void Gather()
     {
-        if (GameManager.Instance == null || GameManager.Instance.Essence == null) return;
+        if (Essence == null) return;
         _ = Essence.TryClickHarvest(); // if capped, it returns false; UI state will update via events
     }
 
     /// <summary>Called by the "Sleep" button (Inspector → OnClick → HUD.Sleep).</summary>
     public void Sleep()
     {
-        var gm = GameManager.Instance;
-        if (gm == null) return;
+        var gm = GM;
+        if (gm == null) return;            // dependency missing
 
         // Respect the daily gate; if false, the handler below already shows why.
         if (!gm.TrySleep())

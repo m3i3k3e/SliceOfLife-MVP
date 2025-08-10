@@ -167,7 +167,8 @@ flowchart LR
 
 | Term | Definition |
 |---|---|
-| **GameManager** | Singleton orchestrator that mediates cross-system communication. |
+| **GameManager** | Singleton orchestrator that mediates cross-system communication. Exposed via `IGameManager` so callers can depend on an interface. |
+| **IGameManager** | Interface describing the GameManager's public API for injection. |
 | **Essence** | Primary currency earned from clicks or battles, spent on upgrades. |
 | **Dungeon Key** | Daily token consumed to attempt a dungeon run. |
 | **Upgrade** | ScriptableObject-driven improvement purchased with essence. |
@@ -176,6 +177,10 @@ flowchart LR
 | **EnergyPool** | Tracks current/max energy and spending. Raises `OnEnergyChanged`. |
 | **StatusController** | Maintains Weak/Vulnerable timers and exposes formatted labels. |
 | **BattleRewardService** | Calculates victory rewards and grants essence. |
+
+### Recent Changes
+- Added `IGameManager` interface. `GameManager` now implements it and callers receive `IGameManager` references instead of using the static singleton.
+- To test: assign the GameManager object to `gameManagerSource` fields on HUD, LoadSceneButton, and BattleManager, then run the game. Gather essence, attempt to sleep, and complete a battle to ensure keys and rewards still flow.
 
 \## 8) Art \& Audio Direction
 

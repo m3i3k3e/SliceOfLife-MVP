@@ -66,7 +66,7 @@ public class BattleManager : MonoBehaviour
     private readonly DeckManager _deck = new();
     private readonly EnergyPool _energy = new();
     private readonly StatusController _status = new();
-    private readonly BattleRewardService _rewards = new();
+    private BattleRewardService _rewards;
 
     // --- Runtime state ---
     private int _playerHP;
@@ -82,6 +82,13 @@ public class BattleManager : MonoBehaviour
     // Cheap link to our tiny enemy AI
     private EnemyAI _enemy;
 
+    [Header("Dependencies")]
+    [Tooltip("Reference to a GameManager implementing IGameManager.")]
+    [SerializeField] private MonoBehaviour gameManagerSource;
+
+    // Helper to cast the serialized MonoBehaviour to the interface.
+    private IGameManager GM => gameManagerSource as IGameManager;
+
     private void Awake()
     {
         if (config == null)
@@ -90,6 +97,9 @@ public class BattleManager : MonoBehaviour
         }
         _enemy = GetComponent<EnemyAI>();
         if (_enemy == null) _enemy = gameObject.AddComponent<EnemyAI>(); // safe default
+
+        // Instantiate reward service with injected GameManager dependency.
+        _rewards = new BattleRewardService(GM);
 
         // Bubble subsystem events up to our public surface
         _deck.OnHandChanged += h => OnHandChanged?.Invoke(h);
