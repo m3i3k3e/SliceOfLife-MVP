@@ -131,7 +131,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 \- \*\*Events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged`.
 
-\- \*\*Persistence\*\*: `SaveSystem` writes a single `GameSaveData` DTO containing `Game`, `Essence`, and `Upgrades` records. `GameManager`, `EssenceManager`, and `UpgradeManager` expose `ToData()`/`LoadFrom()` to bridge runtime and disk.
+\- \*\*Persistence\*\*: `SaveSystem` writes a single `GameSaveData` DTO containing `Game`, `Essence`, and `Upgrades` records. Disk I/O is wrapped in try/catch and logs errors; failed loads return defaults without mutating runtime state. The DTO carries a `version` field for future migrations. `GameManager`, `EssenceManager`, and `UpgradeManager` expose `ToData()`/`LoadFrom()` to bridge runtime and disk.
 
 \- \*\*Scenes\*\*: `Start`, `Battle`.
 
