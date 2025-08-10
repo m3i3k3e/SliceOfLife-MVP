@@ -136,7 +136,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
   Subscribe in `OnEnable` and unsubscribe in `OnDisable`.
 \- \*\*Other events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
 
-\- \*\*Persistence\*\*: `SaveSystem` writes a single `GameSaveData` DTO containing `Game`, `Essence`, and `Upgrades` records. Disk I/O is wrapped in try/catch and logs errors; failed loads return defaults without mutating runtime state. Async `SaveAsync`/`LoadAsync` methods return `Task` so callers can await disk operations, while legacy `Save`/`Load` wrappers block on completion. The DTO carries a `version` field for future migrations. `GameManager`, `EssenceManager`, and `UpgradeManager` expose `ToData()`/`LoadFrom()` to bridge runtime and disk.
+\- \*\*Persistence\*\*: `SaveSystem` writes a single `GameSaveData` DTO containing `Game`, `Essence`, `Upgrades`, `Stations`, and `Companions` records. Disk I/O is wrapped in try/catch and logs errors; failed loads return defaults without mutating runtime state. Async `SaveAsync`/`LoadAsync` methods return `Task` so callers can await disk operations, while legacy `Save`/`Load` wrappers block on completion. The DTO carries a `version` field for future migrations. `GameManager`, `EssenceManager`, `UpgradeManager`, and `StationManager` expose `ToData()`/`LoadFrom()` to bridge runtime and disk. Version 2 adds station unlocks and companion assignments; loading a v1 save simply starts with no stations unlocked and companions at their default assignments. **Test**: unlock a station or reassign a companion, save, then reload to confirm state persists.
 
 \- \*\*Scenes\*\*: `Start`, `Battle`.
 

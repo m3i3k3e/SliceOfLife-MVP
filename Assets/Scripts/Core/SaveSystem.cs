@@ -11,7 +11,7 @@ using UnityEngine;
 public static class SaveSystem
 {
     private const string FileName = "save.json";
-    private const int Version = 1; // Bump this when save schema changes
+    private const int Version = 2; // Bump this when save schema changes
 
     /// <summary>
     /// Serialize current runtime state to JSON asynchronously. Callers can await this task
@@ -21,6 +21,7 @@ public static class SaveSystem
     {
         var essence = gm.Essence as EssenceManager;
         var upgrades = gm.Upgrades as UpgradeManager;
+        var stations = gm.Stations;
 
         // Build a plain data container. Using JsonUtility keeps dependencies minimal.
         var data = new GameSaveData
@@ -28,8 +29,15 @@ public static class SaveSystem
             version = Version, // Stamp the schema version so we can migrate later
             Game = gm.ToData(),
             Essence = essence.ToData(),
-            Upgrades = upgrades.ToData()
+            Upgrades = upgrades.ToData(),
         };
+
+        if (stations != null)
+        {
+            var sd = stations.ToData();
+            data.Stations = sd.Stations;
+            data.Companions = sd.Companions;
+        }
 
         var json = JsonUtility.ToJson(data, prettyPrint: true);
 
@@ -77,10 +85,12 @@ public static class SaveSystem
             // Rehydrate systems only after we have valid data.
             var essence = gm.Essence as EssenceManager;
             var upgrades = gm.Upgrades as UpgradeManager;
+            var stations = gm.Stations;
 
             gm.LoadFrom(data.Game);
             essence?.LoadFrom(data.Essence);
             upgrades?.LoadFrom(data.Upgrades);
+            stations?.LoadFrom(data.Stations, data.Companions);
 
             // Ensure Sleep gate reflects restored state
             gm.ReevaluateSleepGate();
@@ -111,11 +121,13 @@ public class GameSaveData
     /// <summary>
     /// Schema version so future migrations know how to interpret the data.
     /// </summary>
-    public int version = 1;
+    public int version = 2;
 
     public EssenceData Essence = new();
     public UpgradeData Upgrades = new();
     public GameData Game = new();
+    public StationData Stations = new();
+    public CompanionData Companions = new();
 
     [Serializable]
     public class EssenceData
@@ -136,5 +148,25 @@ public class GameSaveData
     public class GameData
     {
         public int day;
+    }
+
+    [Serializable]
+    public class StationData
+    {
+        // Store station IDs so we can rebuild unlocked state on load.
+        public List<string> unlockedStationIds = new();
+    }
+
+    [Serializable]
+    public class CompanionData
+    {
+        [Serializable]
+        public class Assignment
+        {
+            public string companionId;
+            public string stationId; // null/empty means unassigned
+        }
+
+        public List<Assignment> assignments = new();
     }
 }
