@@ -13,7 +13,7 @@ public class StationSO : ScriptableObject, IStation
 
     [Header("Mini-Game")]
     [Tooltip("Optional ScriptableObject implementing IMinigame.")]
-    [SerializeReference] private ScriptableObject minigame;
+    [SerializeReference] private ScriptableObject minigameAsset;
 
     // ---- IStation implementation ----
 
@@ -24,5 +24,6 @@ public class StationSO : ScriptableObject, IStation
     public string DisplayName => displayName;
 
     /// <inheritdoc />
-    public IMinigame Minigame => minigame as IMinigame;
+    // Cast the asset to IMinigame so callers can run PlayAsync.
+    public IMinigame Minigame => minigameAsset as IMinigame;
 }

@@ -24,6 +24,9 @@ public class DefaultEventBus : MonoBehaviour, IEventBus
     public event Action<ICompanion> CompanionRecruited;
 
     /// <inheritdoc />
+    public event Action<MinigameResult> MinigameCompleted;
+
+    /// <inheritdoc />
     public void RaiseDayChanged(int day) => DayChanged?.Invoke(day);
 
     /// <inheritdoc />
@@ -41,4 +44,8 @@ public class DefaultEventBus : MonoBehaviour, IEventBus
     /// <inheritdoc />
     public void RaiseCompanionRecruited(ICompanion companion)
         => CompanionRecruited?.Invoke(companion);
+
+    /// <inheritdoc />
+    public void RaiseMinigameCompleted(MinigameResult result)
+        => MinigameCompleted?.Invoke(result);
 }

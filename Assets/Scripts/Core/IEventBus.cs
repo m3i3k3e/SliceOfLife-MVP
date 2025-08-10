@@ -32,6 +32,11 @@ public interface IEventBus
     event Action<ICompanion> CompanionRecruited;
 
     /// <summary>
+    /// Fired after any minigame finishes. Payload = result details.
+    /// </summary>
+    event Action<MinigameResult> MinigameCompleted;
+
+    /// <summary>
     /// Helper to invoke <see cref="DayChanged"/> safely.
     /// </summary>
     void RaiseDayChanged(int day);
@@ -55,4 +60,9 @@ public interface IEventBus
     /// Helper to invoke <see cref="CompanionRecruited"/> safely.
     /// </summary>
     void RaiseCompanionRecruited(ICompanion companion);
+
+    /// <summary>
+    /// Helper to invoke <see cref="MinigameCompleted"/> safely.
+    /// </summary>
+    void RaiseMinigameCompleted(MinigameResult result);
 }
