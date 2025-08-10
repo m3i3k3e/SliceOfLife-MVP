@@ -38,18 +38,60 @@ public class GameManager : MonoBehaviour
         return !Upgrades.IsPurchased(unlockUpgradeId) && Essence.CurrentEssence >= so.cost;
     }
 
-    private void Start()
+    /// <summary>
+    /// Optional runtime injection for tests or bootstrap scripts.
+    /// Assigns dependencies and wires up events just like inspector references.
+    /// </summary>
+    /// <param name="essence">Essence system to bind.</param>
+    /// <param name="upgrades">Upgrade system to bind.</param>
+    public void Initialize(EssenceManager essence, UpgradeManager upgrades)
     {
-        if (!essenceManager)
-            essenceManager = UnityEngine.Object.FindFirstObjectByType<EssenceManager>(UnityEngine.FindObjectsInactive.Include);
-        if (!upgradeManager)
-            upgradeManager = UnityEngine.Object.FindFirstObjectByType<UpgradeManager>(UnityEngine.FindObjectsInactive.Include);
+        // Avoid duplicate event subscriptions if Initialize is called more than once.
+        UnsubscribeFromManagers();
+
+        essenceManager = essence;
+        upgradeManager = upgrades;
+
+        SubscribeToManagers();
+        ReevaluateSleepGate(); // keep UI/state in sync with new deps
+    }
+
+    private void OnEnable()
+    {
+        // Managers are expected to be assigned via Inspector or Initialize().
+        SubscribeToManagers();
+
+        // Ensure the Sleep button reflects current state immediately on scene load.
+        ReevaluateSleepGate();
+    }
+
+    private void OnDisable()
+    {
+        // Clean up event subscriptions to avoid leaks when disabled or destroyed.
+        UnsubscribeFromManagers();
+    }
+
+    /// <summary>
+    /// Subscribe to events on the injected managers.
+    /// Split into a helper to reuse for both OnEnable and Initialize.
+    /// </summary>
+    private void SubscribeToManagers()
+    {
         if (upgradeManager != null)
             upgradeManager.OnPurchased += HandleUpgradePurchased;
         if (essenceManager != null)
             essenceManager.OnDailyClicksChanged += HandleDailyClicksChanged;
+    }
 
-    ReevaluateSleepGate(); // initialize the Sleep button state
+    /// <summary>
+    /// Undo subscriptions created in <see cref="SubscribeToManagers"/>.
+    /// </summary>
+    private void UnsubscribeFromManagers()
+    {
+        if (upgradeManager != null)
+            upgradeManager.OnPurchased -= HandleUpgradePurchased;
+        if (essenceManager != null)
+            essenceManager.OnDailyClicksChanged -= HandleDailyClicksChanged;
     }
 
     private void HandleUpgradePurchased(UpgradeSO up)
@@ -223,13 +265,6 @@ if (!ok && essenceManager != null)
         int baseCap = essenceManager ? essenceManager.DailyClickCap : 10;
         return Mathf.Max(0, baseCap - _tempNextDayClickDebuff);
     }
-private void OnDestroy()
-{
-    if (essenceManager != null)
-        essenceManager.OnDailyClicksChanged -= HandleDailyClicksChanged;
-    if (upgradeManager != null)
-        upgradeManager.OnPurchased -= HandleUpgradePurchased;
-}
 
     private void OnApplicationQuit() => SaveSystem.Save(this);
 }

@@ -202,6 +202,11 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 \## A. Public APIs (stable entry points)
 
+\*\*GameManager\*\*
+
+\- `IEssenceProvider Essence` • `IUpgradeProvider Upgrades`
+\- `void Initialize(EssenceManager essence, UpgradeManager upgrades)` – manual injection when not using Inspector
+
 \*\*EssenceManager\*\*
 
 \- `bool TryClickHarvest()` • `bool TrySpend(int amount)` • `void AddExternal(int amount)`
@@ -262,7 +267,10 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 \- Base dungeon reward \*\*20\*\* • RewardMultiplier \*\*1.0\*\* (e.g., `+25%` → ×1.25)
 
+\## E. Recent Changes
 
+\- GameManager now expects EssenceManager and UpgradeManager references via Inspector or `Initialize(EssenceManager, UpgradeManager)`; runtime FindFirstObjectByType lookups removed.
+\- **How to test:** Open `Assets/Scenes/Start.unity`, select `GameManager` object and ensure fields `Essence Manager` and `Upgrade Manager` are assigned. Enter Play Mode and verify gathering, purchasing upgrades, and sleeping still work without console errors.
 
 ---
 
