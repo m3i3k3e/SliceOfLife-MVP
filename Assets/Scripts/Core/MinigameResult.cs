@@ -5,5 +5,7 @@
 public record MinigameResult
 (
     bool Success,
-    int ResourcesGained
+    int ResourcesGained,
+    ItemSO RewardItem = null,
+    int RewardQuantity = 0
 );

@@ -11,7 +11,7 @@ using UnityEngine;
 public static class SaveSystem
 {
     private const string FileName = "save.json";
-    private const int Version = 2; // Bump this when save schema changes
+    private const int Version = 3; // Bump this when save schema changes
 
     /// <summary>
     /// Serialize current runtime state to JSON asynchronously. Callers can await this task
@@ -22,6 +22,7 @@ public static class SaveSystem
         var essence = gm.Essence as EssenceManager;
         var upgrades = gm.Upgrades as UpgradeManager;
         var stations = gm.Stations;
+        var inventory = gm.Inventory as InventoryManager;
 
         // Build a plain data container. Using JsonUtility keeps dependencies minimal.
         var data = new GameSaveData
@@ -30,6 +31,7 @@ public static class SaveSystem
             Game = gm.ToData(),
             Essence = essence.ToData(),
             Upgrades = upgrades.ToData(),
+            Inventory = inventory != null ? inventory.ToData() : new GameSaveData.InventoryData(),
         };
 
         if (stations != null)
@@ -91,6 +93,8 @@ public static class SaveSystem
             essence?.LoadFrom(data.Essence);
             upgrades?.LoadFrom(data.Upgrades);
             stations?.LoadFrom(data.Stations, data.Companions);
+            var inventory = gm.Inventory as InventoryManager;
+            inventory?.LoadFrom(data.Inventory);
 
             // Ensure Sleep gate reflects restored state
             gm.ReevaluateSleepGate();
@@ -121,13 +125,14 @@ public class GameSaveData
     /// <summary>
     /// Schema version so future migrations know how to interpret the data.
     /// </summary>
-    public int version = 2;
+    public int version = 3;
 
     public EssenceData Essence = new();
     public UpgradeData Upgrades = new();
     public GameData Game = new();
     public StationData Stations = new();
     public CompanionData Companions = new();
+    public InventoryData Inventory = new();
 
     [Serializable]
     public class EssenceData
@@ -168,5 +173,19 @@ public class GameSaveData
         }
 
         public List<Assignment> assignments = new();
+    }
+
+    [Serializable]
+    public class InventoryData
+    {
+        public int unlockedRows;
+        public List<ItemStack> items = new();
+    }
+
+    [Serializable]
+    public class ItemStack
+    {
+        public string itemId;
+        public int quantity;
     }
 }
