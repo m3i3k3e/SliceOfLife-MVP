@@ -62,17 +62,14 @@ public class UpgradesPanel : MonoBehaviour
         {
             var row = Instantiate(upgradeButtonPrefab, contentParent);
 
-            // Find the two TMP labels on the prefab by name (case-insensitive contains match).
-            TextMeshProUGUI title = null, cost = null;
-            foreach (var t in row.GetComponentsInChildren<TextMeshProUGUI>(true))
+            // Grab the view component and set its labels directly.
+            // This avoids searching children by string every time we build the list.
+            var view = row.GetComponent<UpgradeButtonView>();
+            if (view != null)
             {
-                var n = t.name.ToLower();
-                if (n.Contains("title")) title = t;
-                if (n.Contains("cost"))  cost  = t;
+                view.TitleText.text = up.title;
+                view.CostText.text  = $"Cost: {up.cost}";
             }
-
-            if (title) title.text = up.title;
-            if (cost)  cost.text  = $"Cost: {up.cost}";
 
             var localUp = up; // capture for lambda
             row.onClick.AddListener(() =>
