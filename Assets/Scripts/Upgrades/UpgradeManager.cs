@@ -143,9 +143,29 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider
     }
 
     // ---- Save/Load integration ----
+    
+    /// <summary>
+    /// Extract the minimal persistence data for upgrades.
+    /// </summary>
+    public GameSaveData.UpgradeData ToData()
+    {
+        // Copy IDs to a list so the DTO is decoupled from our HashSet.
+        return new GameSaveData.UpgradeData
+        {
+            purchasedUpgradeIds = _purchased.ToList()
+        };
+    }
 
     /// <summary>
-    /// Called by SaveSystem to rehydrate from disk.
+    /// Restore upgrade ownership and rebuild runtime effects.
+    /// </summary>
+    public void LoadFrom(GameSaveData.UpgradeData data)
+    {
+        LoadPurchased(data?.purchasedUpgradeIds);
+    }
+
+    /// <summary>
+    /// Called internally to rehydrate from disk.
     /// Rebuilds one-shot effects first, then recomputes derived stats.
     /// </summary>
     public void LoadPurchased(IEnumerable<string> ids)

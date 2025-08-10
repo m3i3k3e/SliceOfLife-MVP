@@ -11,17 +11,6 @@ public static class SaveSystem
 {
     private const string FileName = "save.json";
 
-    [Serializable]
-    private class SaveData
-    {
-        public int day;
-        public int essence;
-        public int dailyClicksRemaining;
-        public int essencePerClick;
-        public float passivePerSecond;
-        public List<string> purchasedUpgradeIds = new();
-    }
-
     /// <summary>
     /// Serialize current runtime state to JSON. Static helper follows a tiny facade pattern
     /// so callers don't worry about file paths or formats.
@@ -32,14 +21,11 @@ public static class SaveSystem
         var upgrades = gm.Upgrades as UpgradeManager;
 
         // Build a plain data container. Using JsonUtility keeps dependencies minimal.
-        var data = new SaveData
+        var data = new GameSaveData
         {
-            day = gm.Day,
-            essence = essence.CurrentEssence,
-            dailyClicksRemaining = essence.DailyClicksRemaining,
-            essencePerClick = essence.EssencePerClick,
-            passivePerSecond = essence.PassivePerSecond,
-            purchasedUpgradeIds = new List<string>(upgrades.PurchasedIds)
+            Game = gm.ToData(),
+            Essence = essence.ToData(),
+            Upgrades = upgrades.ToData()
         };
 
         var json = JsonUtility.ToJson(data, prettyPrint: true);
@@ -56,25 +42,48 @@ public static class SaveSystem
         if (!File.Exists(path)) return; // nothing saved yet
 
         var json = File.ReadAllText(path);
-        var data = JsonUtility.FromJson<SaveData>(json);
+        var data = JsonUtility.FromJson<GameSaveData>(json);
         var essence = gm.Essence as EssenceManager;
         var upgrades = gm.Upgrades as UpgradeManager;
 
-        // Rehydrate state. We prefer calling public APIs so events fire consistently.
-        while (essence.DailyClicksRemaining > data.dailyClicksRemaining)
-            essence.TryClickHarvest(); // burn down to saved value
+        gm.LoadFrom(data.Game);
+        essence.LoadFrom(data.Essence);
+        upgrades.LoadFrom(data.Upgrades);
 
-        // For simple fields without setters, reflection is used as a temporary bridge.
-        typeof(EssenceManager).GetField("_currentEssence", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.SetValue(essence, data.essence);
+        // Ensure Sleep gate reflects restored state
+        gm.ReevaluateSleepGate();
+    }
+}
 
-        essence.AddEssencePerClick(data.essencePerClick - essence.EssencePerClick);
-        essence.AddPassivePerSecond(data.passivePerSecond - essence.PassivePerSecond);
+/// <summary>
+/// Plain data-transfer object representing all persistent game state.
+/// Nested records keep JsonUtility serialization simple and explicit.
+/// </summary>
+[Serializable]
+public class GameSaveData
+{
+    public EssenceData Essence = new();
+    public UpgradeData Upgrades = new();
+    public GameData Game = new();
 
-        // Upgrades rebuild their effects internally from purchased IDs
-        upgrades.LoadPurchased(data.purchasedUpgradeIds);
+    [Serializable]
+    public class EssenceData
+    {
+        public int currentEssence;
+        public int dailyClicksRemaining;
+        public int essencePerClick;
+        public float passivePerSecond;
+    }
 
-        // Finally restore the day index
-        typeof(GameManager).GetProperty("Day")?.SetValue(gm, data.day, null);
+    [Serializable]
+    public class UpgradeData
+    {
+        public List<string> purchasedUpgradeIds = new();
+    }
+
+    [Serializable]
+    public class GameData
+    {
+        public int day;
     }
 }
