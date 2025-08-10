@@ -14,14 +14,13 @@ public class CardView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI titleText;
     [SerializeField] private TextMeshProUGUI descText;
     [SerializeField] private Button playButton;
-
-    private BattleManager _battle;
+    [SerializeField] private BattleManager battle; // manually wired; falls back to parent search
     private CanvasGroup _cg;
     private void Awake()
     {
-        // Find the battle brain in our prefab root / scene
-        _battle = GetComponentInParent<BattleManager>();
-        if (!_battle) _battle = FindFirstObjectByType<BattleManager>();
+        // Designers can assign BattleManager in prefab; otherwise look upwards once.
+        if (battle == null)
+            battle = GetComponentInParent<BattleManager>();
 
         if (playButton == null) playButton = GetComponent<Button>(); // allow button on root
         if (playButton != null) playButton.onClick.AddListener(OnClicked);
@@ -51,8 +50,8 @@ public class CardView : MonoBehaviour
 
     private void OnClicked()
     {
-        if (card != null && _battle != null)
-            _battle.PlayCard(card);
+        if (card != null && battle != null)
+            battle.PlayCard(card);
     }
 
     private void OnDestroy()
