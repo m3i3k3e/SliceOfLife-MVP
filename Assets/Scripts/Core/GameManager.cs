@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -118,9 +119,10 @@ public class GameManager : MonoBehaviour, IGameManager
     /// <summary>
     /// Forward companion recruitment to the static event hub.
     /// </summary>
-    private void HandleCompanionRecruited(ICompanion companion)
+    private void HandleCompanionRecruited(ICompanion companion, IReadOnlyList<CardSO> cards, IReadOnlyList<UpgradeSO> buffs)
     {
         // Broadcast companion recruitment through the bus for UI or analytics.
+        // Battle/upgrade systems subscribe directly to StationManager for loadout data.
         Events?.RaiseCompanionRecruited(companion);
     }
 

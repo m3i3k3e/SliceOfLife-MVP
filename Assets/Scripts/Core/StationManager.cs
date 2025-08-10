@@ -35,8 +35,10 @@ public class StationManager : MonoBehaviour
     /// <summary>
     /// Fired when the player recruits a companion.
     /// The companion is added to our assignment list with no station.
+    /// Provides the companion's starting cards and passive buffs for systems
+    /// like battle and upgrades to consume immediately.
     /// </summary>
-    public event Action<ICompanion> OnCompanionRecruited;
+    public event Action<ICompanion, IReadOnlyList<CardSO>, IReadOnlyList<UpgradeSO>> OnCompanionRecruited;
 
     private void Awake()
     {
@@ -91,7 +93,8 @@ public class StationManager : MonoBehaviour
             return false; // invalid or already recruited
 
         _companionAssignments[id] = null; // recruited, not yet assigned
-        OnCompanionRecruited?.Invoke(co);
+        // Fire event with companion loadout so listeners can update immediately
+        OnCompanionRecruited?.Invoke(co, co.GetStartingCards(), co.GetPassiveBuffs());
         return true;
     }
 

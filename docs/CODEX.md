@@ -129,9 +129,11 @@ This file is the source of truth for design + tech. Keep it short and link out t
 \- \*\*Singleton\*\*: `GameManager` (DontDestroyOnLoad).
 \- \*\*Core wiring\*\*: `GameManager` expects `EssenceManager`, `UpgradeManager`, `StationManager`, and `InventoryManager` references assigned in the scene/prefab; it no longer searches at runtime.
 
-\- \*\*Stations\*\*: `StationManager` maintains `IStation`/`ICompanion` lists, exposed via `GameManager`.  
-  `UnlockStation(id)` and `RecruitCompanion(id)` update internal collections and fire  
-  `OnStationUnlocked` / `OnCompanionRecruited` events.
+\- \*\*Stations\*\*: `StationManager` maintains `IStation`/`ICompanion` lists, exposed via `GameManager`.
+  `UnlockStation(id)` and `RecruitCompanion(id)` update internal collections and fire
+  `OnStationUnlocked` / `OnCompanionRecruited(ICompanion, IReadOnlyList<CardSO>, IReadOnlyList<UpgradeSO>)`
+  events so battle and upgrade systems can claim a companion's starting deck and buffs.
+  Each `CompanionSO` serializes these via `GetStartingCards()` and `GetPassiveBuffs()` accessors.
 
 \- \*\*Event bus\*\*: `IEventBus` interface (default `DefaultEventBus` component) exposes cross-system events:
   - `DayChanged(int day)`
