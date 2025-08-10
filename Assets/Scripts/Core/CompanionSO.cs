@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -14,6 +15,13 @@ public class CompanionSO : ScriptableObject, ICompanion
     [Header("Assignment")]
     [Tooltip("Station this companion manages at start (optional).")]
     [SerializeField] private StationSO startingStation;
+
+    [Header("Loadout")]
+    [Tooltip("Cards granted to the player when this companion joins.")]
+    [SerializeField] private List<CardSO> startingCards = new();
+
+    [Tooltip("Passive upgrades applied while this companion is recruited.")]
+    [SerializeField] private List<UpgradeSO> passiveBuffs = new();
 
     // Runtime-assigned station. Not serialized so the asset remains a pure data container.
     // Defaults to startingStation when the asset is enabled.
@@ -40,6 +48,16 @@ public class CompanionSO : ScriptableObject, ICompanion
     /// Starting assignment exposed for save/load defaults.
     /// </summary>
     public StationSO StartingStation => startingStation;
+
+    /// <summary>
+    /// Cards this companion contributes to the player's deck on recruitment.
+    /// </summary>
+    public IReadOnlyList<CardSO> GetStartingCards() => startingCards;
+
+    /// <summary>
+    /// Permanent buffs granted when this companion is recruited.
+    /// </summary>
+    public IReadOnlyList<UpgradeSO> GetPassiveBuffs() => passiveBuffs;
 
     /// <summary>
     /// Assign this companion to a station at runtime.

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 /// <summary>
 /// Contract for a recruitable companion who can manage a station.
 /// This keeps gameplay code decoupled from specific companion implementations.
@@ -12,4 +14,10 @@ public interface ICompanion
 
     /// <summary>The station this companion manages (can be null for unassigned).</summary>
     IStation AssignedStation { get; }
+
+    /// <summary>Cards granted when this companion is recruited.</summary>
+    IReadOnlyList<CardSO> GetStartingCards();
+
+    /// <summary>Passive upgrades applied on recruitment.</summary>
+    IReadOnlyList<UpgradeSO> GetPassiveBuffs();
 }
