@@ -24,6 +24,7 @@ public class GameManager : MonoBehaviour, IGameManager
         if (upgradeManager != null) RegisterSaveable(upgradeManager);
         if (stationManager != null) RegisterSaveable(stationManager);
         if (inventoryManager != null) RegisterSaveable(inventoryManager);
+        if (skillTreeManager != null) RegisterSaveable(skillTreeManager);
     }
 
     // -------- Core systems --------
@@ -32,6 +33,7 @@ public class GameManager : MonoBehaviour, IGameManager
     [SerializeField] private UpgradeManager upgradeManager;
     [SerializeField] private StationManager stationManager; // manages stations/companions
     [SerializeField] private InventoryManager inventoryManager; // holds items
+    [SerializeField] private SkillTreeManager skillTreeManager; // governs skill unlocks
     [SerializeField] private string unlockUpgradeId = UpgradeIds.UnlockBattle; // default to constant to avoid typos
 
     // ----- Saveable registration -----
@@ -68,6 +70,9 @@ public class GameManager : MonoBehaviour, IGameManager
     
     /// <summary>How many dungeon keys the player receives each day once unlocked.</summary>
     public int DungeonKeysPerDay => dungeonKeysPerDay; // expose for HUD
+
+    /// <summary>Access to the skill tree for UI and systems.</summary>
+    public SkillTreeManager Skills => skillTreeManager;
 
     private UpgradeSO FindUpgradeById(string id)
     {
@@ -116,6 +121,10 @@ public class GameManager : MonoBehaviour, IGameManager
         // Persist inventory changes automatically whenever items shift.
         if (inventoryManager != null)
             inventoryManager.OnInventoryChanged += HandleInventoryChanged;
+
+        // Bubble skill unlocks through the global event bus.
+        if (skillTreeManager != null)
+            skillTreeManager.OnSkillUnlocked += HandleSkillUnlocked;
     }
 
     private async void HandleUpgradePurchased(UpgradeSO up)
@@ -164,6 +173,15 @@ public class GameManager : MonoBehaviour, IGameManager
     /// </summary>
     private async void HandleInventoryChanged()
     {
+        await SaveSystem.SaveAsync(this);
+    }
+
+    /// <summary>
+    /// Persist and broadcast newly unlocked skills.
+    /// </summary>
+    private async void HandleSkillUnlocked(SkillSO skill)
+    {
+        Events?.RaiseSkillUnlocked(skill);
         await SaveSystem.SaveAsync(this);
     }
 
@@ -405,6 +423,9 @@ public class GameManager : MonoBehaviour, IGameManager
 
         if (inventoryManager != null)
             inventoryManager.OnInventoryChanged -= HandleInventoryChanged;
+
+        if (skillTreeManager != null)
+            skillTreeManager.OnSkillUnlocked -= HandleSkillUnlocked;
     }
 
     private void OnApplicationQuit() => SaveSystem.SaveAsync(this).GetAwaiter().GetResult();

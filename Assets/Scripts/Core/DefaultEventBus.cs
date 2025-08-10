@@ -24,6 +24,9 @@ public class DefaultEventBus : MonoBehaviour, IEventBus
     public event Action<ICompanion> CompanionRecruited;
 
     /// <inheritdoc />
+    public event Action<SkillSO> SkillUnlocked;
+
+    /// <inheritdoc />
     public event Action<MinigameResult> MinigameCompleted;
 
     /// <inheritdoc />
@@ -47,6 +50,10 @@ public class DefaultEventBus : MonoBehaviour, IEventBus
     /// <inheritdoc />
     public void RaiseCompanionRecruited(ICompanion companion)
         => CompanionRecruited?.Invoke(companion);
+
+    /// <inheritdoc />
+    public void RaiseSkillUnlocked(SkillSO skill)
+        => SkillUnlocked?.Invoke(skill);
 
     /// <inheritdoc />
     public void RaiseMinigameCompleted(MinigameResult result)
