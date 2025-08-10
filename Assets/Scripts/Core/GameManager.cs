@@ -24,6 +24,7 @@ public class GameManager : MonoBehaviour, IGameManager
         if (upgradeManager != null) RegisterSaveable(upgradeManager);
         if (stationManager != null) RegisterSaveable(stationManager);
         if (inventoryManager != null) RegisterSaveable(inventoryManager);
+        if (resourceManager != null) RegisterSaveable(resourceManager);
         if (skillTreeManager != null) RegisterSaveable(skillTreeManager);
     }
 
@@ -33,6 +34,7 @@ public class GameManager : MonoBehaviour, IGameManager
     [SerializeField] private UpgradeManager upgradeManager;
     [SerializeField] private StationManager stationManager; // manages stations/companions
     [SerializeField] private InventoryManager inventoryManager; // holds items
+    [SerializeField] private ResourceManager resourceManager; // tracks generic resources
     [SerializeField] private SkillTreeManager skillTreeManager; // governs skill unlocks
     [SerializeField] private string unlockUpgradeId = UpgradeIds.UnlockBattle; // default to constant to avoid typos
 
@@ -67,6 +69,9 @@ public class GameManager : MonoBehaviour, IGameManager
 
     /// <summary>Read-only inventory access for other systems.</summary>
     public IInventory Inventory => inventoryManager;
+
+    /// <summary>Access to global resource counts.</summary>
+    public ResourceManager Resources => resourceManager;
     
     /// <summary>How many dungeon keys the player receives each day once unlocked.</summary>
     public int DungeonKeysPerDay => dungeonKeysPerDay; // expose for HUD
@@ -122,6 +127,10 @@ public class GameManager : MonoBehaviour, IGameManager
         if (inventoryManager != null)
             inventoryManager.OnInventoryChanged += HandleInventoryChanged;
 
+        // Watch resource counts so saves and UI stay up to date.
+        if (resourceManager != null)
+            resourceManager.OnResourceChanged += HandleResourceChanged;
+
         // Bubble skill unlocks through the global event bus.
         if (skillTreeManager != null)
             skillTreeManager.OnSkillUnlocked += HandleSkillUnlocked;
@@ -173,6 +182,15 @@ public class GameManager : MonoBehaviour, IGameManager
     /// </summary>
     private async void HandleInventoryChanged()
     {
+        await SaveSystem.SaveAsync(this);
+    }
+
+    /// <summary>
+    /// Persist and broadcast whenever resource totals change.
+    /// </summary>
+    private async void HandleResourceChanged(ResourceSO resource, int amount)
+    {
+        Events?.RaiseResourceChanged(resource, amount);
         await SaveSystem.SaveAsync(this);
     }
 
@@ -423,6 +441,9 @@ public class GameManager : MonoBehaviour, IGameManager
 
         if (inventoryManager != null)
             inventoryManager.OnInventoryChanged -= HandleInventoryChanged;
+
+        if (resourceManager != null)
+            resourceManager.OnResourceChanged -= HandleResourceChanged;
 
         if (skillTreeManager != null)
             skillTreeManager.OnSkillUnlocked -= HandleSkillUnlocked;

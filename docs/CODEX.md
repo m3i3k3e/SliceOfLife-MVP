@@ -116,6 +116,8 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 | \*\*Inventory\*\* | Stub | Item stacks, slot limits, add/remove APIs, emits OnInventoryChanged. |
 
+| \*\*Resources\*\* | Stub | `ResourceManager` tracks material counts; `AddResource`/`TryConsumeResource` fire `OnResourceChanged`. |
+
 | \*\*Generational Legacy\*\* | UI Stub | “Fertilize” button + future reset/bonus flow. |
 
 | \*\*Save/Load\*\* | Full | JSON/PlayerPrefs; re-applies one-shot upgrades on load. |
@@ -127,7 +129,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
 \- \*\*Pattern\*\*: MVC-ish. \*\*Model\*\* = ScriptableObjects \& C# state; \*\*View\*\* = TMP UI; \*\*Controller\*\* = buttons, Battle logic; \*\*GameManager\*\* orchestrates.
 
 \- \*\*Singleton\*\*: `GameManager` (DontDestroyOnLoad).
-\- \*\*Core wiring\*\*: `GameManager` expects `EssenceManager`, `UpgradeManager`, `StationManager`, and `InventoryManager` references assigned in the scene/prefab; it no longer searches at runtime.
+\- \*\*Core wiring\*\*: `GameManager` expects `EssenceManager`, `UpgradeManager`, `StationManager`, `InventoryManager`, and `ResourceManager` references assigned in the scene/prefab; it no longer searches at runtime.
 
 \- \*\*Stations\*\*: `StationManager` maintains `IStation`/`ICompanion` lists, exposed via `GameManager`.
   `UnlockStation(id)` and `RecruitCompanion(id)` update internal collections and fire
@@ -142,6 +144,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
   - `StationUnlocked(IStation station)`
   - `CompanionRecruited(ICompanion companion)`
   - `UpgradePurchased(UpgradeSO upgrade)`
+  - `ResourceChanged(ResourceSO resource, int amount)`
   - `MinigameCompleted(MinigameResult result)`
   Subscribe in `OnEnable` and unsubscribe in `OnDisable`.
 \- \*\*Other events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnInventoryChanged`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
