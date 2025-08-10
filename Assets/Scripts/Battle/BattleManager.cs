@@ -459,12 +459,21 @@ private void TickEndOfPlayerTurn()
         StartCoroutine(ReturnToStartAfterDelay());
     }
 
-    private void Defeat()
+private void Defeat()
+{
+    OnInfoChanged?.Invoke("Defeat! Returning to tavern...");
+    OnBattleEnded?.Invoke(false, 0);
+
+    // NEW: apply the loss penalty (immediate essence loss + next-day click debuff)
+    if (GameManager.Instance != null)
     {
-        OnInfoChanged?.Invoke("Defeat! Returning to tavern...");
-        OnBattleEnded?.Invoke(false, 0);
-        StartCoroutine(ReturnToStartAfterDelay());
+        GameManager.Instance.ApplyDungeonLossPenalty();
+        // (Optional) If you didn’t mark attempt on enter for any reason:
+        GameManager.Instance.MarkDungeonAttempted();
     }
+
+    StartCoroutine(ReturnToStartAfterDelay());
+}
 
     private IEnumerator ReturnToStartAfterDelay()
     {

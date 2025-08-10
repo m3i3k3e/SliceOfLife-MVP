@@ -1,14 +1,32 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Call from a UI Button to load a scene by name.
-/// Keep it tiny and reusable.
-/// </summary>
 public class LoadSceneButton : MonoBehaviour
 {
     [SerializeField] private string sceneName = "Battle";
 
-    // Hook this via the Button's OnClick in the Inspector (or via code)
-    public void LoadScene() => SceneManager.LoadScene(sceneName);
+    // If this button is used for the dungeon entry, leave this true.
+    // For other buttons that just change scenes, uncheck in Inspector.
+    [SerializeField] private bool requireDungeonKey = true;
+
+    public void LoadScene()
+    {
+        if (requireDungeonKey)
+        {
+            var gm = GameManager.Instance;
+            if (gm == null) return;
+
+            // Spend a key; bail if none left.
+            if (!gm.TryConsumeDungeonKey())
+            {
+                // (Optional) play a denied sound or flash a “No key left” label.
+                return;
+            }
+
+            // For telemetry/UX flavor (idempotent).
+            gm.MarkDungeonAttempted();
+        }
+
+        SceneManager.LoadScene(sceneName);
+    }
 }
