@@ -5,7 +5,11 @@ using System.Threading.Tasks;
 /// Exposes core systems and day progression without
 /// tying callers to the concrete <see cref="GameManager"/>.
 /// </summary>
-public interface IGameManager
+/// <summary>
+/// Public surface for the central game orchestrator.
+/// Extends <see cref="ISaveable"/> so the manager can participate in persistence.
+/// </summary>
+public interface IGameManager : ISaveable
 {
     // -------- Core systems --------
     /// <summary>Read-only access to the currency system.</summary>
@@ -55,11 +59,5 @@ public interface IGameManager
     /// <summary>Async variant that persists loss penalties.</summary>
     Task ApplyDungeonLossPenaltyAsync();
 
-    // -------- Persistence --------
-    /// <summary>Package GameManager state for saving.</summary>
-    GameSaveData.GameData ToData();
-
-    /// <summary>Restore state from saved data.</summary>
-    void LoadFrom(GameSaveData.GameData data);
 }
 

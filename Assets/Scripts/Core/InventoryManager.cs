@@ -6,7 +6,7 @@ using UnityEngine;
 /// Runtime container for item stacks. Offers basic add/remove/query APIs and fires
 /// <see cref="OnInventoryChanged"/> whenever contents mutate.
 /// </summary>
-public class InventoryManager : MonoBehaviour, IInventory
+public class InventoryManager : MonoBehaviour, IInventory, ISaveable
 {
     private const int SlotsPerRow = 10; // Each row exposes 10 slots in the dungeon bar
 
@@ -111,19 +111,24 @@ public class InventoryManager : MonoBehaviour, IInventory
 
     // ----- Persistence -----
 
+    // ---- ISaveable implementation ----
+
+    /// <summary>Key used in the save file for inventory data.</summary>
+    public string SaveKey => "Inventory";
+
     /// <summary>
     /// Extract plain data for JSON serialization.
     /// </summary>
-    public GameSaveData.InventoryData ToData()
+    public object ToData()
     {
-        var data = new GameSaveData.InventoryData
+        var data = new SaveData
         {
             unlockedRows = unlockedRows,
         };
 
         foreach (var slot in _slots)
         {
-            data.items.Add(new GameSaveData.ItemStack
+            data.items.Add(new ItemStack
             {
                 itemId = slot.item ? slot.item.Id : string.Empty,
                 quantity = slot.quantity
@@ -136,14 +141,15 @@ public class InventoryManager : MonoBehaviour, IInventory
     /// <summary>
     /// Rebuild runtime state from serialized data.
     /// </summary>
-    public void LoadFrom(GameSaveData.InventoryData data)
+    public void LoadFrom(object data)
     {
+        var d = data as SaveData;
         _slots.Clear();
-        if (data == null) return;
+        if (d == null) return;
 
-        unlockedRows = Mathf.Clamp(data.unlockedRows, 1, 5);
+        unlockedRows = Mathf.Clamp(d.unlockedRows, 1, 5);
 
-        foreach (var stack in data.items)
+        foreach (var stack in d.items)
         {
             var item = FindItem(stack.itemId);
             if (item != null)
@@ -151,6 +157,22 @@ public class InventoryManager : MonoBehaviour, IInventory
         }
 
         OnInventoryChanged?.Invoke();
+    }
+
+    /// <summary>Serializable representation of the inventory grid.</summary>
+    [Serializable]
+    public class SaveData
+    {
+        public int unlockedRows;
+        public List<ItemStack> items = new();
+    }
+
+    /// <summary>Simple ID/quantity pair for one slot.</summary>
+    [Serializable]
+    public class ItemStack
+    {
+        public string itemId;
+        public int quantity;
     }
 
     /// <summary>Lookup helper to resolve an item ID from the catalog.</summary>
