@@ -17,15 +17,24 @@ public class UpgradesPanel : MonoBehaviour
 
     private void OnEnable()
     {
+        // Cache provider references and guard against missing systems during init/hot reloads.
+        var upgrades = Upgrades;
+        var essence = Essence;
+        if (upgrades == null || essence == null) return;
+
         BuildList();
-        Upgrades.OnPurchased += OnPurchased;
-        Essence.OnEssenceChanged += OnEssenceChanged;
+        upgrades.OnPurchased += OnPurchased;
+        essence.OnEssenceChanged += OnEssenceChanged;
     }
 
     private void OnDisable()
     {
-        Upgrades.OnPurchased -= OnPurchased;
-        Essence.OnEssenceChanged -= OnEssenceChanged;
+        var upgrades = Upgrades;
+        var essence = Essence;
+        if (upgrades == null || essence == null) return;
+
+        upgrades.OnPurchased -= OnPurchased;
+        essence.OnEssenceChanged -= OnEssenceChanged;
     }
 
     private void BuildList()
