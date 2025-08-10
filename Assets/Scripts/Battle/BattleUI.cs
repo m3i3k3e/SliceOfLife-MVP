@@ -36,10 +36,7 @@ public class BattleUI : MonoBehaviour
     [SerializeField] private Slider enemyHPBar;               // new
 
     [Header("Buttons")]
-    [SerializeField] private UnityEngine.UI.Button endTurnButton;
-    [SerializeField] private Button attackButton;
-    [SerializeField] private Button guardButton;
-    [SerializeField] private Button mendButton;
+    [SerializeField] private UnityEngine.UI.Button endTurnButton; // Only remaining legacy button
 
     [Header("Energy")]
     [SerializeField] private TextMeshProUGUI energyText; // new label "Energy: X/Y"
@@ -97,11 +94,8 @@ public class BattleUI : MonoBehaviour
         battle.OnHandChanged        += HandleHandChanged;
 
 
-        // Keep legacy buttons optional (only wire if assigned)
+        // Wire up optional end turn button.
         if (endTurnButton) endTurnButton.onClick.AddListener(battle.EndTurn);
-        if (attackButton) attackButton.onClick.AddListener(battle.PlayerAttack);
-        if (guardButton)  guardButton.onClick.AddListener(battle.PlayerGuard);
-        if (mendButton)   mendButton.onClick.AddListener(battle.PlayerMend);
     }
 
     private void OnDisable()
@@ -121,9 +115,6 @@ public class BattleUI : MonoBehaviour
         }
 
         if (endTurnButton) endTurnButton.onClick.RemoveListener(battle.EndTurn);
-        if (attackButton) attackButton.onClick.RemoveAllListeners();
-        if (guardButton)  guardButton.onClick.RemoveAllListeners();
-        if (mendButton)   mendButton.onClick.RemoveAllListeners();
     }
     private void HandleHandChanged(System.Collections.Generic.IReadOnlyList<CardSO> cards)
     {
@@ -193,8 +184,6 @@ public class BattleUI : MonoBehaviour
     private void HandleBattleEnded(bool victory, int reward)
     {
         // Prevent further clicks during the return delay
-        if (attackButton) attackButton.interactable = false;
-        if (guardButton)  guardButton.interactable  = false;
-        if (mendButton)   mendButton.interactable   = false;
+        if (endTurnButton) endTurnButton.interactable = false;
     }
 }

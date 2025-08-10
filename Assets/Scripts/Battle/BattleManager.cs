@@ -8,7 +8,8 @@ using UnityEngine.SceneManagement;
 /// Minimal, readable turn loop:
 /// PlayerTurn -> EnemyTurn -> check win/lose -> back to PlayerTurn.
 /// Coordinates specialized subsystems (deck, energy, statuses, rewards).
-/// UI is driven via events; buttons call the public Player* methods.
+/// UI is driven via events; <see cref="CardView"/> instances call <see cref="PlayCard"/>.
+/// Legacy button actions have been removed in favor of the card system.
 /// </summary>
 public class BattleManager : MonoBehaviour
 {
@@ -228,52 +229,6 @@ public class BattleManager : MonoBehaviour
         }
         // Still the player's turn but might be stuck with expensive cards
         MaybeAutoEndTurn();
-    }
-
-    /// <summary>
-    /// High-level action entry. Implements a simple command pattern so callers
-    /// can trigger effects without referencing specific methods.
-    /// </summary>
-    public void PlayAction(BattleAction action)
-    {
-        if (!_playerTurn) return;
-
-        switch (action)
-        {
-            case BattleAction.Attack: PlayerAttack(); break;
-            case BattleAction.Guard: PlayerGuard(); break;
-            case BattleAction.Mend: PlayerMend(); break;
-            default: return;
-        }
-    }
-
-    // --- Runtime player controls ---
-
-    /// <summary>Legacy button hook for a basic attack.</summary>
-    public void PlayerAttack()
-    {
-        if (!_playerTurn) return;
-        if (!TrySpendEnergy(1)) return;        // legacy buttons cost 1 energy
-        ApplyActionEffect(BattleAction.Attack);
-        PostPlayerCardResolved();               // may end turn
-    }
-
-    /// <summary>Legacy button hook for a guard card.</summary>
-    public void PlayerGuard()
-    {
-        if (!_playerTurn) return;
-        if (!TrySpendEnergy(1)) return;
-        ApplyActionEffect(BattleAction.Guard);
-        PostPlayerCardResolved();
-    }
-
-    /// <summary>Legacy button hook for a mend card.</summary>
-    public void PlayerMend()
-    {
-        if (!_playerTurn) return;
-        if (!TrySpendEnergy(1)) return;        // legacy cost
-        ApplyActionEffect(BattleAction.Mend);
-        PostPlayerCardResolved();
     }
 
     // --- Turn transitions ---

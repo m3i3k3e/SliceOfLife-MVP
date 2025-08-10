@@ -274,7 +274,7 @@ flowchart LR
 
 **BattleManager**
 
-- `void PlayAction(BattleAction)` • `void PlayCard(CardSO)`
+- `void PlayCard(CardSO)`
 
 - Events: `OnInfoChanged(string)`, `OnPlayerStatsChanged(int hp, int maxHp, int armor)`, `OnEnemyStatsChanged(int hp, int maxHp)`, `OnEnergyChanged(int current, int max)`, `OnHandChanged(IEnumerable<CardSO>)`, `OnPlayerStatusChanged(string)`, `OnEnemyStatusChanged(string)`, `OnBattleEnded(bool win, int reward)`
 

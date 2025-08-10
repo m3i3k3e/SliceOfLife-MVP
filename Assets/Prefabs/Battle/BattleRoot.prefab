@@ -2242,9 +2242,6 @@ MonoBehaviour:
   playerHPBar: {fileID: 3821851068500880258}
   enemyHPBar: {fileID: 1252041669619066860}
   endTurnButton: {fileID: 0}
-  attackButton: {fileID: 0}
-  guardButton: {fileID: 0}
-  mendButton: {fileID: 0}
   energyText: {fileID: 2511227462712584610}
   handUI: {fileID: 592823931815947202}
 --- !u!1 &8817933358467748098
