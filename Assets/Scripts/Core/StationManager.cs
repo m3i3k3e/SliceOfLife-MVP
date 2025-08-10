@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -25,6 +26,18 @@ public class StationManager : MonoBehaviour
     // Maps companion ID -> station ID they are assigned to
     private readonly Dictionary<string, string> _companionAssignments = new();
 
+    /// <summary>
+    /// Fired whenever a station becomes unlocked.
+    /// Payload is the station ScriptableObject (typed via interface).
+    /// </summary>
+    public event Action<IStation> OnStationUnlocked;
+
+    /// <summary>
+    /// Fired when the player recruits a companion.
+    /// The companion is added to our assignment list with no station.
+    /// </summary>
+    public event Action<ICompanion> OnCompanionRecruited;
+
     private void Awake()
     {
         // Build interface lists once on startup; ScriptableObjects live in memory.
@@ -50,6 +63,37 @@ public class StationManager : MonoBehaviour
 
     /// <summary>Enumerate all companions.</summary>
     public IReadOnlyList<ICompanion> Companions => _companions;
+
+    /// <summary>
+    /// Unlock a station by its ID.
+    /// Returns false if the ID is unknown or already unlocked.
+    /// </summary>
+    public bool UnlockStation(string id)
+    {
+        var so = FindStationById(id);
+        if (so == null || _unlockedStationIds.Contains(id))
+            return false; // invalid or already unlocked
+
+        _unlockedStationIds.Add(id); // track newly unlocked station
+        OnStationUnlocked?.Invoke(so); // notify listeners
+        return true;
+    }
+
+    /// <summary>
+    /// Recruit a companion by ID.
+    /// Adds the companion to the assignment map with no station.
+    /// Returns false if the ID is unknown or already recruited.
+    /// </summary>
+    public bool RecruitCompanion(string id)
+    {
+        var co = FindCompanionById(id);
+        if (co == null || _companionAssignments.ContainsKey(id))
+            return false; // invalid or already recruited
+
+        _companionAssignments[id] = null; // recruited, not yet assigned
+        OnCompanionRecruited?.Invoke(co);
+        return true;
+    }
 
     // ---- Save/Load helpers ----
 
@@ -117,6 +161,19 @@ public class StationManager : MonoBehaviour
         {
             var so = stationAssets[i];
             if (so != null && so.Id == id) return so;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Helper to locate a CompanionSO by ID.
+    /// </summary>
+    private CompanionSO FindCompanionById(string id)
+    {
+        for (int i = 0; i < companionAssets.Count; i++)
+        {
+            var co = companionAssets[i];
+            if (co != null && co.Id == id) return co;
         }
         return null;
     }

@@ -23,6 +23,16 @@ public static class GameEvents
     public static event Action<bool, string> SleepEligibilityChanged;
 
     /// <summary>
+    /// Fired when a station is unlocked. Payload = unlocked station.
+    /// </summary>
+    public static event Action<IStation> StationUnlocked;
+
+    /// <summary>
+    /// Fired when a companion is recruited. Payload = companion data.
+    /// </summary>
+    public static event Action<ICompanion> CompanionRecruited;
+
+    /// <summary>
     /// Helper to invoke <see cref="DayChanged"/> safely.
     /// </summary>
     public static void RaiseDayChanged(int day) => DayChanged?.Invoke(day);
@@ -38,4 +48,16 @@ public static class GameEvents
     /// </summary>
     public static void RaiseSleepEligibilityChanged(bool canSleep, string reason)
         => SleepEligibilityChanged?.Invoke(canSleep, reason);
+
+    /// <summary>
+    /// Helper to invoke <see cref="StationUnlocked"/> safely.
+    /// </summary>
+    public static void RaiseStationUnlocked(IStation station)
+        => StationUnlocked?.Invoke(station);
+
+    /// <summary>
+    /// Helper to invoke <see cref="CompanionRecruited"/> safely.
+    /// </summary>
+    public static void RaiseCompanionRecruited(ICompanion companion)
+        => CompanionRecruited?.Invoke(companion);
 }
