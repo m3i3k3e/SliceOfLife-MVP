@@ -1,17 +1,17 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
 /// Small JSON saver for MVP. No external packages required.
-/// Data volume is tiny, so JsonUtility is fine (no dictionaries).
+/// Data volume is tiny, so JsonUtility is fine. Each saveable system contributes
+/// a JSON section keyed by name, enabling new systems without touching this class.
 /// </summary>
 public static class SaveSystem
 {
     private const string FileName = "save.json";
-    private const int Version = 3; // Bump this when save schema changes
+    private const int Version = 4; // Bump this when save schema changes
 
     /// <summary>
     /// Serialize current runtime state to JSON asynchronously. Callers can await this task
@@ -19,26 +19,15 @@ public static class SaveSystem
     /// </summary>
     public static async Task SaveAsync(GameManager gm)
     {
-        var essence = gm.Essence as EssenceManager;
-        var upgrades = gm.Upgrades as UpgradeManager;
-        var stations = gm.Stations;
-        var inventory = gm.Inventory as InventoryManager;
-
         // Build a plain data container. Using JsonUtility keeps dependencies minimal.
-        var data = new GameSaveData
-        {
-            version = Version, // Stamp the schema version so we can migrate later
-            Game = gm.ToData(),
-            Essence = essence.ToData(),
-            Upgrades = upgrades.ToData(),
-            Inventory = inventory != null ? inventory.ToData() : new GameSaveData.InventoryData(),
-        };
+        var data = new GameSaveData { version = Version };
 
-        if (stations != null)
+        // Iterate all registered saveables and let each contribute its section.
+        foreach (var saveable in gm.Saveables)
         {
-            var sd = stations.ToData();
-            data.Stations = sd.Stations;
-            data.Companions = sd.Companions;
+            var payload = saveable.ToData();
+            var jsonSection = JsonUtility.ToJson(payload);
+            data.SetSection(saveable.SaveKey, jsonSection);
         }
 
         var json = JsonUtility.ToJson(data, prettyPrint: true);
@@ -85,16 +74,16 @@ public static class SaveSystem
             var data = JsonUtility.FromJson<GameSaveData>(json) ?? new GameSaveData();
 
             // Rehydrate systems only after we have valid data.
-            var essence = gm.Essence as EssenceManager;
-            var upgrades = gm.Upgrades as UpgradeManager;
-            var stations = gm.Stations;
+            foreach (var saveable in gm.Saveables)
+            {
+                var sectionJson = data.GetSection(saveable.SaveKey);
+                if (string.IsNullOrEmpty(sectionJson)) continue;
 
-            gm.LoadFrom(data.Game);
-            essence?.LoadFrom(data.Essence);
-            upgrades?.LoadFrom(data.Upgrades);
-            stations?.LoadFrom(data.Stations, data.Companions);
-            var inventory = gm.Inventory as InventoryManager;
-            inventory?.LoadFrom(data.Inventory);
+                // Use ToData() to discover the expected type for deserialization.
+                var type = saveable.ToData().GetType();
+                var payload = JsonUtility.FromJson(sectionJson, type);
+                saveable.LoadFrom(payload);
+            }
 
             // Ensure Sleep gate reflects restored state
             gm.ReevaluateSleepGate();
@@ -113,79 +102,4 @@ public static class SaveSystem
     /// Legacy synchronous wrapper for code that hasn't adopted async yet.
     /// </summary>
     public static GameSaveData Load(GameManager gm) => LoadAsync(gm).GetAwaiter().GetResult();
-}
-
-/// <summary>
-/// Plain data-transfer object representing all persistent game state.
-/// Nested records keep JsonUtility serialization simple and explicit.
-/// </summary>
-[Serializable]
-public class GameSaveData
-{
-    /// <summary>
-    /// Schema version so future migrations know how to interpret the data.
-    /// </summary>
-    public int version = 3;
-
-    public EssenceData Essence = new();
-    public UpgradeData Upgrades = new();
-    public GameData Game = new();
-    public StationData Stations = new();
-    public CompanionData Companions = new();
-    public InventoryData Inventory = new();
-
-    [Serializable]
-    public class EssenceData
-    {
-        public int currentEssence;
-        public int dailyClicksRemaining;
-        public int essencePerClick;
-        public float passivePerSecond;
-    }
-
-    [Serializable]
-    public class UpgradeData
-    {
-        public List<string> purchasedUpgradeIds = new();
-    }
-
-    [Serializable]
-    public class GameData
-    {
-        public int day;
-    }
-
-    [Serializable]
-    public class StationData
-    {
-        // Store station IDs so we can rebuild unlocked state on load.
-        public List<string> unlockedStationIds = new();
-    }
-
-    [Serializable]
-    public class CompanionData
-    {
-        [Serializable]
-        public class Assignment
-        {
-            public string companionId;
-            public string stationId; // null/empty means unassigned
-        }
-
-        public List<Assignment> assignments = new();
-    }
-
-    [Serializable]
-    public class InventoryData
-    {
-        public int unlockedRows;
-        public List<ItemStack> items = new();
-    }
-
-    [Serializable]
-    public class ItemStack
-    {
-        public string itemId;
-        public int quantity;
-    }
 }

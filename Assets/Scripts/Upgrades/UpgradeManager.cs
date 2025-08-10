@@ -32,7 +32,7 @@ public interface IUpgradeProvider
 /// - "Derived" effects (e.g., multipliers) are recomputed from PurchasedIds so they
 ///   never double-apply.
 /// </summary>
-public class UpgradeManager : MonoBehaviour, IUpgradeProvider
+public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable
 {
     [Tooltip("Drag your UpgradeSO assets here in the Inspector.")]
     [SerializeField] private List<UpgradeSO> available = new();
@@ -144,13 +144,18 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider
 
     // ---- Save/Load integration ----
     
+    // ---- ISaveable implementation ----
+
+    /// <summary>Key used for the upgrades section in the save file.</summary>
+    public string SaveKey => "Upgrades";
+
     /// <summary>
     /// Extract the minimal persistence data for upgrades.
     /// </summary>
-    public GameSaveData.UpgradeData ToData()
+    public object ToData()
     {
         // Copy IDs to a list so the DTO is decoupled from our HashSet.
-        return new GameSaveData.UpgradeData
+        return new SaveData
         {
             purchasedUpgradeIds = _purchased.ToList()
         };
@@ -159,9 +164,17 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider
     /// <summary>
     /// Restore upgrade ownership and rebuild runtime effects.
     /// </summary>
-    public void LoadFrom(GameSaveData.UpgradeData data)
+    public void LoadFrom(object data)
     {
-        LoadPurchased(data?.purchasedUpgradeIds);
+        var d = data as SaveData;
+        LoadPurchased(d?.purchasedUpgradeIds);
+    }
+
+    /// <summary>Serializable list of purchased upgrade IDs.</summary>
+    [Serializable]
+    public class SaveData
+    {
+        public List<string> purchasedUpgradeIds = new();
     }
 
     /// <summary>

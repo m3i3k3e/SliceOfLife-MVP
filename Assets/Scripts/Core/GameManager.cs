@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -15,6 +16,14 @@ public class GameManager : MonoBehaviour, IGameManager
     {
         if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); }
         else { Destroy(gameObject); return; }
+
+        // Register core systems for saving. Doing this in Awake ensures the list
+        // is ready before any save/load operations occur.
+        RegisterSaveable(this); // GameManager persists its own day counter
+        if (essenceManager != null) RegisterSaveable(essenceManager);
+        if (upgradeManager != null) RegisterSaveable(upgradeManager);
+        if (stationManager != null) RegisterSaveable(stationManager);
+        if (inventoryManager != null) RegisterSaveable(inventoryManager);
     }
 
     // -------- Core systems --------
@@ -24,6 +33,27 @@ public class GameManager : MonoBehaviour, IGameManager
     [SerializeField] private StationManager stationManager; // manages stations/companions
     [SerializeField] private InventoryManager inventoryManager; // holds items
     [SerializeField] private string unlockUpgradeId = UpgradeIds.UnlockBattle; // default to constant to avoid typos
+
+    // ----- Saveable registration -----
+    // Maintain a list of participating systems so SaveSystem can iterate them generically.
+    private readonly List<ISaveable> _saveables = new();
+
+    /// <summary>Expose registered saveables to <see cref="SaveSystem"/>.</summary>
+    public IReadOnlyList<ISaveable> Saveables => _saveables;
+
+    /// <summary>Allow subsystems to enlist for persistence.</summary>
+    public void RegisterSaveable(ISaveable saveable)
+    {
+        if (saveable != null && !_saveables.Contains(saveable))
+            _saveables.Add(saveable);
+    }
+
+    /// <summary>Remove a saveable when it is destroyed/disabled.</summary>
+    public void UnregisterSaveable(ISaveable saveable)
+    {
+        if (saveable != null)
+            _saveables.Remove(saveable);
+    }
 
     [Header("Events")]
     [Tooltip("Reference to an event bus implementing IEventBus.")]
@@ -326,21 +356,34 @@ public class GameManager : MonoBehaviour, IGameManager
 
     // ---- Save/Load integration ----
 
+    // ---- ISaveable implementation ----
+
+    /// <summary>Key used in the save file dictionary.</summary>
+    public string SaveKey => "Game";
+
     /// <summary>
     /// Package the tiny bit of GameManager state that needs to persist.
     /// </summary>
-    public GameSaveData.GameData ToData()
-    {
-        return new GameSaveData.GameData { day = Day };
-    }
+    public object ToData() => new GameData { day = Day };
 
     /// <summary>
     /// Restore GameManager values from serialized data.
     /// </summary>
-    public void LoadFrom(GameSaveData.GameData data)
+    public void LoadFrom(object data)
     {
-        if (data == null) return;
-        Day = Mathf.Max(1, data.day); // clamp to sensible minimum
+        var d = data as GameData;
+        if (d == null) return;
+        Day = Mathf.Max(1, d.day); // clamp to sensible minimum
+    }
+
+    /// <summary>
+    /// Plain serializable container for GameManager's tiny bit of state.
+    /// Kept nested to emphasize its exclusive use by this manager.
+    /// </summary>
+    [Serializable]
+    public class GameData
+    {
+        public int day;
     }
 
     /// <summary>
