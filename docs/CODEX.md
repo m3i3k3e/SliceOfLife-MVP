@@ -197,6 +197,8 @@ flowchart LR
 - To test: create a scriptable object implementing `IMinigame`, then call `MinigameLauncher.LaunchAsync` and watch listeners receive the result via the event bus.
 - Added `LocationSO` data and `MapUI` that spawns buttons for unlocked locations. Event bus now exposes `UpgradePurchased` for UI refreshes.
 - To test: create LocationSO assets for Hub and Battle, assign them to MapUI, purchase the battle unlock upgrade, and verify the Battle button appears and loads the scene.
+- Split `HUD` into a lightweight container with pluggable `HUDPanel` components. Panels subscribe only to needed `IEventBus` events and register themselves for easy prefab addition.
+- To test: in a scene with HUD, add `CurrencyHUDPanel`, `KeysHUDPanel`, and `SleepHUDPanel` components to appropriate UI objects. Wire button OnClick events to the panels and ensure essence, keys, and sleep states update when playing.
 
 \## 8) Art \& Audio Direction
 
