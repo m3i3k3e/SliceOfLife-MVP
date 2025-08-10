@@ -3,15 +3,22 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Battle UI glue:
-/// - Auto-finds BattleManager (or you can assign it)
-/// - Updates labels AND health bars when stats change
-/// - Forwards button clicks to the BattleManager
+/// Battle UI glue.
+///
+/// Wiring guidelines:
+/// - Place this component on the <see cref="BattleManager"/> GameObject or assign the field manually.
+/// - If left unassigned, the script will walk up the hierarchy to locate a <see cref="BattleManager"/>.
+/// - No global FindAnyObjectByType fallback; missing wiring will log an error in play mode.
+///
+/// Responsibilities:
+/// - Updates labels AND health bars when stats change.
+/// - Forwards button clicks to the BattleManager.
 /// </summary>
+[RequireComponent(typeof(BattleManager))]
 public class BattleUI : MonoBehaviour
 {
-    [Header("Scene References (assign if you want; auto-wire will backfill)")]
-    [SerializeField] private BattleManager battle;
+    [Header("Scene References (drag BattleManager here or keep default to auto-find parent)")]
+    [SerializeField] private BattleManager battle; // Serialized for manual wiring; defaults to same object/parent
 
     [Header("Texts")]
     [SerializeField] private TextMeshProUGUI playerText;
@@ -45,22 +52,32 @@ public class BattleUI : MonoBehaviour
         AutoWireBattle();
     }
 
+    /// <summary>
+    /// Attempts to resolve the <see cref="BattleManager"/> reference if none was wired in the Inspector.
+    /// We intentionally avoid expensive global searches (FindObjectByType) and only look on the
+    /// current GameObject or its parents. This keeps the hierarchy explicit and predictable.
+    /// </summary>
     private void AutoWireBattle()
     {
-        if (battle) return;
+        if (battle) return; // Field already assigned via Inspector
 
-        // Look for a BattleManager under the same prefab root first
-        var root = transform.root;
-        battle = root.GetComponentInChildren<BattleManager>(true);
+        // First, check the same GameObject. RequireComponent ensures this succeeds
+        // when BattleUI lives on the BattleManager root.
+        battle = GetComponent<BattleManager>();
 
-#if UNITY_600_OR_NEWER
-        if (!battle) battle = FindAnyObjectByType<BattleManager>(FindObjectsInactive.Include);
-#else
-        if (!battle) battle = FindFirstObjectByType<BattleManager>();
-#endif
+        // If the script is placed on a child object, walk up the hierarchy.
         if (!battle)
         {
-            Debug.LogError("BattleUI: Couldn't find BattleManager. Drag it into the 'battle' field or ensure it exists in the scene.", this);
+            battle = GetComponentInParent<BattleManager>();
+        }
+
+        // Still missing? Developer forgot to wire it.
+        if (!battle)
+        {
+            Debug.LogError(
+                "BattleUI: BattleManager reference missing. " +
+                "Assign the 'battle' field or place this component under a BattleManager.",
+                this);
         }
     }
 
