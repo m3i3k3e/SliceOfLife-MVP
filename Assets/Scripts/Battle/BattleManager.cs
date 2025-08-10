@@ -87,8 +87,12 @@ public class BattleManager : MonoBehaviour
     [Tooltip("Reference to a GameManager implementing IGameManager.")]
     [SerializeField] private MonoBehaviour gameManagerSource;
 
+    [Tooltip("Reference to an event bus implementing IEventBus.")]
+    [SerializeField] private MonoBehaviour eventBusSource;
+
     // Helper to cast the serialized MonoBehaviour to the interface.
     private IGameManager GM => gameManagerSource as IGameManager;
+    private IEventBus Events => eventBusSource as IEventBus;
 
     private void Awake()
     {
