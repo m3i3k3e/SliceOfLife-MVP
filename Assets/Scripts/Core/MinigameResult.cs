@@ -6,6 +6,6 @@ public record MinigameResult
 (
     bool Success,
     int ResourcesGained,
-    ItemSO RewardItem = null,
+    ItemCardSO RewardItem = null,
     int RewardQuantity = 0
 );
