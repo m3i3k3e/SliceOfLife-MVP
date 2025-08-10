@@ -131,6 +131,8 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 \- \*\*Events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged`.
 
+\- \*\*Persistence\*\*: `SaveSystem` writes a single `GameSaveData` DTO containing `Game`, `Essence`, and `Upgrades` records. `GameManager`, `EssenceManager`, and `UpgradeManager` expose `ToData()`/`LoadFrom()` to bridge runtime and disk.
+
 \- \*\*Scenes\*\*: `Start`, `Battle`.
 
 \- \*\*Prefabs\*\*: `BattleRoot` (BattleManager + UI), `CardView`, `UpgradeButtonPrefab`.

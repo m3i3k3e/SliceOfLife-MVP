@@ -257,6 +257,25 @@ public class GameManager : MonoBehaviour
         return Mathf.Max(0, baseCap - _tempNextDayClickDebuff);
     }
 
+    // ---- Save/Load integration ----
+
+    /// <summary>
+    /// Package the tiny bit of GameManager state that needs to persist.
+    /// </summary>
+    public GameSaveData.GameData ToData()
+    {
+        return new GameSaveData.GameData { day = Day };
+    }
+
+    /// <summary>
+    /// Restore GameManager values from serialized data.
+    /// </summary>
+    public void LoadFrom(GameSaveData.GameData data)
+    {
+        if (data == null) return;
+        Day = Mathf.Max(1, data.day); // clamp to sensible minimum
+    }
+
     /// <summary>
     /// Detach event listeners when the object is disabled to prevent leaks.
     /// </summary>

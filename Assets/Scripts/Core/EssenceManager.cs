@@ -168,4 +168,42 @@ public class EssenceManager : MonoBehaviour, IEssenceProvider
             yield return wait;
         }
     }
+
+    // ---- Save/Load ----
+
+    /// <summary>
+    /// Extract the minimal persistence data for the essence system.
+    /// </summary>
+    public GameSaveData.EssenceData ToData()
+    {
+        // Build a plain container that captures only the fields we want to persist.
+        return new GameSaveData.EssenceData
+        {
+            currentEssence = _currentEssence,
+            dailyClicksRemaining = _dailyClicksRemaining,
+            essencePerClick = _essencePerClick,
+            passivePerSecond = passivePerSecond
+        };
+    }
+
+    /// <summary>
+    /// Restore state from disk. Called by <see cref="SaveSystem"/> after deserializing.
+    /// </summary>
+    public void LoadFrom(GameSaveData.EssenceData data)
+    {
+        if (data == null) return; // defensive: save file may be missing fields
+
+        // Directly assign fields instead of using reflection. We notify listeners so
+        // any UI hooked up at load time refreshes with accurate numbers.
+        _currentEssence = data.currentEssence;
+        _dailyClicksRemaining = data.dailyClicksRemaining;
+        _essencePerClick = data.essencePerClick;
+        passivePerSecond = data.passivePerSecond;
+
+        OnEssenceChanged?.Invoke(_currentEssence);
+        OnDailyClicksChanged?.Invoke(_dailyClicksRemaining);
+
+        // Make sure passive income coroutine reflects the loaded rate.
+        StartPassiveIfNeeded();
+    }
 }
