@@ -5,7 +5,9 @@ Assets/Scenes/Battle.unity
 Assets/Scenes/Start.unity
 Assets/ScriptableObjects/Battle/BattleConfig.asset
 Assets/ScriptableObjects/Cards/Attack.asset
+Assets/ScriptableObjects/Cards/Expose.asset
 Assets/ScriptableObjects/Cards/Guard.asset
+Assets/ScriptableObjects/Cards/Hamstring.asset
 Assets/ScriptableObjects/Cards/Mend.asset
 Assets/ScriptableObjects/Upgrades/BattleRewardBonus25.asset
 Assets/ScriptableObjects/Upgrades/Plus One Click.asset

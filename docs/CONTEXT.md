@@ -1,5 +1,5 @@
 # SliceOfLife-MVP — Context Snapshot
-_Generated: 2025-08-09 14:25_
+_Generated: 2025-08-09 21:19_
 
 ## Scenes
 - Battle
@@ -13,7 +13,9 @@ _Generated: 2025-08-09 14:25_
 ## ScriptableObjects
 - ScriptableObjects/Battle/BattleConfig.asset  _(type: BattleConfigSO)_
 - ScriptableObjects/Cards/Attack.asset  _(type: CardSO)_
+- ScriptableObjects/Cards/Expose.asset  _(type: CardSO)_
 - ScriptableObjects/Cards/Guard.asset  _(type: CardSO)_
+- ScriptableObjects/Cards/Hamstring.asset  _(type: CardSO)_
 - ScriptableObjects/Cards/Mend.asset  _(type: CardSO)_
 - ScriptableObjects/Upgrades/BattleRewardBonus25.asset  _(type: UpgradeSO)_
 - ScriptableObjects/Upgrades/Plus One Click.asset  _(type: UpgradeSO)_
