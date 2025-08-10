@@ -18,8 +18,10 @@ public class CardHandUI : MonoBehaviour
 
     private void Awake()
     {
-        if (!battle) battle = GetComponentInParent<BattleManager>();
-        if (!battle) battle = FindFirstObjectByType<BattleManager>();
+        // Allow designers to wire the BattleManager in the inspector.
+        // If they forget, try to locate one up the hierarchy as a safety net.
+        if (battle == null)
+            battle = GetComponentInParent<BattleManager>();
     }
 
     /// <summary>

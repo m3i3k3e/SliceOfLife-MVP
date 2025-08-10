@@ -187,7 +187,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 765dbe32f7e447e4695b0ea55abbf8bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CardHandUI
-  battle: {fileID: 0}
+  battle: {fileID: 1873941590154138472}
   handParent: {fileID: 4870733506955178402}
   cardViewPrefab: {fileID: 7489504110286601948, guid: bcca005528f474f4cb2d579539f74fd2, type: 3}
   startingHand: []

@@ -141,6 +141,7 @@ MonoBehaviour:
   titleText: {fileID: 3091780662672879162}
   descText: {fileID: 5771873056094793015}
   playButton: {fileID: 0}
+  battle: {fileID: 1873941590154138472, guid: 2f719039daa6983409d484b69ebb8192, type: 3}
 --- !u!114 &3315524081946835502
 MonoBehaviour:
   m_ObjectHideFlags: 0
