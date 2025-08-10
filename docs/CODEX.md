@@ -129,7 +129,12 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 \- \*\*Stations\*\*: `StationManager` maintains `IStation`/`ICompanion` lists, exposed via `GameManager`.
 
-\- \*\*Events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged`.
+\- \*\*Event bus\*\*: `GameEvents` static class exposes cross-system events:
+  - `DayChanged(int day)`
+  - `DungeonKeysChanged(int current, int perDay)`
+  - `SleepEligibilityChanged(bool canSleep, string reason)`
+  Subscribe in `OnEnable` and unsubscribe in `OnDisable`.
+\- \*\*Other events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
 
 \- \*\*Persistence\*\*: `SaveSystem` writes a single `GameSaveData` DTO containing `Game`, `Essence`, and `Upgrades` records. Disk I/O is wrapped in try/catch and logs errors; failed loads return defaults without mutating runtime state. The DTO carries a `version` field for future migrations. `GameManager`, `EssenceManager`, and `UpgradeManager` expose `ToData()`/`LoadFrom()` to bridge runtime and disk.
 
