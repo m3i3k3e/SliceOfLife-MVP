@@ -2,7 +2,7 @@
 
 
 
-\_Last updated: 2025-08-09 • Engine: Unity 6.2 URP • Target: PC (1080p)\_
+\_Last updated: 2025-08-10 • Engine: Unity 6.2 URP • Target: PC (1080p)\_
 
 
 
@@ -318,6 +318,11 @@ flowchart LR
 2\) Keep `Assets/TextMesh Pro/Resources/\\\\\\\*\\\\\\\*`; delete/ignore TMP \*\*Examples \& Extras\*\*.
 
 3\) Third-party packs live under `Assets/ThirdParty/PackName/` (ignored if solo; use LFS if shared).
+
+\## Recent Changes
+\- 2025-08-10: Added `UpgradeIds` static class to centralize upgrade ID strings.
+  - How to test: project compiles; dungeon gate button and HUD use `UpgradeIds.UnlockBattle`.
+
 
 
 

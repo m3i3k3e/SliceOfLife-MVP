@@ -100,7 +100,7 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider
                 break;
 
             case UpgradeEffect.UnlockBattle:
-                // No numeric state; UI checks IsPurchased("unlock_battle") to enable the button
+                // No numeric state; UI checks IsPurchased(UpgradeIds.UnlockBattle) to enable the button
                 break;
 
             case UpgradeEffect.BattleRewardBonus:
