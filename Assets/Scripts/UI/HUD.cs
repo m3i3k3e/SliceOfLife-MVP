@@ -26,8 +26,12 @@ public class HUD : MonoBehaviour
     [Tooltip("Reference to a GameManager instance implementing IGameManager.")]
     [SerializeField] private MonoBehaviour gameManagerSource;
 
+    [Tooltip("Reference to an event bus implementing IEventBus.")]
+    [SerializeField] private MonoBehaviour eventBusSource;
+
     // Cast the serialized reference to the interface so callers stay decoupled.
     private IGameManager GM => gameManagerSource as IGameManager;
+    private IEventBus Events => eventBusSource as IEventBus;
 
     // Convenience getter NOTE: do not use this in OnEnable until GM is ready.
     private IEssenceProvider Essence => GM?.Essence;
@@ -52,13 +56,15 @@ public class HUD : MonoBehaviour
         Essence.OnEssenceChanged += HandleEssenceChanged;
         Essence.OnDailyClicksChanged += HandleClicksChanged;
 
-        // Subscribe to global events instead of directly referencing GameManager.
-        GameEvents.DungeonKeysChanged += HandleKeysChanged;
+        // Subscribe to global events via the injected bus instead of a static hub.
+        if (Events != null)
+            Events.DungeonKeysChanged += HandleKeysChanged;
         // Initialize key label immediately.
         HandleKeysChanged(GM.DungeonKeysRemaining, GM.DungeonKeysPerDay);
 
         // Subscribe to sleep-gate state (optional but recommended).
-        GameEvents.SleepEligibilityChanged += HandleSleepEligibility;
+        if (Events != null)
+            Events.SleepEligibilityChanged += HandleSleepEligibility;
         // Pull initial state for Sleep via GameManager so UI reflects current gate.
         GM.ReevaluateSleepGate();
 
@@ -80,8 +86,11 @@ public class HUD : MonoBehaviour
                 Essence.OnEssenceChanged -= HandleEssenceChanged;
                 Essence.OnDailyClicksChanged -= HandleClicksChanged;
             }
-            GameEvents.SleepEligibilityChanged -= HandleSleepEligibility;
-            GameEvents.DungeonKeysChanged -= HandleKeysChanged;
+            if (Events != null)
+            {
+                Events.SleepEligibilityChanged -= HandleSleepEligibility;
+                Events.DungeonKeysChanged -= HandleKeysChanged;
+            }
 
         }
         _bound = false;

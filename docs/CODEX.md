@@ -131,7 +131,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
   `UnlockStation(id)` and `RecruitCompanion(id)` update internal collections and fire  
   `OnStationUnlocked` / `OnCompanionRecruited` events.
 
-\- \*\*Event bus\*\*: `GameEvents` static class exposes cross-system events:
+\- \*\*Event bus\*\*: `IEventBus` interface (default `DefaultEventBus` component) exposes cross-system events:
   - `DayChanged(int day)`
   - `DungeonKeysChanged(int current, int perDay)`
   - `SleepEligibilityChanged(bool canSleep, string reason)`
@@ -141,7 +141,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
 \- \*\*Other events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
 
 \- \*\*Persistence\*\*: `SaveSystem` writes a single `GameSaveData` DTO containing `Game`, `Essence`, `Upgrades`, `Stations`, and `Companions` records. Disk I/O is wrapped in try/catch and logs errors; failed loads return defaults without mutating runtime state. Async `SaveAsync`/`LoadAsync` methods return `Task` so callers can await disk operations, while legacy `Save`/`Load` wrappers block on completion. The DTO carries a `version` field for future migrations. `GameManager`, `EssenceManager`, `UpgradeManager`, and `StationManager` expose `ToData()`/`LoadFrom()` to bridge runtime and disk. Version 2 adds station unlocks and companion assignments; loading a v1 save simply starts with no stations unlocked and companions at their default assignments. **Test**: unlock a station or reassign a companion, save, then reload to confirm state persists.  
-\- **Test**: Call `Stations.UnlockStation("farm")` or `Stations.RecruitCompanion("alice")` in play mode and watch the console/UI react via `GameEvents.StationUnlocked` or `GameEvents.CompanionRecruited`.
+\- **Test**: Call `Stations.UnlockStation("farm")` or `Stations.RecruitCompanion("alice")` in play mode and watch the console/UI react via the event bus (`StationUnlocked` or `CompanionRecruited`).
 
 \- \*\*Scenes\*\*: `Start`, `Battle`.
 
@@ -185,7 +185,8 @@ flowchart LR
 
 ### Recent Changes
 - Added `IGameManager` interface. `GameManager` now implements it and callers receive `IGameManager` references instead of using the static singleton.
-- To test: assign the GameManager object to `gameManagerSource` fields on HUD, LoadSceneButton, and BattleManager, then run the game. Gather essence, attempt to sleep, and complete a battle to ensure keys and rewards still flow.
+- Introduced `IEventBus` with `DefaultEventBus` implementation. GameManager, HUD, and BattleManager now receive an event bus reference instead of calling static `GameEvents`.
+- To test: assign a `DefaultEventBus` component to `eventBusSource` fields on GameManager, HUD, and BattleManager. Run the game, unlock a station or recruit a companion, and ensure HUD and other listeners react via bus events.
 
 \## 8) Art \& Audio Direction
 

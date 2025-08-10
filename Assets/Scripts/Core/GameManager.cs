@@ -22,6 +22,14 @@ public class GameManager : MonoBehaviour, IGameManager
     [SerializeField] private UpgradeManager upgradeManager;
     [SerializeField] private StationManager stationManager; // manages stations/companions
     [SerializeField] private string unlockUpgradeId = UpgradeIds.UnlockBattle; // default to constant to avoid typos
+
+    [Header("Events")]
+    [Tooltip("Reference to an event bus implementing IEventBus.")]
+    [SerializeField] private MonoBehaviour eventBusSource;
+
+    // Helper to cast the serialized reference to the interface. Keeps consumers
+    // ignorant of the concrete implementation while still allowing Inspector wiring.
+    public IEventBus Events => eventBusSource as IEventBus;
     
     /// <summary>How many dungeon keys the player receives each day once unlocked.</summary>
     public int DungeonKeysPerDay => dungeonKeysPerDay; // expose for HUD
@@ -77,8 +85,8 @@ public class GameManager : MonoBehaviour, IGameManager
     {
         // Give keys right away on the day you unlock
         DungeonKeysRemaining = Mathf.Max(0, dungeonKeysPerDay);
-        // Broadcast via the static event hub so UI stays decoupled from GameManager.
-        GameEvents.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
+        // Broadcast via the injected event bus so UI stays decoupled from GameManager.
+        Events?.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
         ReevaluateSleepGate();
         // Persist the newly unlocked state without blocking callers.
         await SaveSystem.SaveAsync(this);
@@ -95,7 +103,8 @@ public class GameManager : MonoBehaviour, IGameManager
     /// </summary>
     private void HandleStationUnlocked(IStation station)
     {
-        GameEvents.RaiseStationUnlocked(station);
+        // Forward the event onto the bus so listeners don't require a StationManager reference.
+        Events?.RaiseStationUnlocked(station);
     }
 
     /// <summary>
@@ -103,7 +112,8 @@ public class GameManager : MonoBehaviour, IGameManager
     /// </summary>
     private void HandleCompanionRecruited(ICompanion companion)
     {
-        GameEvents.RaiseCompanionRecruited(companion);
+        // Broadcast companion recruitment through the bus for UI or analytics.
+        Events?.RaiseCompanionRecruited(companion);
     }
 
     /// <summary>Read-only access to the currency system via its interface.</summary>
@@ -168,7 +178,7 @@ public class GameManager : MonoBehaviour, IGameManager
 
         DungeonKeysRemaining = Mathf.Max(0, DungeonKeysRemaining - 1);
         // Let listeners know key counts changed (UI, save system, etc.).
-        GameEvents.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
+        Events?.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
         ReevaluateSleepGate();
         await SaveSystem.SaveAsync(this);
         return true;
@@ -257,7 +267,7 @@ public class GameManager : MonoBehaviour, IGameManager
                 reason = DungeonKeysRemaining == 1 ? "Use your dungeon key" : $"Use dungeon keys ({DungeonKeysRemaining})";
         }
         // Tell UI whether Sleep is allowed and why not.
-        GameEvents.RaiseSleepEligibilityChanged(ok, reason);
+        Events?.RaiseSleepEligibilityChanged(ok, reason);
     }
 
     // -------- Day change internals --------
@@ -276,13 +286,13 @@ public class GameManager : MonoBehaviour, IGameManager
         // Reset keys: before unlock → 0; after unlock → dungeonKeysPerDay
         DungeonKeysRemaining = IsDungeonUnlocked() ? Mathf.Max(0, dungeonKeysPerDay) : 0;
         // Reset keys for the new day and notify any listeners.
-        GameEvents.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
+        Events?.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
 
         // New day → must attempt again if you want (for flavor), but Sleep gate uses keys now.
         DungeonAttemptedToday = false;
 
         // Inform listeners of the new day index.
-        GameEvents.RaiseDayChanged(Day);
+        Events?.RaiseDayChanged(Day);
         await SaveSystem.SaveAsync(this);
         ReevaluateSleepGate();
     }
