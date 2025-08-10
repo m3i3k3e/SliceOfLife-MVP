@@ -16,6 +16,7 @@ public class GameManager : MonoBehaviour
     [Header("Core Systems (assign in Inspector)")]
     [SerializeField] private EssenceManager essenceManager;
     [SerializeField] private UpgradeManager upgradeManager;
+    [SerializeField] private StationManager stationManager; // manages stations/companions
     [SerializeField] private string unlockUpgradeId = "unlock_battle";
     
     public int DungeonKeysPerDay => dungeonKeysPerDay; // expose for HUD
@@ -44,6 +45,8 @@ public class GameManager : MonoBehaviour
             essenceManager = UnityEngine.Object.FindFirstObjectByType<EssenceManager>(UnityEngine.FindObjectsInactive.Include);
         if (!upgradeManager)
             upgradeManager = UnityEngine.Object.FindFirstObjectByType<UpgradeManager>(UnityEngine.FindObjectsInactive.Include);
+        if (!stationManager)
+            stationManager = UnityEngine.Object.FindFirstObjectByType<StationManager>(UnityEngine.FindObjectsInactive.Include);
         if (upgradeManager != null)
             upgradeManager.OnPurchased += HandleUpgradePurchased;
         if (essenceManager != null)
@@ -71,6 +74,9 @@ public class GameManager : MonoBehaviour
 
     public IEssenceProvider Essence => essenceManager;
     public IUpgradeProvider Upgrades => upgradeManager;
+
+    /// <summary>Access to station and companion collections.</summary>
+    public StationManager Stations => stationManager;
 
     // -------- Day progression --------
     public int Day { get; private set; } = 1;

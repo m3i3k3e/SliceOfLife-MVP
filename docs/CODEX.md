@@ -110,7 +110,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 | \*\*Exploration/Harvesting\*\* | Stub | Single room interactables (Altar, Bed, Door). |
 
-| \*\*Stations (Farm/Kitchen/Alchemy/Blacksmith)\*\* | UI Stubs | Buttons + eventual micro-games + automations. |
+| \*\*Stations (Farm/Kitchen/Alchemy/Blacksmith)\*\* | Data Stubs | Interfaces + SOs + manager to track stations/companions. |
 
 | \*\*Waifu Collection\*\* | Partial Stub | Placeholder waifu cards; first passive buff hook. |
 
@@ -125,6 +125,8 @@ This file is the source of truth for design + tech. Keep it short and link out t
 \- \*\*Pattern\*\*: MVC-ish. \*\*Model\*\* = ScriptableObjects \& C# state; \*\*View\*\* = TMP UI; \*\*Controller\*\* = buttons, Battle logic; \*\*GameManager\*\* orchestrates.
 
 \- \*\*Singleton\*\*: `GameManager` (DontDestroyOnLoad).
+
+\- \*\*Stations\*\*: `StationManager` maintains `IStation`/`ICompanion` lists, exposed via `GameManager`.
 
 \- \*\*Events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged`.
 
