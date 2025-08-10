@@ -37,6 +37,11 @@ public interface IEventBus
     event Action<SkillSO> SkillUnlocked;
 
     /// <summary>
+    /// Fired whenever a resource amount changes. Payload = (resource, newAmount).
+    /// </summary>
+    event Action<ResourceSO, int> ResourceChanged;
+
+    /// <summary>
     /// Fired whenever an upgrade is successfully purchased. Payload = upgrade data.
     /// Lets UI refresh when new systems or locations unlock.
     /// </summary>
@@ -76,6 +81,11 @@ public interface IEventBus
     /// Helper to invoke <see cref="SkillUnlocked"/> safely.
     /// </summary>
     void RaiseSkillUnlocked(SkillSO skill);
+
+    /// <summary>
+    /// Helper to invoke <see cref="ResourceChanged"/> safely.
+    /// </summary>
+    void RaiseResourceChanged(ResourceSO resource, int amount);
 
     /// <summary>
     /// Helper to invoke <see cref="UpgradePurchased"/> safely.

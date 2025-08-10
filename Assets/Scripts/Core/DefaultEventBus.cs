@@ -27,6 +27,9 @@ public class DefaultEventBus : MonoBehaviour, IEventBus
     public event Action<SkillSO> SkillUnlocked;
 
     /// <inheritdoc />
+    public event Action<ResourceSO, int> ResourceChanged;
+
+    /// <inheritdoc />
     public event Action<MinigameResult> MinigameCompleted;
 
     /// <inheritdoc />
@@ -54,6 +57,10 @@ public class DefaultEventBus : MonoBehaviour, IEventBus
     /// <inheritdoc />
     public void RaiseSkillUnlocked(SkillSO skill)
         => SkillUnlocked?.Invoke(skill);
+
+    /// <inheritdoc />
+    public void RaiseResourceChanged(ResourceSO resource, int amount)
+        => ResourceChanged?.Invoke(resource, amount);
 
     /// <inheritdoc />
     public void RaiseMinigameCompleted(MinigameResult result)
