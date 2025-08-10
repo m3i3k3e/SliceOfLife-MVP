@@ -44,20 +44,23 @@ public class GameManager : MonoBehaviour
         return !Upgrades.IsPurchased(unlockUpgradeId) && Essence.CurrentEssence >= so.cost;
     }
 
-    private void Start()
+    /// <summary>
+    /// Hook up to manager events once the object becomes active.
+    /// Assumes references are assigned via the Inspector, avoiding costly lookups.
+    /// </summary>
+    private void OnEnable()
     {
-        if (!essenceManager)
-            essenceManager = UnityEngine.Object.FindFirstObjectByType<EssenceManager>(UnityEngine.FindObjectsInactive.Include);
-        if (!upgradeManager)
-            upgradeManager = UnityEngine.Object.FindFirstObjectByType<UpgradeManager>(UnityEngine.FindObjectsInactive.Include);
-        if (!stationManager)
-            stationManager = UnityEngine.Object.FindFirstObjectByType<StationManager>(UnityEngine.FindObjectsInactive.Include);
+        // Subscribe to upgrade purchase notifications so we can grant dungeon keys
+        // and update the Sleep gate when the dungeon unlocks.
         if (upgradeManager != null)
             upgradeManager.OnPurchased += HandleUpgradePurchased;
+
+        // Watch daily click changes to reevaluate Sleep eligibility each time.
         if (essenceManager != null)
             essenceManager.OnDailyClicksChanged += HandleDailyClicksChanged;
 
-    ReevaluateSleepGate(); // initialize the Sleep button state
+        // Initialize UI state for the current day immediately.
+        ReevaluateSleepGate();
     }
 
     private void HandleUpgradePurchased(UpgradeSO up)
@@ -253,13 +256,18 @@ public class GameManager : MonoBehaviour
         int baseCap = essenceManager ? essenceManager.DailyClickCap : 10;
         return Mathf.Max(0, baseCap - _tempNextDayClickDebuff);
     }
-private void OnDestroy()
-{
-    if (essenceManager != null)
-        essenceManager.OnDailyClicksChanged -= HandleDailyClicksChanged;
-    if (upgradeManager != null)
-        upgradeManager.OnPurchased -= HandleUpgradePurchased;
-}
+
+    /// <summary>
+    /// Detach event listeners when the object is disabled to prevent leaks.
+    /// </summary>
+    private void OnDisable()
+    {
+        if (essenceManager != null)
+            essenceManager.OnDailyClicksChanged -= HandleDailyClicksChanged;
+
+        if (upgradeManager != null)
+            upgradeManager.OnPurchased -= HandleUpgradePurchased;
+    }
 
     private void OnApplicationQuit() => SaveSystem.Save(this);
 }
