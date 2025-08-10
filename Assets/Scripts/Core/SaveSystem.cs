@@ -11,7 +11,7 @@ using UnityEngine;
 public static class SaveSystem
 {
     private const string FileName = "save.json";
-    private const int Version = 4; // Bump this when save schema changes
+    private const int Version = 5; // Bump this when save schema changes
 
     /// <summary>
     /// Serialize current runtime state to JSON asynchronously. Callers can await this task

@@ -353,6 +353,8 @@ flowchart LR
   - How to test: project compiles; dungeon gate button and HUD use `UpgradeIds.UnlockBattle`.
 \- 2025-08-10: Introduced `ItemSO`, `InventoryManager`, and inventory persistence. `MinigameResult` can now carry item rewards which `MinigameLauncher` deposits automatically.
   - How to test: create an `ItemSO`, assign it in a test mini-game returning `(true, 0, item, qty)`, run the mini-game and confirm the item appears in `InventoryManager` and remains after save/load.
+- 2025-08-10: Added basic skill tree framework (`SkillSO`, `SkillTreeManager`) and `SkillUnlocked` event on `IEventBus`.
+  - How to test: create a couple `SkillSO` assets, assign them to a `SkillTreeManager` hooked into `GameManager`. Call `Unlock` on a skill and verify the event fires and the skill ID persists in the save file.
 
 
 
