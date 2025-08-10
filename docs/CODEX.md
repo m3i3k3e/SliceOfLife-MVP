@@ -296,6 +296,10 @@ flowchart LR
 
 - Victory rewards delegated to `BattleRewardService`
 
+**SceneLoader**
+
+- `Task LoadSceneAsync(string sceneName)` • hooks: `FadeOutAsync()`, `FadeInAsync()`
+
 
 
 > \\\\\\\*\\\\\\\*Rule\\\\\\\*\\\\\\\*: world-space interactions (3D Altar/Bed/Door) must call these APIs—no bypassing.
@@ -314,7 +318,7 @@ flowchart LR
 
 \## C. Scene \& Prefab Wiring (required)
 
-\*\*Start\*\*: Systems (GameManager, EssenceManager, UpgradeManager), `HUD` (Gather/Sleep), `UpgradesPanel`, `DungeonGateButton` (needs `unlock\\\\\\\_battle`), `LoadSceneButton("Battle")`
+**Start**: Systems (GameManager, EssenceManager, UpgradeManager, SceneLoader), `HUD` (Gather/Sleep), `UpgradesPanel`, `DungeonGateButton` (needs `unlock_battle`, loads "Battle")
 
 \*\*BattleRoot prefab\*\*: BattleManager + EnemyAI w/ `BattleConfig`; `BattleUI` with Player/Enemy/Info + HP bars; `HandPanel + CardHandUI` (`PopulateHand(IEnumerable<CardSO>)` + `RefreshAffordability(int)` spawns `CardView` from `CardSO`s)
 
@@ -341,6 +345,8 @@ flowchart LR
 3\) Third-party packs live under `Assets/ThirdParty/PackName/` (ignored if solo; use LFS if shared).
 
 \## Recent Changes
+- 2025-08-10: Added `SceneLoader` service and migrated `LoadSceneButton`/`DungeonGateButton` to use it.
+  - How to test: assign `SceneLoader` in Start scene and click the gate to load `Battle`.
 \- 2025-08-10: Added `UpgradeIds` static class to centralize upgrade ID strings.
   - How to test: project compiles; dungeon gate button and HUD use `UpgradeIds.UnlockBattle`.
 \- 2025-08-10: Introduced `ItemSO`, `InventoryManager`, and inventory persistence. `MinigameResult` can now carry item rewards which `MinigameLauncher` deposits automatically.

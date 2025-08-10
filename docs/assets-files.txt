@@ -23,6 +23,7 @@ Assets/Scripts/Battle/EnemyAI.cs
 Assets/Scripts/Core/EssenceManager.cs
 Assets/Scripts/Core/GameManager.cs
 Assets/Scripts/Core/SaveSystem.cs
+Assets/Scripts/Core/SceneLoader.cs
 Assets/Scripts/UI/DungeonGateButton.cs
 Assets/Scripts/UI/HUD.cs
 Assets/Scripts/UI/LoadSceneButton.cs
