@@ -46,11 +46,12 @@ public class HUD : MonoBehaviour
         Essence.OnDailyClicksChanged += HandleClicksChanged;
 
         var gm = GameManager.Instance;
-        gm.OnDungeonKeysChanged += HandleKeysChanged;
+        // Subscribe via event bus so we don't require direct references.
+        GameEvents.DungeonKeysChanged += HandleKeysChanged;
         HandleKeysChanged(gm.DungeonKeysRemaining, gm.DungeonKeysPerDay); // init
 
         // Subscribe to sleep-gate state (optional but recommended).
-        GameManager.Instance.OnSleepEligibilityChanged += HandleSleepEligibility;
+        GameEvents.SleepEligibilityChanged += HandleSleepEligibility;
         // Pull initial state for Sleep
         GameManager.Instance.ReevaluateSleepGate();
 
@@ -72,8 +73,9 @@ public class HUD : MonoBehaviour
                 Essence.OnEssenceChanged -= HandleEssenceChanged;
                 Essence.OnDailyClicksChanged -= HandleClicksChanged;
             }
-            GameManager.Instance.OnSleepEligibilityChanged -= HandleSleepEligibility;
-            GameManager.Instance.OnDungeonKeysChanged -= HandleKeysChanged;
+            // Unsubscribe from global events when HUD is disabled.
+            GameEvents.SleepEligibilityChanged -= HandleSleepEligibility;
+            GameEvents.DungeonKeysChanged -= HandleKeysChanged;
 
         }
         _bound = false;

@@ -100,7 +100,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 |---|---|---|
 
-| \*\*GameManager\*\* | Full | Tracks essence/day/clicks; refs to Essence/Upgrades; broadcasts events. |
+| \*\*GameManager\*\* | Full | Tracks essence/day/clicks; refs to Essence/Upgrades; publishes via `GameEvents` bus. |
 
 | \*\*Essence \& Currency\*\* | Full | Manual clicks (≤10/day), dungeon rewards, passive/sec; spend/add APIs. |
 
@@ -267,6 +267,16 @@ This file is the source of truth for design + tech. Keep it short and link out t
 ---
 
 
+
+\## E. Global Events (GameEvents)
+
+| Event | Payload | Description |
+|---|---|---|
+| `GameEvents.DayChanged` | `(int day)` | Fired after Sleep advances to a new day. |
+| `GameEvents.DungeonKeysChanged` | `(int current, int perDay)` | Remaining keys and daily allotment. |
+| `GameEvents.SleepEligibilityChanged` | `(bool canSleep, string reason)` | Gate state and explanation when false. |
+
+---
 
 \# WORKING AGREEMENTS
 
