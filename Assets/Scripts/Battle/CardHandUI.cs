@@ -13,10 +13,8 @@ public class CardHandUI : MonoBehaviour
     [SerializeField] private Transform handParent;     // where to spawn cards (e.g., a Horizontal/Vertical Layout)
     [SerializeField] private CardView cardViewPrefab;  // the prefab you just made
 
-    [Header("Hand Definition (MVP)")]
-    [SerializeField] private List<CardSO> startingHand = new(); // assign Attack/Guard/Mend here
-
     private readonly List<CardView> _spawned = new();
+    private readonly List<CardSO> _currentHand = new(); // last set of cards shown
 
     private void Awake()
     {
@@ -24,8 +22,11 @@ public class CardHandUI : MonoBehaviour
         if (!battle) battle = FindFirstObjectByType<BattleManager>();
     }
 
-    /// <summary>Rebuilds the visible hand from a manager-provided list.</summary>
-    public void Show(System.Collections.Generic.IReadOnlyList<CardSO> cards)
+    /// <summary>
+    /// Rebuilds the visible hand from a list of cards.
+    /// </summary>
+    /// <param name="cards">Cards to display in order.</param>
+    public void PopulateHand(IEnumerable<CardSO> cards)
     {
         if (!handParent || !cardViewPrefab)
         {
@@ -33,32 +34,21 @@ public class CardHandUI : MonoBehaviour
             return;
         }
 
-        Clear();
+        Clear(); // remove old views
 
+        _currentHand.Clear();
         foreach (var c in cards)
         {
-            var v = Instantiate(cardViewPrefab, handParent);
-            v.Bind(c);           // CardView wires its own onClick to BattleManager
-            _spawned.Add(v);
+            _currentHand.Add(c);                      // remember which cards are shown
+            var v = Instantiate(cardViewPrefab, handParent); // spawn a view for each card
+            v.Bind(c);                                 // CardView wires its own onClick to BattleManager
+            _spawned.Add(v);                           // track spawned view for later cleanup
         }
     }
 
     private void OnDisable()
     {
         Clear();
-    }
-
-    private void BuildHand()
-    {
-        if (!handParent || !cardViewPrefab) { Debug.LogError("CardHandUI: Missing handParent or cardViewPrefab", this); return; }
-        Clear();
-
-        foreach (var card in startingHand)
-        {
-            var view = Instantiate(cardViewPrefab, handParent);
-            view.Bind(card);
-            _spawned.Add(view);
-        }
     }
 
     private void Clear()
@@ -68,15 +58,19 @@ public class CardHandUI : MonoBehaviour
             if (_spawned[i]) Destroy(_spawned[i].gameObject);
         }
         _spawned.Clear();
+        _currentHand.Clear();
     }
-        /// <summary>Toggle cards based on current energy.</summary>
+
+    /// <summary>Toggle cards based on current energy.</summary>
     public void RefreshAffordability(int currentEnergy)
     {
-        foreach (var v in _spawned)
+        for (int i = 0; i < _spawned.Count; i++)
         {
-            if (!v || !v.card) continue;
-            bool canPlay = v.card.cost <= currentEnergy;
-            v.SetInteractable(canPlay);
+            var view = _spawned[i];
+            var card = i < _currentHand.Count ? _currentHand[i] : null;
+            if (!view || card == null) continue;
+            bool canPlay = card.cost <= currentEnergy;
+            view.SetInteractable(canPlay);
         }
     }
 }

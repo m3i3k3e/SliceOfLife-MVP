@@ -110,7 +110,7 @@ public class BattleUI : MonoBehaviour
     }
     private void HandleHandChanged(System.Collections.Generic.IReadOnlyList<CardSO> cards)
     {
-        if (handUI) handUI.Show(cards);
+        if (handUI) handUI.PopulateHand(cards);
         // Re-apply affordability using the last-known energy
         // BattleManager will also fire OnEnergyChanged in BeginPlayerTurn, but this keeps mid-turn removals tidy.
         // If you want this to be exact, you could cache current energy here; for now EnergyChanged will follow shortly.
