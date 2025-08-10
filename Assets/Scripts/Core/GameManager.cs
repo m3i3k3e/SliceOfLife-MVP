@@ -98,6 +98,9 @@ public class GameManager : MonoBehaviour
     /// <summary>Click-cap reduction queued for the next day only.</summary>
     private int _tempNextDayClickDebuff;
 
+    /// <summary>Exposes the queued debuff so the save system can persist it.</summary>
+    public int TempNextDayClickDebuff => _tempNextDayClickDebuff;
+
     public event Action<bool, string> OnSleepEligibilityChanged; // (canSleep, reason)
 
     // -------- Public API used by UI / buttons --------
@@ -191,6 +194,27 @@ if (!ok && essenceManager != null)
         reason = DungeonKeysRemaining == 1 ? "Use your dungeon key" : $"Use dungeon keys ({DungeonKeysRemaining})";
     }
         OnSleepEligibilityChanged?.Invoke(ok, reason);
+    }
+
+    /// <summary>
+    /// Rehydrate manager state from a persisted snapshot.
+    /// </summary>
+    public void Load(GameSaveData data)
+    {
+        if (data == null) return; // Defensive: nothing to load
+
+        // Restore simple fields
+        Day                  = data.day;
+        DungeonKeysRemaining = data.dungeonKeysRemaining;
+        DungeonAttemptedToday = data.dungeonAttemptedToday;
+        _tempNextDayClickDebuff = data.tempNextDayClickDebuff;
+
+        // Notify listeners so UI and other systems sync to the loaded values
+        OnDayChanged?.Invoke(Day);
+        OnDungeonKeysChanged?.Invoke(DungeonKeysRemaining, dungeonKeysPerDay);
+
+        // Recompute sleep eligibility after state changes
+        ReevaluateSleepGate();
     }
 
     // -------- Day change internals --------

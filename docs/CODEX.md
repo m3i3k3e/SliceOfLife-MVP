@@ -266,6 +266,12 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 ---
 
+## Latest Changes
+
+- Added `EssenceManager.Load(EssenceSaveData)` and `GameManager.Load(GameSaveData)` to rehydrate saves without reflection.
+  - **Test:** collect some essence, spend clicks and a dungeon key, then quit and relaunch. State should match the moment you quit.
+
+
 
 
 \# WORKING AGREEMENTS

@@ -11,17 +11,6 @@ public static class SaveSystem
 {
     private const string FileName = "save.json";
 
-    [Serializable]
-    private class SaveData
-    {
-        public int day;
-        public int essence;
-        public int dailyClicksRemaining;
-        public int essencePerClick;
-        public float passivePerSecond;
-        public List<string> purchasedUpgradeIds = new();
-    }
-
     public static void Save(GameManager gm)
     {
         var essence = gm.Essence as EssenceManager;
@@ -29,11 +18,20 @@ public static class SaveSystem
 
         var data = new SaveData
         {
-            day = gm.Day,
-            essence = essence.CurrentEssence,
-            dailyClicksRemaining = essence.DailyClicksRemaining,
-            essencePerClick = essence.EssencePerClick,
-            passivePerSecond = essence.PassivePerSecond,
+            game = new GameSaveData
+            {
+                day = gm.Day,
+                dungeonKeysRemaining = gm.DungeonKeysRemaining,
+                dungeonAttemptedToday = gm.DungeonAttemptedToday,
+                tempNextDayClickDebuff = gm.TempNextDayClickDebuff
+            },
+            essence = new EssenceSaveData
+            {
+                currentEssence = essence.CurrentEssence,
+                dailyClicksRemaining = essence.DailyClicksRemaining,
+                essencePerClick = essence.EssencePerClick,
+                passivePerSecond = essence.PassivePerSecond
+            },
             purchasedUpgradeIds = new List<string>(upgrades.PurchasedIds)
         };
 
@@ -51,21 +49,9 @@ public static class SaveSystem
         var essence = gm.Essence as EssenceManager;
         var upgrades = gm.Upgrades as UpgradeManager;
 
-        // Rehydrate state. Note we call the same methods that runtime uses,
-        // so we don't accidentally bypass any logic.
-        while (essence.DailyClicksRemaining > data.dailyClicksRemaining)
-            essence.TryClickHarvest(); // crude but keeps events consistent
-
-        // Directly set fields that are safe to assign (or extend EssenceManager with setters)
-        typeof(EssenceManager).GetField("_currentEssence", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.SetValue(essence, data.essence);
-
-        essence.AddEssencePerClick(data.essencePerClick - essence.EssencePerClick);
-        essence.AddPassivePerSecond(data.passivePerSecond - essence.PassivePerSecond);
-
-        upgrades.LoadPurchased(data.purchasedUpgradeIds);
-
-        // Day last (fires event if you add one in GameManager.Load in future)
-        typeof(GameManager).GetProperty("Day")?.SetValue(gm, data.day, null);
+        // Let each system rehydrate itself so events fire correctly.
+        essence?.Load(data.essence);
+        upgrades?.LoadPurchased(data.purchasedUpgradeIds);
+        gm.Load(data.game);
     }
 }

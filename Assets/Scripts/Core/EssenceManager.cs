@@ -114,6 +114,28 @@ public class EssenceManager : MonoBehaviour, IEssenceProvider
         OnDailyClicksChanged?.Invoke(_dailyClicksRemaining);
     }
 
+    /// <summary>
+    /// Rehydrate state from a saved snapshot.
+    /// This avoids reflection and ensures all events fire consistently.
+    /// </summary>
+    public void Load(EssenceSaveData data)
+    {
+        if (data == null) return; // Defensive: nothing to load
+
+        // Directly assign the saved values
+        _currentEssence       = data.currentEssence;
+        _dailyClicksRemaining = data.dailyClicksRemaining;
+        _essencePerClick      = data.essencePerClick;
+        passivePerSecond      = data.passivePerSecond;
+
+        // Notify listeners so the UI syncs up after loading
+        OnEssenceChanged?.Invoke(_currentEssence);
+        OnDailyClicksChanged?.Invoke(_dailyClicksRemaining);
+
+        // Refresh passive tick in case passivePerSecond changed
+        StartPassiveIfNeeded();
+    }
+
     // ---- internals ----
 
     private void AddInternal(int amount)
