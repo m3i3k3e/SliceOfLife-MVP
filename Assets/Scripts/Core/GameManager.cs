@@ -6,7 +6,7 @@ using UnityEngine;
 /// Central orchestrator. Uses the Singleton pattern so other systems can easily locate
 /// one persistent instance that survives scene loads.
 /// </summary>
-public class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviour, IGameManager
 {
     // -------- Singleton --------
     public static GameManager Instance { get; private set; }

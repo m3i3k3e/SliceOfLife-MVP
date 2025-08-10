@@ -13,6 +13,13 @@ public class LoadSceneButton : MonoBehaviour
     // For other buttons that just change scenes, uncheck in Inspector.
     [SerializeField] private bool requireDungeonKey = true;
 
+    [Header("Dependencies")]
+    [Tooltip("Reference to a GameManager implementing IGameManager.")]
+    [SerializeField] private MonoBehaviour gameManagerSource;
+
+    // Helper property casts the serialized reference to our interface.
+    private IGameManager GM => gameManagerSource as IGameManager;
+
     /// <summary>
     /// Triggered by UI. Spends a dungeon key if required before loading the target scene.
     /// </summary>
@@ -20,8 +27,8 @@ public class LoadSceneButton : MonoBehaviour
     {
         if (requireDungeonKey)
         {
-            var gm = GameManager.Instance;
-            if (gm == null) return;
+            var gm = GM;                   // interface-based reference
+            if (gm == null) return;        // dependency missing
 
             // Spend a key; bail if none left.
             if (!gm.TryConsumeDungeonKey())

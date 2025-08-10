@@ -7,6 +7,18 @@ using UnityEngine;
 /// </summary>
 public class BattleRewardService
 {
+    private readonly IGameManager _gameManager;
+
+    /// <summary>
+    /// Require a reference to <see cref="IGameManager"/> so callers can inject
+    /// the concrete implementation. Keeps battle logic decoupled from the
+    /// GameManager singleton.
+    /// </summary>
+    public BattleRewardService(IGameManager gameManager)
+    {
+        _gameManager = gameManager;
+    }
+
     /// <summary>
     /// Calculates the final reward based on config and active upgrades,
     /// grants it through the EssenceManager, and returns the amount awarded.
@@ -18,7 +30,7 @@ public class BattleRewardService
 
         // 2) Pull the multiplier from the Upgrade system if available.
         float multiplier = 1f;
-        var upgrades = GameManager.Instance != null ? GameManager.Instance.Upgrades : null;
+        var upgrades = _gameManager?.Upgrades;
         if (upgrades != null)
         {
             multiplier = Mathf.Max(0f, upgrades.RewardMultiplier);
@@ -28,12 +40,15 @@ public class BattleRewardService
         int reward = Mathf.RoundToInt(baseReward * multiplier);
 
         // 4) Grant the reward via the Essence manager (if present).
-        var gm = GameManager.Instance;
-        if (gm != null && gm.Essence != null)
+        var essence = _gameManager?.Essence;
+        if (essence != null)
         {
-            gm.Essence.AddExternal(reward);
+            essence.AddExternal(reward);
             // Persist the payout so it isn't lost if the app closes immediately after battle.
-            await SaveSystem.SaveAsync(gm); // optional: persist immediately
+            if (_gameManager is GameManager concrete)
+            {
+                await SaveSystem.SaveAsync(concrete); // optional: persist immediately
+            }
         }
 
         return reward;
