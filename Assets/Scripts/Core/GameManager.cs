@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using UnityEngine;
 
 [DefaultExecutionOrder(-100)]
@@ -62,7 +63,7 @@ public class GameManager : MonoBehaviour
         ReevaluateSleepGate();
     }
 
-    private void HandleUpgradePurchased(UpgradeSO up)
+    private async void HandleUpgradePurchased(UpgradeSO up)
 {
     if (up != null && up.id == unlockUpgradeId)
     {
@@ -71,7 +72,8 @@ public class GameManager : MonoBehaviour
         // Broadcast via the static event hub so UI stays decoupled from GameManager.
         GameEvents.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
         ReevaluateSleepGate();
-        SaveSystem.Save(this);
+        // Persist the newly unlocked state without blocking callers.
+        await SaveSystem.SaveAsync(this);
     }
 }
 
@@ -124,12 +126,18 @@ public class GameManager : MonoBehaviour
             ReevaluateSleepGate();
             return false; // Gate denied; reason broadcast via event
         }
-        AdvanceDay();
+        // Block until day advancement (and save) completes to keep API synchronous.
+        AdvanceDay().GetAwaiter().GetResult();
         return true;
     }
 
     /// <summary>Consume one dungeon key if available. Returns true on success.</summary>
-    public bool TryConsumeDungeonKey()
+    public bool TryConsumeDungeonKey() => TryConsumeDungeonKeyAsync().GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Async version so callers can await the save operation if desired.
+    /// </summary>
+    public async Task<bool> TryConsumeDungeonKeyAsync()
     {
         if (!IsDungeonUnlocked()) return true; // before unlock, don't block
         if (DungeonKeysRemaining <= 0) return false;
@@ -138,7 +146,7 @@ public class GameManager : MonoBehaviour
         // Let listeners know key counts changed (UI, save system, etc.).
         GameEvents.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
         ReevaluateSleepGate();
-        SaveSystem.Save(this);
+        await SaveSystem.SaveAsync(this);
         return true;
     }
 
@@ -156,7 +164,12 @@ public class GameManager : MonoBehaviour
     /// Applies defeat repercussions: immediate essence loss and a temporary click-cap debuff
     /// for the following day. Encapsulated here so battle code stays unaware of economy rules.
     /// </summary>
-    public void ApplyDungeonLossPenalty()
+    public void ApplyDungeonLossPenalty() => ApplyDungeonLossPenaltyAsync().GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Async variant of the loss penalty so callers may await persistence.
+    /// </summary>
+    public async Task ApplyDungeonLossPenaltyAsync()
     {
         if (Essence != null)
         {
@@ -167,7 +180,7 @@ public class GameManager : MonoBehaviour
         int baseCap = essenceManager ? essenceManager.DailyClickCap : 10;
         _tempNextDayClickDebuff = Mathf.Clamp(_tempNextDayClickDebuff + nextDayClickDebuffOnLoss, 0, baseCap);
 
-        SaveSystem.Save(this);
+        await SaveSystem.SaveAsync(this);
     }
 
     // -------- Sleep gate --------
@@ -224,7 +237,7 @@ public class GameManager : MonoBehaviour
 
     // -------- Day change internals --------
 
-    private void AdvanceDay() // keep this private so everyone uses TrySleep()
+    private async Task AdvanceDay() // keep this private so everyone uses TrySleep()
     {
         Day++;
 
@@ -245,7 +258,7 @@ public class GameManager : MonoBehaviour
 
         // Inform listeners of the new day index.
         GameEvents.RaiseDayChanged(Day);
-        SaveSystem.Save(this);
+        await SaveSystem.SaveAsync(this);
         ReevaluateSleepGate();
     }
 
@@ -286,5 +299,5 @@ public class GameManager : MonoBehaviour
             upgradeManager.OnPurchased -= HandleUpgradePurchased;
     }
 
-    private void OnApplicationQuit() => SaveSystem.Save(this);
+    private void OnApplicationQuit() => SaveSystem.SaveAsync(this).GetAwaiter().GetResult();
 }

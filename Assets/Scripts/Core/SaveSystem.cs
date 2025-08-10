@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -13,10 +14,10 @@ public static class SaveSystem
     private const int Version = 1; // Bump this when save schema changes
 
     /// <summary>
-    /// Serialize current runtime state to JSON. Static helper follows a tiny facade pattern
-    /// so callers don't worry about file paths or formats.
+    /// Serialize current runtime state to JSON asynchronously. Callers can await this task
+    /// if they need confirmation that disk I/O has completed.
     /// </summary>
-    public static void Save(GameManager gm)
+    public static async Task SaveAsync(GameManager gm)
     {
         var essence = gm.Essence as EssenceManager;
         var upgrades = gm.Upgrades as UpgradeManager;
@@ -40,8 +41,8 @@ public static class SaveSystem
 
         try
         {
-            // Write JSON to disk. Any IO issue gets logged instead of crashing the game.
-            File.WriteAllText(path, json);
+            // Asynchronously write JSON to disk. Any IO issue gets logged instead of crashing the game.
+            await File.WriteAllTextAsync(path, json);
         }
         catch (Exception ex)
         {
@@ -50,10 +51,15 @@ public static class SaveSystem
     }
 
     /// <summary>
-    /// Attempt to load saved JSON and apply it to runtime objects.
+    /// Legacy synchronous wrapper so existing callers don't need to care about tasks.
+    /// </summary>
+    public static void Save(GameManager gm) => SaveAsync(gm).GetAwaiter().GetResult();
+
+    /// <summary>
+    /// Attempt to load saved JSON and apply it to runtime objects asynchronously.
     /// Returns a default <see cref="GameSaveData"/> if loading fails for any reason.
     /// </summary>
-    public static GameSaveData Load(GameManager gm)
+    public static async Task<GameSaveData> LoadAsync(GameManager gm)
     {
         var path = Path.Combine(Application.persistentDataPath, FileName);
 
@@ -62,8 +68,8 @@ public static class SaveSystem
 
         try
         {
-            // Read JSON off disk. Exceptions (missing file, locked file, etc.) are caught below.
-            var json = File.ReadAllText(path);
+            // Asynchronously read JSON off disk. Exceptions are caught below.
+            var json = await File.ReadAllTextAsync(path);
 
             // Deserialize into our DTO; if parsing somehow returns null, fall back to defaults.
             var data = JsonUtility.FromJson<GameSaveData>(json) ?? new GameSaveData();
@@ -88,6 +94,11 @@ public static class SaveSystem
             return new GameSaveData();
         }
     }
+
+    /// <summary>
+    /// Legacy synchronous wrapper for code that hasn't adopted async yet.
+    /// </summary>
+    public static GameSaveData Load(GameManager gm) => LoadAsync(gm).GetAwaiter().GetResult();
 }
 
 /// <summary>

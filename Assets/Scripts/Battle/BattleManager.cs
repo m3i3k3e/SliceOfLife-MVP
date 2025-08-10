@@ -326,9 +326,10 @@ public class BattleManager : MonoBehaviour
 
     // --- Endings ---
 
-    private void Victory()
+    private async void Victory()
     {
-        int reward = _rewards.GrantVictoryReward(config);
+        // Await the reward calculation so the save operation completes before returning to UI.
+        int reward = await _rewards.GrantVictoryReward(config);
 
         OnInfoChanged?.Invoke($"Victory! +{reward} Essence");
         OnBattleEnded?.Invoke(true, reward);

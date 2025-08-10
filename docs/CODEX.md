@@ -136,7 +136,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
   Subscribe in `OnEnable` and unsubscribe in `OnDisable`.
 \- \*\*Other events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
 
-\- \*\*Persistence\*\*: `SaveSystem` writes a single `GameSaveData` DTO containing `Game`, `Essence`, and `Upgrades` records. Disk I/O is wrapped in try/catch and logs errors; failed loads return defaults without mutating runtime state. The DTO carries a `version` field for future migrations. `GameManager`, `EssenceManager`, and `UpgradeManager` expose `ToData()`/`LoadFrom()` to bridge runtime and disk.
+\- \*\*Persistence\*\*: `SaveSystem` writes a single `GameSaveData` DTO containing `Game`, `Essence`, and `Upgrades` records. Disk I/O is wrapped in try/catch and logs errors; failed loads return defaults without mutating runtime state. Async `SaveAsync`/`LoadAsync` methods return `Task` so callers can await disk operations, while legacy `Save`/`Load` wrappers block on completion. The DTO carries a `version` field for future migrations. `GameManager`, `EssenceManager`, and `UpgradeManager` expose `ToData()`/`LoadFrom()` to bridge runtime and disk.
 
 \- \*\*Scenes\*\*: `Start`, `Battle`.
 
