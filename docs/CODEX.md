@@ -160,9 +160,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 - **GameEvents**: lightweight static hub mirroring common manager events for quick prototypes. Currently forwards `OnEssenceChanged`, `OnInventoryChanged`, `OnTaskAdvanced`, `OnTaskCompleted`, `OnUpgradePurchased`, `OnDayChanged`, `OnDungeonKeysChanged`, and `OnSleepEligibilityChanged`.
 
-  - **Test**: Attach `GameEventsSanityTest` or `TaskServiceSanityTest` to any scene object, run the game, trigger a click, add an item, advance/complete a task, buy an upgrade, spend a dungeon key, or sleep to advance the day. Each action should log exactly one message.
-
- - **Tasks**: `TaskService.CurrentTaskTitle` exposes the active tutorial step's title. Useful for HUDs that want to display guidance.  **Test**: Start the game and watch `WorldHUD` update as tasks advance.
+- **Tasks**: `TaskService.CurrentTaskTitle` exposes the active tutorial step's title. Useful for HUDs that want to display guidance.  **Test**: Start the game and watch `WorldHUD` update as tasks advance.
 
    - **Tasks Access**: `GameManager.Tasks` exposes the `TaskService` so systems can query or save tutorial progress.
 
