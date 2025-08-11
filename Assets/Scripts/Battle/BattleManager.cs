@@ -344,10 +344,10 @@ public class BattleManager : MonoBehaviour
     /// <summary>
     /// Handle victory flow and award essence asynchronously.
     /// </summary>
-    private async void Victory()
+    private void Victory()
     {
-        // Await the reward calculation so the save operation completes before returning to UI.
-        int reward = await _rewards.GrantVictoryReward(config);
+        // Calculate the reward synchronously.
+        int reward = _rewards.GrantVictoryReward(config);
 
         OnInfoChanged?.Invoke($"Victory! +{reward} Essence");
         OnBattleEnded?.Invoke(true, reward);

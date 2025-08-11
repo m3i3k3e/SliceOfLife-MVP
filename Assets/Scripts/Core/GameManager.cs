@@ -278,7 +278,7 @@ public class GameManager : MonoBehaviour, IGameManager
             return false; // Gate denied; reason broadcast via event
         }
         // Block until day advancement (and save) completes to keep API synchronous.
-        AdvanceDay().GetAwaiter().GetResult();
+        AdvanceDay();
         return true;
     }
 
@@ -385,7 +385,7 @@ public class GameManager : MonoBehaviour, IGameManager
     /// <summary>
     /// Internal routine that advances the day and resets daily-limited resources.
     /// </summary>
-    private async Task AdvanceDay() // keep this private so everyone uses TrySleep()
+    private void AdvanceDay() // keep this private so everyone uses TrySleep()
     {
         Day++; // increment first so save file reflects the new day
 
