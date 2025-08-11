@@ -1,3 +1,9 @@
+/*
+ * HUD.cs
+ * Role: Root hub that hands core dependencies to HUD panels and coordinates their binding lifecycle.
+ * Key dependencies: IGameManager for game state, IEventBus for global notifications, HUDPanel components.
+ * Expansion: Add new HUD panels by deriving from HUDPanel and registering them in scenes.
+ */
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,9 +16,11 @@ using UnityEngine;
 public class HUD : MonoBehaviour
 {
     [Header("Dependencies")]
+    /// <summary>Reference to a GameManager instance implementing IGameManager.</summary>
     [Tooltip("Reference to a GameManager instance implementing IGameManager.")]
     [SerializeField] private MonoBehaviour gameManagerSource;
 
+    /// <summary>Reference to an event bus implementing IEventBus.</summary>
     [Tooltip("Reference to an event bus implementing IEventBus.")]
     [SerializeField] private MonoBehaviour eventBusSource;
 
@@ -21,12 +29,13 @@ public class HUD : MonoBehaviour
     private IGameManager GM => gameManagerSource as IGameManager;
     private IEventBus Events => eventBusSource as IEventBus;
 
-    // Keep track of registered panels so we can bind/unbind them as a group.
+    /// <summary>Keep track of registered panels so we can bind/unbind them as a group.</summary>
     private readonly List<HUDPanel> _panels = new();
 
-    // Tracks whether core dependencies are ready. Only then do we bind panels.
+    /// <summary>Tracks whether core dependencies are ready before binding panels.</summary>
     private bool _ready;
 
+    /// <summary>Unity OnEnable: delay binding until dependencies are assigned.</summary>
     private void OnEnable()
     {
         // Wait for the GameManager to exist before initializing panels.
@@ -44,9 +53,9 @@ public class HUD : MonoBehaviour
             panel.Bind(GM, Events);
     }
 
+    /// <summary>Unity OnDisable: unbind all panels to drop event subscriptions.</summary>
     private void OnDisable()
     {
-        // Unbind panels so they drop event subscriptions when the HUD is disabled.
         foreach (var panel in _panels)
             panel.Unbind();
         _ready = false;

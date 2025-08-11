@@ -1,3 +1,9 @@
+/*
+ * StationManager.cs
+ * Role: Central registry for stations and companions, decoupling runtime systems from ScriptableObject implementations.
+ * Key dependencies: StationSO and CompanionSO assets; GameManager event bus for unlock notifications.
+ * Expansion: Implement additional station types by extending IStation and creating new StationSO assets.
+ */
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,20 +16,24 @@ using UnityEngine;
 public class StationManager : MonoBehaviour, ISaveable
 {
     [Header("Data Sources (assign in Inspector)")]
+    /// <summary>List of all station definitions available in the game.</summary>
     [Tooltip("List of all station definitions available in the game.")]
     [SerializeField] private List<StationSO> stationAssets = new();
 
+    /// <summary>List of all companions player can eventually recruit.</summary>
     [Tooltip("List of all companions player can eventually recruit.")]
     [SerializeField] private List<CompanionSO> companionAssets = new();
 
     // Backing collections exposed as interface lists.
+    /// <summary>Runtime list of station interfaces for decoupled access.</summary>
     private readonly List<IStation> _stations = new();
+    /// <summary>Runtime list of companion interfaces for decoupled access.</summary>
     private readonly List<ICompanion> _companions = new();
 
     // Persistence containers
-    // Tracks unlocked stations by their stable IDs
+    /// <summary>Tracks unlocked stations by their stable IDs.</summary>
     private readonly HashSet<string> _unlockedStationIds = new();
-    // Maps companion ID -> station ID they are assigned to
+    /// <summary>Maps companion ID to the station ID they are assigned to.</summary>
     private readonly Dictionary<string, string> _companionAssignments = new();
 
     /// <summary>
@@ -34,6 +44,10 @@ public class StationManager : MonoBehaviour, ISaveable
     /// </summary>
     public event Action<ICompanion, IReadOnlyList<CardSO>, IReadOnlyList<UpgradeSO>> OnCompanionRecruited;
 
+    /// <summary>
+    /// Unity Awake: build interface lists and capture default companion assignments
+    /// so the manager starts with clean runtime collections.
+    /// </summary>
     private void Awake()
     {
         // Build interface lists once on startup; ScriptableObjects live in memory.
@@ -98,16 +112,21 @@ public class StationManager : MonoBehaviour, ISaveable
         return true;
     }
 
+    /// <summary>
+    /// Unity OnEnable: subscribe to station production events so results can be
+    /// forwarded through the global event bus.
+    /// </summary>
     private void OnEnable()
     {
-        // Subscribe to station production events so we can forward results globally.
         for (int i = 0; i < _stations.Count; i++)
             _stations[i].OnProductionComplete += HandleStationProductionComplete;
     }
 
+    /// <summary>
+    /// Unity OnDisable: unsubscribe from station production events to avoid leaks.
+    /// </summary>
     private void OnDisable()
     {
-        // Unsubscribe to avoid memory leaks when the object is disabled/destroyed.
         for (int i = 0; i < _stations.Count; i++)
             _stations[i].OnProductionComplete -= HandleStationProductionComplete;
     }
