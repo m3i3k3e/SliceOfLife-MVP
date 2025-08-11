@@ -51,6 +51,12 @@ public class BattleRewardService
             }
         }
 
+        // 5) Unlock any recipe reward configured for this battle.
+        if (config != null && config.recipeReward != null)
+        {
+            _gameManager?.Recipes?.UnlockRecipe(config.recipeReward.Id);
+        }
+
         return reward;
     }
 }

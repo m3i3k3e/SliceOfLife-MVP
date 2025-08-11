@@ -22,6 +22,7 @@ MonoBehaviour:
   enemyHeavyDamage: 7
   enemyLeechHeal: 3
   baseEssenceReward: 20
+  recipeReward: {fileID: 0}
   returnDelay: 5
   autoEndTurnDelay: 5
   energyPerTurn: 3

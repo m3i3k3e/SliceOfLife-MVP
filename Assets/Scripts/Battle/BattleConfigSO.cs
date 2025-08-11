@@ -22,6 +22,8 @@ public class BattleConfigSO : ScriptableObject
 
     [Header("Rewards")]
     public int baseEssenceReward = 20;    // Essence granted on win (before any future multipliers)
+    [Tooltip("Recipe unlocked on victory; leave null for none.")]
+    public RecipeSO recipeReward;         // optional recipe unlock
 
     [Header("Flow")]
     public float returnDelay = 3.0f;      // seconds before returning to Start scene after win/lose

@@ -26,6 +26,7 @@ public class GameManager : MonoBehaviour, IGameManager
         if (inventoryManager != null) RegisterSaveable(inventoryManager);
         if (resourceManager != null) RegisterSaveable(resourceManager);
         if (skillTreeManager != null) RegisterSaveable(skillTreeManager);
+        if (recipeManager != null) RegisterSaveable(recipeManager);
     }
 
     // -------- Core systems --------
@@ -36,6 +37,7 @@ public class GameManager : MonoBehaviour, IGameManager
     [SerializeField] private InventoryManager inventoryManager; // holds items
     [SerializeField] private ResourceManager resourceManager; // tracks generic resources
     [SerializeField] private SkillTreeManager skillTreeManager; // governs skill unlocks
+    [SerializeField] private RecipeManager recipeManager; // crafting recipes
     [SerializeField] private string unlockUpgradeId = UpgradeIds.UnlockBattle; // default to constant to avoid typos
 
     // ----- Saveable registration -----
@@ -72,7 +74,10 @@ public class GameManager : MonoBehaviour, IGameManager
 
     /// <summary>Access to global resource counts.</summary>
     public ResourceManager Resources => resourceManager;
-    
+
+    /// <summary>Access to unlocked crafting recipes.</summary>
+    public RecipeManager Recipes => recipeManager;
+
     /// <summary>How many dungeon keys the player receives each day once unlocked.</summary>
     public int DungeonKeysPerDay => dungeonKeysPerDay; // expose for HUD
 
