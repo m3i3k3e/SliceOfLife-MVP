@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using UnityEngine;
 
 /// <summary>
@@ -34,10 +32,11 @@ public static class SaveSystem
     /// <summary>
     /// Serialize runtime state to disk.
     /// </summary>
-    public static void Save(GameManager gm)
+    public static void Save(GameManager gm, TaskService taskService = null)
     {
         if (gm == null) return;
-        var model = BuildModel(gm);
+        taskService ??= gm.Tasks; // fall back to manager's reference if none provided
+        var model = BuildModel(gm, taskService);
         WriteToDisk(model);
     }
 
@@ -45,14 +44,16 @@ public static class SaveSystem
     /// Load state from disk, migrating v1 data if encountered, and apply to managers.
     /// Returns the loaded model for convenience.
     /// </summary>
-    public static SaveModelV2 Load(GameManager gm)
+    public static SaveModelV2 Load(GameManager gm, TaskService taskService = null)
     {
         var model = new SaveModelV2();
+        if (gm == null) return model;
+        taskService ??= gm.Tasks;
         var path = PathToFile;
 
         if (!File.Exists(path))
         {
-            ApplyModel(gm, model);
+            ApplyModel(gm, model, taskService);
             return model; // nothing to load yet
         }
 
@@ -76,24 +77,20 @@ public static class SaveSystem
             model = new SaveModelV2();
         }
 
-        ApplyModel(gm, model);
+        ApplyModel(gm, model, taskService);
         return model;
     }
 
     /// <summary>Gather data from services into a <see cref="SaveModelV2"/>.</summary>
-    private static SaveModelV2 BuildModel(GameManager gm)
+    private static SaveModelV2 BuildModel(GameManager gm, TaskService taskService)
     {
         var model = new SaveModelV2
         {
             day = gm.Day,
             dungeonKeysRemaining = gm.DungeonKeysRemaining,
-            dungeonKeysPerDay = gm.DungeonKeysPerDay
+            dungeonKeysPerDay = gm.DungeonKeysPerDay,
+            tempNextDayClickDebuff = gm.TempNextDayClickDebuff
         };
-
-        // Access private debuff field via reflection to avoid widening GameManager's API.
-        var debuffField = typeof(GameManager).GetField("_tempNextDayClickDebuff", BindingFlags.NonPublic | BindingFlags.Instance);
-        if (debuffField != null)
-            model.tempNextDayClickDebuff = (int)debuffField.GetValue(gm);
 
         // ----- Essence -----
         if (gm.Essence is EssenceManager essence)
@@ -132,24 +129,21 @@ public static class SaveSystem
         }
 
         // ----- Tasks -----
-        var taskSvc = UnityEngine.Object.FindObjectOfType<TaskService>();
-        if (taskSvc != null)
-            model.tasks.AddRange(taskSvc.CaptureState());
+        if (taskService != null)
+            model.tasks.AddRange(taskService.CaptureState());
 
         // Flags not yet driven by runtime systems default to their existing values.
         return model;
     }
 
     /// <summary>Apply a loaded model to all known systems.</summary>
-    private static void ApplyModel(GameManager gm, SaveModelV2 model)
+    private static void ApplyModel(GameManager gm, SaveModelV2 model, TaskService taskService)
     {
         gm?.ApplyLoadedState(model);
         (gm?.Essence as EssenceManager)?.ApplyLoadedState(model);
         (gm?.Upgrades as UpgradeManager)?.ApplyLoadedState(model);
         (gm?.Inventory as InventoryManager)?.ApplyLoadedState(model);
 
-        // TaskService is spawned separately; find and apply if present.
-        var taskService = UnityEngine.Object.FindObjectOfType<TaskService>();
         taskService?.ApplyLoadedState(model);
 
         gm?.ReevaluateSleepGate();

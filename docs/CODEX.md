@@ -162,9 +162,13 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
   - **Test**: Attach `GameEventsSanityTest` or `TaskServiceSanityTest` to any scene object, run the game, trigger a click, add an item, advance/complete a task, buy an upgrade, spend a dungeon key, or sleep to advance the day. Each action should log exactly one message.
 
-- **Tasks**: `TaskService.CurrentTaskTitle` exposes the active tutorial step's title. Useful for HUDs that want to display guidance.  **Test**: Start the game and watch `WorldHUD` update as tasks advance.
+ - **Tasks**: `TaskService.CurrentTaskTitle` exposes the active tutorial step's title. Useful for HUDs that want to display guidance.  **Test**: Start the game and watch `WorldHUD` update as tasks advance.
 
-\- \*\*Persistence\*\*: `SaveSystem` v2 writes a single `SaveModelV2` JSON file instead of sectioned blobs. Core managers expose an `ApplyLoadedState(SaveModelV2 data)` hook so loading can hydrate each system without string keys. `SaveSystem` now offers `HasAnySave()`, `Delete()`, `Save(GameManager)`, and `Load(GameManager)` APIs. **Test**: start a new game, ensure `save.json` appears, then delete it via `SaveSystem.Delete()` and verify a fresh run starts clean.
+   - **Tasks Access**: `GameManager.Tasks` exposes the `TaskService` so systems can query or save tutorial progress.
+
+   - **Debuff Access**: `GameManager.TempNextDayClickDebuff` reveals the click-cap reduction that will apply on the next day.
+
+   - **Persistence**: `SaveSystem` v2 writes a single `SaveModelV2` JSON file instead of sectioned blobs. Core managers expose an `ApplyLoadedState(SaveModelV2 data)` hook so loading can hydrate each system without string keys. `SaveSystem` now offers `HasAnySave()`, `Delete()`, `Save(GameManager, TaskService)`, and `Load(GameManager, TaskService)` APIs (task service parameter is optional if `GameManager` already has one injected). **Test**: start a new game, ensure `save.json` appears, then delete it via `SaveSystem.Delete()` and verify a fresh run starts clean.
 \- **Test**: Call `Stations.UnlockStation("farm")` or `Stations.RecruitCompanion("alice")` in play mode and watch the console/UI react via the event bus (`StationUnlocked` or `CompanionRecruited`).
   Trigger a station's `OnProductionComplete` to see `MinigameCompleted` propagate.
 
