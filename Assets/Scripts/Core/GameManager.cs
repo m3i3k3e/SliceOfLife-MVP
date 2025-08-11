@@ -20,14 +20,16 @@ public class GameManager : MonoBehaviour, IGameManager
         // Register core systems for saving. Doing this in Awake ensures the list
         // is ready before any save/load operations occur.
         RegisterSaveable(this); // GameManager persists its own day counter
-        if (essenceManager != null) RegisterSaveable(essenceManager);
-        if (upgradeManager != null) RegisterSaveable(upgradeManager);
-        if (stationManager != null) RegisterSaveable(stationManager);
-        if (dungeonProgression != null) RegisterSaveable(dungeonProgression);
-        if (inventoryManager != null) RegisterSaveable(inventoryManager);
-        if (resourceManager != null) RegisterSaveable(resourceManager);
-        if (skillTreeManager != null) RegisterSaveable(skillTreeManager);
-        if (recipeManager != null) RegisterSaveable(recipeManager);
+
+        // Economy and progression modules
+        if (essenceManager != null) RegisterSaveable(essenceManager);      // primary currency
+        if (upgradeManager != null) RegisterSaveable(upgradeManager);      // purchased upgrades
+        if (stationManager != null) RegisterSaveable(stationManager);      // unlocked stations/companions
+        if (inventoryManager != null) RegisterSaveable(inventoryManager);  // item stacks
+        if (resourceManager != null) RegisterSaveable(resourceManager);    // raw resource counts
+        if (recipeManager != null) RegisterSaveable(recipeManager);        // known crafting recipes
+        if (dungeonProgression != null) RegisterSaveable(dungeonProgression); // floor milestones
+        if (skillTreeManager != null) RegisterSaveable(skillTreeManager);  // unlocked skills
     }
 
     // -------- Core systems --------

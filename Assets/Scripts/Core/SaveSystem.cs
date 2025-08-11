@@ -11,7 +11,9 @@ using UnityEngine;
 public static class SaveSystem
 {
     private const string FileName = "save.json";
-    private const int Version = 5; // Bump this when save schema changes
+    // Version is baked into the save file so future migrations can detect
+    // outdated data layouts. Adding new saveable sections warrants a bump.
+    private const int Version = 6; // v6 adds Resources, Recipes and Dungeon sections
 
     /// <summary>
     /// Serialize current runtime state to JSON asynchronously. Callers can await this task
