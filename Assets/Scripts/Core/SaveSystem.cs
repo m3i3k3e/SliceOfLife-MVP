@@ -131,6 +131,11 @@ public static class SaveSystem
             }
         }
 
+        // ----- Tasks -----
+        var taskSvc = UnityEngine.Object.FindObjectOfType<TaskService>();
+        if (taskSvc != null)
+            model.tasks.AddRange(taskSvc.CaptureState());
+
         // Flags not yet driven by runtime systems default to their existing values.
         return model;
     }
