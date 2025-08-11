@@ -19,6 +19,15 @@ public class TaskService : MonoBehaviour
     private readonly List<TaskState> _states = new();
     private int _currentIndex; // index of the active task
 
+    /// <summary>
+    /// Title of the task the player is currently working on.
+    /// Returns an empty string when all tasks are complete.
+    /// </summary>
+    public string CurrentTaskTitle
+        => (_currentIndex >= 0 && _currentIndex < _states.Count)
+            ? _states[_currentIndex].task.Title
+            : string.Empty;
+
     /// <summary>Convenience accessor to the inventory interface.</summary>
     private IInventoryService Inventory => inventory;
 
