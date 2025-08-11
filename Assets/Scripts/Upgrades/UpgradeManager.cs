@@ -211,4 +211,13 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable
         // Then recompute all derived stats from the set (so multipliers are correct, with no double-apply).
         RecalculateDerivedStats();
     }
+
+    /// <summary>
+    /// Rehydrate upgrade state from the aggregate save model.
+    /// </summary>
+    public void ApplyLoadedState(SaveModelV2 data)
+    {
+        if (data == null) return;
+        LoadPurchased(data.purchasedUpgradeIds);
+    }
 }

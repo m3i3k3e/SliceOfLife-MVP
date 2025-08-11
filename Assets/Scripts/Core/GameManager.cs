@@ -5,7 +5,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 
 [DefaultExecutionOrder(-100)]
@@ -167,7 +166,7 @@ public class GameManager : MonoBehaviour, IGameManager
     /// <summary>
     /// React to newly bought upgrades so dependent systems update immediately.
     /// </summary>
-    private async void HandleUpgradePurchased(UpgradeSO up)
+    private void HandleUpgradePurchased(UpgradeSO up)
     {
         // Always bridge the purchase onto the global event bus so UI systems can react.
         Events?.RaiseUpgradePurchased(up);
@@ -179,8 +178,8 @@ public class GameManager : MonoBehaviour, IGameManager
             // Broadcast via the injected event bus so UI stays decoupled from GameManager.
             Events?.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
             ReevaluateSleepGate();
-            // Persist the newly unlocked state without blocking callers.
-            await SaveSystem.SaveAsync(this);
+            // Persist the newly unlocked state so the unlock isn't lost.
+            SaveSystem.Save(this);
         }
     }
 
@@ -196,36 +195,36 @@ public class GameManager : MonoBehaviour, IGameManager
     /// <summary>
     /// Persist inventory whenever items are added or removed.
     /// </summary>
-    private async void HandleInventoryChanged()
+    private void HandleInventoryChanged()
     {
-        await SaveSystem.SaveAsync(this);
+        SaveSystem.Save(this);
     }
 
     /// <summary>
     /// Persist and broadcast whenever resource totals change.
     /// </summary>
-    private async void HandleResourceChanged(ResourceSO resource, int amount)
+    private void HandleResourceChanged(ResourceSO resource, int amount)
     {
         Events?.RaiseResourceChanged(resource, amount);
-        await SaveSystem.SaveAsync(this);
+        SaveSystem.Save(this);
     }
 
     /// <summary>
     /// Persist and broadcast newly unlocked skills.
     /// </summary>
-    private async void HandleSkillUnlocked(SkillSO skill)
+    private void HandleSkillUnlocked(SkillSO skill)
     {
         Events?.RaiseSkillUnlocked(skill);
-        await SaveSystem.SaveAsync(this);
+        SaveSystem.Save(this);
     }
 
     /// <summary>
     /// Persist and broadcast newly unlocked crafting recipes.
     /// </summary>
-    private async void HandleRecipeUnlocked(RecipeSO recipe)
+    private void HandleRecipeUnlocked(RecipeSO recipe)
     {
         Events?.RaiseRecipeUnlocked(recipe);
-        await SaveSystem.SaveAsync(this);
+        SaveSystem.Save(this);
     }
 
     /// <summary>
@@ -284,12 +283,7 @@ public class GameManager : MonoBehaviour, IGameManager
     }
 
     /// <summary>Consume one dungeon key if available. Returns true on success.</summary>
-    public bool TryConsumeDungeonKey() => TryConsumeDungeonKeyAsync().GetAwaiter().GetResult();
-
-    /// <summary>
-    /// Async version so callers can await the save operation if desired.
-    /// </summary>
-    public async Task<bool> TryConsumeDungeonKeyAsync()
+    public bool TryConsumeDungeonKey()
     {
         if (!IsDungeonUnlocked()) return true; // before unlock, don't block
         if (DungeonKeysRemaining <= 0) return false;
@@ -298,7 +292,7 @@ public class GameManager : MonoBehaviour, IGameManager
         // Let listeners know key counts changed (UI, save system, etc.).
         Events?.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
         ReevaluateSleepGate();
-        await SaveSystem.SaveAsync(this);
+        SaveSystem.Save(this);
         return true;
     }
 
@@ -316,12 +310,7 @@ public class GameManager : MonoBehaviour, IGameManager
     /// Applies defeat repercussions: immediate essence loss and a temporary click-cap debuff
     /// for the following day. Encapsulated here so battle code stays unaware of economy rules.
     /// </summary>
-    public void ApplyDungeonLossPenalty() => ApplyDungeonLossPenaltyAsync().GetAwaiter().GetResult();
-
-    /// <summary>
-    /// Async variant of the loss penalty so callers may await persistence.
-    /// </summary>
-    public async Task ApplyDungeonLossPenaltyAsync()
+    public void ApplyDungeonLossPenalty()
     {
         if (Essence != null)
         {
@@ -332,7 +321,7 @@ public class GameManager : MonoBehaviour, IGameManager
         int baseCap = essenceManager ? essenceManager.DailyClickCap : 10;
         _tempNextDayClickDebuff = Mathf.Clamp(_tempNextDayClickDebuff + nextDayClickDebuffOnLoss, 0, baseCap);
 
-        await SaveSystem.SaveAsync(this);
+        SaveSystem.Save(this);
     }
 
     // -------- Sleep gate --------
@@ -417,7 +406,7 @@ public class GameManager : MonoBehaviour, IGameManager
 
         // Inform listeners of the new day index.
         Events?.RaiseDayChanged(Day);
-        await SaveSystem.SaveAsync(this);
+        SaveSystem.Save(this);
         ReevaluateSleepGate();
     }
 
@@ -463,6 +452,19 @@ public class GameManager : MonoBehaviour, IGameManager
     }
 
     /// <summary>
+    /// Populate runtime fields from the aggregated <see cref="SaveModelV2"/> data.
+    /// Only touches values owned by <see cref="GameManager"/> itself.
+    /// </summary>
+    public void ApplyLoadedState(SaveModelV2 data)
+    {
+        if (data == null) return;
+        Day = Mathf.Max(1, data.day);
+        DungeonKeysRemaining = Mathf.Max(0, data.dungeonKeysRemaining);
+        dungeonKeysPerDay = data.dungeonKeysPerDay;
+        _tempNextDayClickDebuff = Mathf.Max(0, data.tempNextDayClickDebuff);
+    }
+
+    /// <summary>
     /// Detach event listeners when the object is disabled to prevent leaks.
     /// </summary>
     private void OnDisable()
@@ -492,5 +494,5 @@ public class GameManager : MonoBehaviour, IGameManager
     /// <summary>
     /// Unity lifecycle: called when the application is closing. Forces a final save.
     /// </summary>
-    private void OnApplicationQuit() => SaveSystem.SaveAsync(this).GetAwaiter().GetResult();
+    private void OnApplicationQuit() => SaveSystem.Save(this);
 }

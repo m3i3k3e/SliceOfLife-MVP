@@ -193,6 +193,24 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
         public int quantity;
     }
 
+    /// <summary>
+    /// Apply loaded inventory state from the aggregate save model.
+    /// </summary>
+    public void ApplyLoadedState(SaveModelV2 data)
+    {
+        _slots.Clear();
+        if (data == null) return;
+
+        foreach (var stack in data.inventory)
+        {
+            var item = FindItem(stack.itemId);
+            if (item != null)
+                _slots.Add(new Slot(item, stack.qty));
+        }
+
+        OnInventoryChanged?.Invoke();
+    }
+
     /// <summary>Lookup helper to resolve an item ID from the catalog.</summary>
     private ItemCardSO FindItem(string id)
     {

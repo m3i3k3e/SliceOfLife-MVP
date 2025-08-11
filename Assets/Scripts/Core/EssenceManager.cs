@@ -242,4 +242,21 @@ public class EssenceManager : MonoBehaviour, IEssenceProvider, ISaveable
         public int essencePerClick;
         public float passivePerSecond;
     }
+
+    /// <summary>
+    /// Restore runtime values from the unified <see cref="SaveModelV2"/>.
+    /// </summary>
+    public void ApplyLoadedState(SaveModelV2 data)
+    {
+        if (data == null) return;
+
+        _currentEssence = data.essence;
+        _dailyClicksRemaining = data.dailyClicksRemaining;
+        _essencePerClick = data.essencePerClick;
+        passivePerSecond = data.passivePerSecond;
+
+        OnEssenceChanged?.Invoke(_currentEssence);
+        OnDailyClicksChanged?.Invoke(_dailyClicksRemaining);
+        StartPassiveIfNeeded();
+    }
 }

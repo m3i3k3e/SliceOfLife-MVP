@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -23,7 +22,7 @@ public class BattleRewardService
     /// Calculates the final reward based on config and active upgrades,
     /// grants it through the EssenceManager, and returns the amount awarded.
     /// </summary>
-    public async Task<int> GrantVictoryReward(BattleConfigSO config)
+    public int GrantVictoryReward(BattleConfigSO config)
     {
         // 1) Base reward from config. Defensive in case designers leave it negative.
         int baseReward = Mathf.Max(0, config.baseEssenceReward);
@@ -47,7 +46,7 @@ public class BattleRewardService
             // Persist the payout so it isn't lost if the app closes immediately after battle.
             if (_gameManager is GameManager concrete)
             {
-                await SaveSystem.SaveAsync(concrete); // optional: persist immediately
+                SaveSystem.Save(concrete); // optional: persist immediately
             }
         }
 

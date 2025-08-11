@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-
 /// <summary>
 /// Public surface for the central game orchestrator.
 /// Exposes core systems and day progression without
@@ -53,17 +51,11 @@ public interface IGameManager : ISaveable
     /// <summary>Consume one dungeon key if available.</summary>
     bool TryConsumeDungeonKey();
 
-    /// <summary>Async variant that persists the change.</summary>
-    Task<bool> TryConsumeDungeonKeyAsync();
-
     /// <summary>Mark that a dungeon attempt was made today.</summary>
     void MarkDungeonAttempted();
 
     /// <summary>Apply defeat repercussions immediately.</summary>
     void ApplyDungeonLossPenalty();
-
-    /// <summary>Async variant that persists loss penalties.</summary>
-    Task ApplyDungeonLossPenaltyAsync();
 
 }
 
