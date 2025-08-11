@@ -1,3 +1,10 @@
+/*
+ * InventoryManager.cs
+ * Purpose: Maintains the player's inventory at runtime with add/remove/query APIs.
+ * Dependencies: ItemCardSO definitions, IInventory surface, ISaveable for persistence.
+ * Expansion Hooks: OnInventoryChanged event for UI; slot data structure allows future sorting.
+ * Rationale: Implements interfaces so other systems talk to abstractions instead of concrete types.
+ */
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,6 +13,10 @@ using UnityEngine;
 /// Runtime container for item stacks. Offers basic add/remove/query APIs and fires
 /// <see cref="OnInventoryChanged"/> whenever contents mutate.
 /// </summary>
+/// <remarks>
+/// Implements <see cref="IInventory"/> and <see cref="ISaveable"/> to keep the persistence
+/// and consumer code decoupled from this concrete class.
+/// </remarks>
 public class InventoryManager : MonoBehaviour, IInventory, ISaveable
 {
     private const int SlotsPerRow = 10; // Each row exposes 10 slots in the dungeon bar
@@ -38,10 +49,13 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
     /// <inheritdoc />
     public int Capacity => unlockedRows * SlotsPerRow;
 
-    /// <inheritdoc />
+    /// <summary>Raised whenever inventory contents change.</summary>
     public event Action OnInventoryChanged;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Attempts to add an item stack, merging into existing stacks before creating new ones.
+    /// Returns <c>true</c> only if the entire quantity fits.
+    /// </summary>
     public bool TryAdd(ItemCardSO item, int quantity)
     {
         if (item == null || quantity <= 0) return false;
@@ -52,8 +66,8 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
         for (int i = 0; i < _slots.Count && remaining > 0; i++)
         {
             var slot = _slots[i];
-            if (slot.item != item) continue;
-            if (slot.quantity >= item.StackSize) continue;
+            if (slot.item != item) continue;           // skip non-matching stacks
+            if (slot.quantity >= item.StackSize) continue; // stack already full
 
             int space = item.StackSize - slot.quantity;
             int toAdd = Mathf.Min(space, remaining);
@@ -74,13 +88,17 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
         return success;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Attempts to remove items, failing if insufficient quantity exists.
+    /// Returns <c>true</c> when the full amount was removed.
+    /// </summary>
     public bool TryRemove(ItemCardSO item, int quantity)
     {
         if (item == null || quantity <= 0) return false;
         if (GetCount(item) < quantity) return false; // not enough to remove
 
         int remaining = quantity;
+        // Iterate backwards so RemoveAt doesn't skip elements
         for (int i = _slots.Count - 1; i >= 0 && remaining > 0; i--)
         {
             var slot = _slots[i];
@@ -98,14 +116,14 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
         return true;
     }
 
-    /// <inheritdoc />
+    /// <summary>Total quantity of the specified item across all stacks.</summary>
     public int GetCount(ItemCardSO item)
     {
         if (item == null) return 0;
         int total = 0;
         foreach (var slot in _slots)
             if (slot.item == item)
-                total += slot.quantity;
+                total += slot.quantity; // accumulate across stacks
         return total;
     }
 
@@ -133,7 +151,7 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
                 itemId = slot.item ? slot.item.Id : string.Empty,
                 quantity = slot.quantity
             });
-        }
+        } // capture each stack as plain data
 
         return data;
     }
@@ -151,7 +169,7 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
 
         foreach (var stack in d.items)
         {
-            var item = FindItem(stack.itemId);
+            var item = FindItem(stack.itemId); // resolve SO from saved ID
             if (item != null)
                 _slots.Add(new Slot(item, stack.quantity));
         }
@@ -179,6 +197,7 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
     private ItemCardSO FindItem(string id)
     {
         if (string.IsNullOrEmpty(id)) return null;
+        // Manual loop avoids allocations from LINQ
         for (int i = 0; i < itemCatalog.Count; i++)
         {
             var item = itemCatalog[i];
