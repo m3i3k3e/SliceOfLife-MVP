@@ -89,9 +89,25 @@ public class EssenceManager : MonoBehaviour, IEssenceProvider, ISaveable
     }
 
     /// <summary>
-    /// Unity lifecycle: begin passive generation if configured.
+    /// Unity lifecycle: begin passive generation and bridge local events to the
+    /// global <see cref="GameEvents"/> hub.
     /// </summary>
-    private void OnEnable() => StartPassiveIfNeeded();
+    private void OnEnable()
+    {
+        StartPassiveIfNeeded();
+
+        // Mirror our instance events to the static GameEvents so lightweight
+        // listeners can hook into currency changes without referencing us.
+        OnEssenceChanged += GameEvents.RaiseEssenceChanged;
+    }
+
+    /// <summary>
+    /// Unity lifecycle: drop event subscriptions to avoid leaks when disabled.
+    /// </summary>
+    private void OnDisable()
+    {
+        OnEssenceChanged -= GameEvents.RaiseEssenceChanged;
+    }
 
     /// <summary>Consume one click and add essence if under the daily cap.</summary>
     public bool TryClickHarvest()

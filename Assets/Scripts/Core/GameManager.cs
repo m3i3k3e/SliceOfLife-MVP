@@ -161,6 +161,11 @@ public class GameManager : MonoBehaviour, IGameManager
         // Notify listeners when deeper dungeon floors are reached.
         if (dungeonProgression != null)
             dungeonProgression.OnFloorReached += HandleFloorReached;
+
+        // Mirror day change events from the injected event bus onto the static
+        // GameEvents hub so lightweight listeners can react without bus refs.
+        if (Events != null)
+            Events.DayChanged += GameEvents.RaiseDayChanged;
     }
 
     /// <summary>
@@ -489,6 +494,9 @@ public class GameManager : MonoBehaviour, IGameManager
 
         if (dungeonProgression != null)
             dungeonProgression.OnFloorReached -= HandleFloorReached;
+
+        if (Events != null)
+            Events.DayChanged -= GameEvents.RaiseDayChanged;
     }
 
     /// <summary>

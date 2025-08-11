@@ -57,6 +57,22 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable
 
     public event Action<UpgradeSO> OnPurchased;
 
+    /// <summary>
+    /// Unity lifecycle: forward purchase events to the global <see cref="GameEvents"/> hub.
+    /// </summary>
+    private void OnEnable()
+    {
+        OnPurchased += GameEvents.RaiseUpgradePurchased;
+    }
+
+    /// <summary>
+    /// Unity lifecycle: unsubscribe mirrored handlers to avoid leaks.
+    /// </summary>
+    private void OnDisable()
+    {
+        OnPurchased -= GameEvents.RaiseUpgradePurchased;
+    }
+
     // ---- Purchase flow ----
     /// <summary>
     /// Attempt to buy an upgrade, applying one-shot effects and persisting ownership.
