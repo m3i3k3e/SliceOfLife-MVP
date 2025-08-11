@@ -195,7 +195,7 @@ public class BattleManager : MonoBehaviour
         if (card == null || !_playerTurn) return;
 
         // Card must exist in hand (prevents clicking stale UI)
-        if (!_deck.Hand.Contains(card)) return;
+        if (!System.Linq.Enumerable.Contains(_deck.Hand, card)) return;
 
         // Spend energy first so UI disables unaffordable cards immediately
         if (!TrySpendEnergy(Mathf.Max(0, card.cost))) return;

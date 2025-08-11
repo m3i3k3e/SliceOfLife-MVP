@@ -1,5 +1,5 @@
 # SliceOfLife-MVP — Context Snapshot
-_Generated: 2025-08-09 23:22_
+_Generated: 2025-08-10 20:57_
 
 ## Scenes
 - Battle
@@ -7,7 +7,6 @@ _Generated: 2025-08-09 23:22_
 - Title
 
 ## Prefabs
-- Prefabs/Battle/BattleRoot.prefab
 - Prefabs/Battle/CardView.prefab
 - Prefabs/UI/UpgradeButtonPrefab.prefab
 
@@ -18,6 +17,8 @@ _Generated: 2025-08-09 23:22_
 - ScriptableObjects/Cards/Guard.asset  _(type: CardSO)_
 - ScriptableObjects/Cards/Hamstring.asset  _(type: CardSO)_
 - ScriptableObjects/Cards/Mend.asset  _(type: CardSO)_
+- ScriptableObjects/Locations/Battle.asset  _(type: LocationSO)_
+- ScriptableObjects/Locations/Hub.asset  _(type: LocationSO)_
 - ScriptableObjects/Upgrades/BattleRewardBonus25.asset  _(type: UpgradeSO)_
 - ScriptableObjects/Upgrades/Plus One Click.asset  _(type: UpgradeSO)_
 - ScriptableObjects/Upgrades/Unlock Dungeon.asset  _(type: UpgradeSO)_
@@ -26,20 +27,60 @@ _Generated: 2025-08-09 23:22_
 ### Battle
 - BattleConfigSO
 - BattleManager
+- BattleRewardService
 - BattleUI
 - CardHandUI
 - CardSO
 - CardView
+- DeckManager
 - EnemyAI
+- EnergyPool
+- StatusController
 ### Core
+- CompanionSO
+- DefaultEventBus
+- DungeonProgression
 - EssenceManager
 - GameManager
+- GameSaveData
+- ICompanion
+- IEventBus
+- IGameManager
+- IInventory
+- IMinigame
+- InventoryManager
+- ISaveable
+- IsExternalInit
+- IStation
+- ItemCardSO
+- ItemSO
+- LocationSO
+- MinigameLauncher
+- MinigameResult
+- RecipeManager
+- RecipeRewardStub
+- RecipeSO
+- ResourceManager
+- ResourceSO
 - SaveSystem
+- SceneLoader
+- SkillSO
+- SkillTreeManager
+- StationManager
+- StationSO
 ### UI
+- CurrencyHUDPanel
 - DungeonGateButton
 - HUD
+- HUDPanel
+- KeysHUDPanel
 - LoadSceneButton
+- LocationButtonView
+- MapUI
+- SleepHUDPanel
+- UpgradeButtonView
 - UpgradesPanel
 ### Upgrades
+- UpgradeIds
 - UpgradeManager
 - UpgradeSO
