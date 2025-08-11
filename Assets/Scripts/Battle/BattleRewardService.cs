@@ -46,7 +46,8 @@ public class BattleRewardService
             // Persist the payout so it isn't lost if the app closes immediately after battle.
             if (_gameManager is GameManager concrete)
             {
-                SaveSystem.Save(concrete); // optional: persist immediately
+                // Rewards often arrive with other state changes; batch the save.
+                SaveScheduler.RequestSave(concrete);
             }
         }
 
