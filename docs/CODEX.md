@@ -152,7 +152,11 @@ This file is the source of truth for design + tech. Keep it short and link out t
   Subscribe in `OnEnable` and unsubscribe in `OnDisable`.
 \- \*\*Other events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnInventoryChanged`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
 
-\- \*\*Persistence\*\*: `SaveSystem` now stores a dictionary of JSON sections keyed by system name inside `GameSaveData`. Any manager implementing `ISaveable` registers with `GameManager`, which exposes a read-only list for iteration. During save, each `ISaveable` contributes its own `ToData()` payload; on load, `SaveSystem` fetches the section and passes the deserialized object to `LoadFrom()`. This decoupled approach lets new systems plug into persistence without modifying central code. To add a new participant, implement `ISaveable`, provide a unique `SaveKey`, and call `GameManager.RegisterSaveable(this)` in `Awake`. Disk I/O remains wrapped in try/catch. Version 4 introduces the section-based format. **Test**: recruit a companion, buy an upgrade, save, then reload to ensure state persists.
+\- \*\*Persistence\*\*: `SaveSystem` now stores a dictionary of JSON sections keyed by system name inside `GameSaveData`. Any manager implementing `ISaveable` registers with `GameManager`, which exposes a read-only list for iteration. During save, each `ISaveable` contributes its own `ToData()` payload; on load, `SaveSystem` fetches the section and passes the deserialized object to `LoadFrom()`. This decoupled approach lets new systems plug into persistence without modifying central code. To add a new participant, implement `ISaveable`, provide a unique `SaveKey`, and call `GameManager.RegisterSaveable(this)` in `Awake`. Disk I/O remains wrapped in try/catch. Version 6 adds new save sections and bumps the file schema. **Test**: recruit a companion, buy an upgrade, save, then reload to ensure state persists.
+  - **Sections** (SaveKey → payload schema):
+    - `Resources` → `{ resources: [{ id: string, quantity: int }] }`
+    - `recipes` → `{ unlocked: [string] }`
+    - `Dungeon` → `{ maxFloorReached: int, unlockedMilestones: [int] }`
 \- **Test**: Call `Stations.UnlockStation("farm")` or `Stations.RecruitCompanion("alice")` in play mode and watch the console/UI react via the event bus (`StationUnlocked` or `CompanionRecruited`).
   Trigger a station's `OnProductionComplete` to see `MinigameCompleted` propagate.
 
@@ -365,6 +369,9 @@ flowchart LR
   - How to test: create a couple `SkillSO` assets, assign them to a `SkillTreeManager` hooked into `GameManager`. Call `Unlock` on a skill and verify the event fires and the skill ID persists in the save file.
 - 2025-08-10: Added `RecipeSO` and `RecipeManager` with persistence; `GameManager` now exposes `Recipes`, and `BattleConfigSO` can grant recipe unlocks.
   - How to test: create a `RecipeSO`, assign it to `GameManager`'s `recipeManager` and to `BattleConfigSO.recipeReward`, win a battle, then save and reload to confirm the recipe remains unlocked.
+
+- 2025-08-10: Registered `ResourceManager`, `RecipeManager`, and `DungeonProgression` as saveable systems and bumped save file version to 6.
+  - How to test: give yourself some resources, unlock a recipe, advance a dungeon floor, save, then reload to verify resources, recipes, and max floor persist.
 
 
 

@@ -12,7 +12,7 @@ using System.Linq;
 public class GameSaveData
 {
     /// <summary>Schema version for future migrations.</summary>
-    public int version = 5;
+    public int version = 6;
 
     /// <summary>Serializable key/value pair storing one system's JSON payload.</summary>
     [Serializable]
