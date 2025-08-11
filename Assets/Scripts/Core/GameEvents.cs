@@ -18,6 +18,10 @@ public static class GameEvents
     public static event Action<UpgradeSO> OnUpgradePurchased;
     /// <summary>Fired after the day counter increments.</summary>
     public static event Action<int> OnDayChanged;
+    /// <summary>Fired whenever dungeon key counts change.</summary>
+    public static event Action<int, int> OnDungeonKeysChanged; // (current, perDay)
+    /// <summary>Fired whenever Sleep eligibility is recomputed.</summary>
+    public static event Action<bool, string> OnSleepEligibilityChanged; // (canSleep, reason)
 
     /// <summary>Helper to invoke <see cref="OnEssenceChanged"/> safely.</summary>
     public static void RaiseEssenceChanged(int amount) => OnEssenceChanged?.Invoke(amount);
@@ -31,5 +35,11 @@ public static class GameEvents
     public static void RaiseUpgradePurchased(UpgradeSO upgrade) => OnUpgradePurchased?.Invoke(upgrade);
     /// <summary>Helper to invoke <see cref="OnDayChanged"/> safely.</summary>
     public static void RaiseDayChanged(int day) => OnDayChanged?.Invoke(day);
+    /// <summary>Helper to invoke <see cref="OnDungeonKeysChanged"/> safely.</summary>
+    public static void RaiseDungeonKeysChanged(int current, int perDay)
+        => OnDungeonKeysChanged?.Invoke(current, perDay);
+    /// <summary>Helper to invoke <see cref="OnSleepEligibilityChanged"/> safely.</summary>
+    public static void RaiseSleepEligibilityChanged(bool canSleep, string reason)
+        => OnSleepEligibilityChanged?.Invoke(canSleep, reason);
 }
 
