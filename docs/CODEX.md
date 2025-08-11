@@ -158,11 +158,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
   - **Test**: Call `Recipes.UnlockRecipe("someId")` or `Dungeon.AdvanceFloor()` in play mode and watch subscribed panels respond.
 \- \*\*Other events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnInventoryChanged`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
 
-\- \*\*Persistence\*\*: `SaveSystem` now stores a dictionary of JSON sections keyed by system name inside `GameSaveData`. Any manager implementing `ISaveable` registers with `GameManager`, which exposes a read-only list for iteration. During save, each `ISaveable` contributes its own `ToData()` payload; on load, `SaveSystem` fetches the section and passes the deserialized object to `LoadFrom()`. This decoupled approach lets new systems plug into persistence without modifying central code. To add a new participant, implement `ISaveable`, provide a unique `SaveKey`, and call `GameManager.RegisterSaveable(this)` in `Awake`. Disk I/O remains wrapped in try/catch. Version 6 adds new save sections and bumps the file schema. **Test**: recruit a companion, buy an upgrade, save, then reload to ensure state persists.
-  - **Sections** (SaveKey → payload schema):
-    - `Resources` → `{ resources: [{ id: string, quantity: int }] }`
-    - `recipes` → `{ unlocked: [string] }`
-    - `Dungeon` → `{ maxFloorReached: int, unlockedMilestones: [int] }`
+\- \*\*Persistence\*\*: `SaveSystem` v2 writes a single `SaveModelV2` JSON file instead of sectioned blobs. Core managers expose an `ApplyLoadedState(SaveModelV2 data)` hook so loading can hydrate each system without string keys. `SaveSystem` now offers `HasAnySave()`, `Delete()`, `Save(GameManager)`, and `Load(GameManager)` APIs. **Test**: start a new game, ensure `save.json` appears, then delete it via `SaveSystem.Delete()` and verify a fresh run starts clean.
 \- **Test**: Call `Stations.UnlockStation("farm")` or `Stations.RecruitCompanion("alice")` in play mode and watch the console/UI react via the event bus (`StationUnlocked` or `CompanionRecruited`).
   Trigger a station's `OnProductionComplete` to see `MinigameCompleted` propagate.
 
