@@ -389,6 +389,8 @@ flowchart LR
   - How to test: place `InventoryDebugMenu` in a scene, assign an `InventoryManager` and an item asset, then press Add/Remove and observe console logs for "Inventory changed".
 - 2025-08-11: Added basic world interaction system (`IInteractable`, `Interactable`, `InteractionController`) plus item grant/consume components.
   - How to test: in a scene, place a camera with `InteractionController`, add a cube with `Interactable` and `ItemGrantOnInteract`, assign a test `ItemSO`, run and click the cube to see the prompt and item grant in console logs.
+- 2025-08-12: Introduced `InteractionPromptUI` and updated `InteractionController` to drive it instead of `Debug.Log`.
+  - How to test: place a `Canvas` with a `TMP_Text` and `InteractionPromptUI`, assign it to `InteractionController`'s **Prompt UI** field, then look at and click interactables to watch the label update.
 
 ## Commenting Style
 
