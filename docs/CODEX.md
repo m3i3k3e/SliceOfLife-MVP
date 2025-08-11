@@ -353,11 +353,13 @@ flowchart LR
 - 2025-08-10: Added `SceneLoader` service and migrated `LoadSceneButton`/`DungeonGateButton` to use it.
   - How to test: assign `SceneLoader` in Start scene and click the gate to load `Battle`.
 - 2025-08-10: Added `UpgradeIds` static class to centralize upgrade ID strings.
-   - How to test: project compiles; dungeon gate button and HUD use `UpgradeIds.UnlockBattle`.
+  - How to test: project compiles; dungeon gate button and HUD use `UpgradeIds.UnlockBattle`.
 - 2025-08-10: Introduced `ItemCardSO` (replacing `ItemSO`), `InventoryManager`, and inventory persistence. `MinigameResult` can now carry item rewards which `MinigameLauncher` deposits automatically.
-   - How to test: create an `ItemCardSO`, assign it in a test mini-game returning `(true, 0, item, qty)`, run the mini-game and confirm the item appears in `InventoryManager` and remains after save/load.
+  - How to test: create an `ItemCardSO`, assign it in a test mini-game returning `(true, 0, item, qty)`, run the mini-game and confirm the item appears in `InventoryManager` and remains after save/load.
 - 2025-08-10: Added basic skill tree framework (`SkillSO`, `SkillTreeManager`) and `SkillUnlocked` event on `IEventBus`.
   - How to test: create a couple `SkillSO` assets, assign them to a `SkillTreeManager` hooked into `GameManager`. Call `Unlock` on a skill and verify the event fires and the skill ID persists in the save file.
+- 2025-08-10: Added `RecipeSO` and `RecipeManager` with persistence; `GameManager` now exposes `Recipes`, and `BattleConfigSO` can grant recipe unlocks.
+  - How to test: create a `RecipeSO`, assign it to `GameManager`'s `recipeManager` and to `BattleConfigSO.recipeReward`, win a battle, then save and reload to confirm the recipe remains unlocked.
 
 
 

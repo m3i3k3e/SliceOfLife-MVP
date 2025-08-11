@@ -21,6 +21,9 @@ public interface IGameManager : ISaveable
     /// <summary>Access to station and companion collections.</summary>
     StationManager Stations { get; }
 
+    /// <summary>Access to crafting recipes and unlock state.</summary>
+    RecipeManager Recipes { get; }
+
     // -------- Day progression --------
     /// <summary>Current in-game day (starts at 1).</summary>
     int Day { get; }
