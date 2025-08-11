@@ -44,3 +44,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 961675139bd54860a5a76e021baa7b91, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TaskService
+  graph: {fileID: 11400000, guid: 6af20b92a68d4a208a4630bf8c1a31a9, type: 2}
+  inventory: {fileID: 0}
