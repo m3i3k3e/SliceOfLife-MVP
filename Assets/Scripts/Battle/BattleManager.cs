@@ -1,3 +1,10 @@
+/*
+ * BattleManager.cs
+ * Purpose: Orchestrates the Player vs. Enemy turn loop and coordinates subsystems.
+ * Dependencies: DeckManager, EnergyPool, StatusController, IGameManager, IEventBus.
+ * Expansion Hooks: Public events allow UI or other systems to react without tight coupling.
+ * Rationale: Interfaces and event bus keep this class testable and decoupled; async reward grant.
+ */
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,19 +18,32 @@ using UnityEngine.SceneManagement;
 /// UI is driven via events; <see cref="CardView"/> instances call <see cref="PlayCard"/>.
 /// Legacy button actions have been removed in favor of the card system.
 /// </summary>
+/// <remarks>
+/// References to <see cref="IGameManager"/> and <see cref="IEventBus"/> are injected to avoid
+/// direct dependencies on scene singletons.
+/// </remarks>
 public class BattleManager : MonoBehaviour
 {
     // --- Events so UI can stay dumb and reactive ---
+    /// <summary>Player HP/MaxHP/Armor changed.</summary>
     public event Action<int, int, int> OnPlayerStatsChanged; // (hp, maxHp, armor)
+    /// <summary>Enemy HP/MaxHP changed.</summary>
     public event Action<int, int> OnEnemyStatsChanged;       // (hp, maxHp)
+    /// <summary>Informational string for the HUD.</summary>
     public event Action<string> OnInfoChanged;               // "Your turn", "Enemy intends X", etc.
+    /// <summary>Telegraphed enemy intent for next turn.</summary>
     public event Action<EnemyIntent> OnEnemyIntentChanged;   // next enemy action preview
+    /// <summary>Battle concluded. Bool indicates victory, int is essence reward.</summary>
     public event Action<bool, int> OnBattleEnded;            // (victory?, rewardEssence)
 
     // Bubble up events from subsystems so callers don't need direct refs
+    /// <summary>Status label added/removed on the player.</summary>
     public event Action<string> OnPlayerStatusChanged;
+    /// <summary>Status label added/removed on the enemy.</summary>
     public event Action<string> OnEnemyStatusChanged;
+    /// <summary>Energy pool updated. (current, max)</summary>
     public event Action<int, int> OnEnergyChanged; // (current, max)
+    /// <summary>Player hand changed. Provides current list of cards.</summary>
     public event Action<IReadOnlyList<CardSO>> OnHandChanged;
 
     /// <summary>
@@ -36,10 +56,12 @@ public class BattleManager : MonoBehaviour
         EndPlayerTurn();
     }
 
-    // --- Utility: if you have no playable cards, auto end the turn after a tiny beat ---
+    /// <summary>
+    /// Checks the player's hand and queues an automatic end-turn if nothing is affordable.
+    /// </summary>
     private void MaybeAutoEndTurn()
     {
-        if (!_playerTurn) return;
+        if (!_playerTurn) return; // only care during the player's turn
 
         bool anyPlayable = false;
         foreach (var c in _deck.Hand)
@@ -50,6 +72,10 @@ public class BattleManager : MonoBehaviour
         if (!anyPlayable) StartCoroutine(AutoEndTurnAfterBeat());
     }
 
+    /// <summary>
+    /// Small coroutine delay so players can visually confirm no actions are available
+    /// before the turn auto-ends.
+    /// </summary>
     private IEnumerator AutoEndTurnAfterBeat()
     {
         OnInfoChanged?.Invoke("No playable cards… ending turn.");
@@ -90,10 +116,17 @@ public class BattleManager : MonoBehaviour
     [Tooltip("Reference to an event bus implementing IEventBus.")]
     [SerializeField] private MonoBehaviour eventBusSource;
 
-    // Helper to cast the serialized MonoBehaviour to the interface.
+    // Helper accessors cast the serialized MonoBehaviours to their interfaces.
+    // This lets designers assign any implementation in the Inspector while keeping code
+    // dependent only on abstractions.
     private IGameManager GM => gameManagerSource as IGameManager;
     private IEventBus Events => eventBusSource as IEventBus;
 
+    /// <summary>
+    /// Resolve references and wire up subsystem events.
+    /// Using serialized <see cref="MonoBehaviour"/> fields lets us inject interface
+    /// implementations while still using the Unity inspector.
+    /// </summary>
     private void Awake()
     {
         if (config == null)
@@ -106,7 +139,7 @@ public class BattleManager : MonoBehaviour
         // Instantiate reward service with injected GameManager dependency.
         _rewards = new BattleRewardService(GM);
 
-        // Bubble subsystem events up to our public surface
+        // Bubble subsystem events up to our public surface so callers only depend on BattleManager.
         _deck.OnHandChanged += h => OnHandChanged?.Invoke(h);
         _energy.OnEnergyChanged += (c, m) => OnEnergyChanged?.Invoke(c, m);
         _status.OnPlayerStatusChanged += s => OnPlayerStatusChanged?.Invoke(s);
@@ -125,6 +158,9 @@ public class BattleManager : MonoBehaviour
         OnInfoChanged?.Invoke("Your turn");
     }
 
+    /// <summary>
+    /// Initialize battle state from config and hand control to the player.
+    /// </summary>
     private void Start()
     {
         // Initialize runtime stats from config
@@ -145,7 +181,7 @@ public class BattleManager : MonoBehaviour
         // Init subsystems and start the fight
         _energy.SetMax(Mathf.Max(config.maxEnergy, config.energyPerTurn));
         _status.PushLabels();
-        _deck.BuildAndShuffle(startingDeck);   // <- NEW
+        _deck.BuildAndShuffle(startingDeck);   // build draw pile from starting deck
         BeginPlayerTurn();
 
     }
@@ -237,6 +273,9 @@ public class BattleManager : MonoBehaviour
 
     // --- Turn transitions ---
 
+    /// <summary>
+    /// Wrap up the player's turn and begin the enemy's response.
+    /// </summary>
     private void EndPlayerTurn()
     {
         // Victory() is handled earlier; here we simply hand control to the enemy.
@@ -248,6 +287,9 @@ public class BattleManager : MonoBehaviour
         StartCoroutine(EnemyTurn()); // async to allow small pauses/FX
     }
 
+    /// <summary>
+    /// Coroutine executing the enemy's intent before returning control to the player.
+    /// </summary>
     private IEnumerator EnemyTurn()
     {
         // 1) Short pause so players can read the intent telegraph
@@ -295,6 +337,9 @@ public class BattleManager : MonoBehaviour
 
     // --- Endings ---
 
+    /// <summary>
+    /// Handle victory flow and award essence asynchronously.
+    /// </summary>
     private async void Victory()
     {
         // Await the reward calculation so the save operation completes before returning to UI.
@@ -306,12 +351,15 @@ public class BattleManager : MonoBehaviour
         StartCoroutine(ReturnToStartAfterDelay());
     }
 
+    /// <summary>
+    /// Handle defeat flow and apply penalties.
+    /// </summary>
     private void Defeat()
     {
         OnInfoChanged?.Invoke("Defeat! Returning to tavern...");
         OnBattleEnded?.Invoke(false, 0);
 
-        // NEW: apply the loss penalty (immediate essence loss + next-day click debuff)
+        // Apply the loss penalty (immediate essence loss + next-day click debuff)
         if (GameManager.Instance != null)
         {
             GameManager.Instance.ApplyDungeonLossPenalty();
@@ -322,6 +370,9 @@ public class BattleManager : MonoBehaviour
         StartCoroutine(ReturnToStartAfterDelay());
     }
 
+    /// <summary>
+    /// Delay helper so victory/defeat messages linger before returning to the start scene.
+    /// </summary>
     private IEnumerator ReturnToStartAfterDelay()
     {
         yield return new WaitForSeconds(config.returnDelay);
@@ -330,7 +381,10 @@ public class BattleManager : MonoBehaviour
 
     // --- Helpers to notify UI ---
 
+    /// <summary>Push current player stats to any UI listeners.</summary>
     private void PushPlayerStats() => OnPlayerStatsChanged?.Invoke(_playerHP, config.playerMaxHP, _playerArmor);
+
+    /// <summary>Push current enemy stats to any UI listeners.</summary>
     private void PushEnemyStats()  => OnEnemyStatsChanged?.Invoke(_enemyHP, config.enemyMaxHP);
 }
 
