@@ -147,10 +147,15 @@ This file is the source of truth for design + tech. Keep it short and link out t
   - `SleepEligibilityChanged(bool canSleep, string reason)`
   - `StationUnlocked(IStation station)`
   - `CompanionRecruited(ICompanion companion)`
-  - `UpgradePurchased(UpgradeSO upgrade)`
+  - `SkillUnlocked(SkillSO skill)`
   - `ResourceChanged(ResourceSO resource, int amount)`
+  - `RecipeUnlocked(RecipeSO recipe)`
+  - `FloorReached(int floor)`
+  - `UpgradePurchased(UpgradeSO upgrade)`
   - `MinigameCompleted(MinigameResult result)`
   Subscribe in `OnEnable` and unsubscribe in `OnDisable`.
+  - **New**: Added `RecipeUnlocked` and `FloorReached` so UI can react when crafting expands or the dungeon deepens.
+  - **Test**: Call `Recipes.UnlockRecipe("someId")` or `Dungeon.AdvanceFloor()` in play mode and watch subscribed panels respond.
 \- \*\*Other events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnInventoryChanged`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
 
 \- \*\*Persistence\*\*: `SaveSystem` now stores a dictionary of JSON sections keyed by system name inside `GameSaveData`. Any manager implementing `ISaveable` registers with `GameManager`, which exposes a read-only list for iteration. During save, each `ISaveable` contributes its own `ToData()` payload; on load, `SaveSystem` fetches the section and passes the deserialized object to `LoadFrom()`. This decoupled approach lets new systems plug into persistence without modifying central code. To add a new participant, implement `ISaveable`, provide a unique `SaveKey`, and call `GameManager.RegisterSaveable(this)` in `Awake`. Disk I/O remains wrapped in try/catch. Version 6 adds new save sections and bumps the file schema. **Test**: recruit a companion, buy an upgrade, save, then reload to ensure state persists.

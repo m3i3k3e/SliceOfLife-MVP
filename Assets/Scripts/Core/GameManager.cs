@@ -135,9 +135,17 @@ public class GameManager : MonoBehaviour, IGameManager
         if (resourceManager != null)
             resourceManager.OnResourceChanged += HandleResourceChanged;
 
+        // Forward recipe unlocks onto the global event bus and persist progress.
+        if (recipeManager != null)
+            recipeManager.OnRecipeUnlocked += HandleRecipeUnlocked;
+
         // Bubble skill unlocks through the global event bus.
         if (skillTreeManager != null)
             skillTreeManager.OnSkillUnlocked += HandleSkillUnlocked;
+
+        // Notify listeners when deeper dungeon floors are reached.
+        if (dungeonProgression != null)
+            dungeonProgression.OnFloorReached += HandleFloorReached;
     }
 
     private async void HandleUpgradePurchased(UpgradeSO up)
@@ -187,6 +195,21 @@ public class GameManager : MonoBehaviour, IGameManager
         Events?.RaiseSkillUnlocked(skill);
         await SaveSystem.SaveAsync(this);
     }
+
+    /// <summary>
+    /// Persist and broadcast newly unlocked crafting recipes.
+    /// </summary>
+    private async void HandleRecipeUnlocked(RecipeSO recipe)
+    {
+        Events?.RaiseRecipeUnlocked(recipe);
+        await SaveSystem.SaveAsync(this);
+    }
+
+    /// <summary>
+    /// Broadcast deeper dungeon progress to interested systems.
+    /// </summary>
+    private void HandleFloorReached(int floor)
+        => Events?.RaiseFloorReached(floor);
 
     /// <summary>Read-only access to the currency system via its interface.</summary>
     public IEssenceProvider Essence => essenceManager;
@@ -424,8 +447,14 @@ public class GameManager : MonoBehaviour, IGameManager
         if (resourceManager != null)
             resourceManager.OnResourceChanged -= HandleResourceChanged;
 
+        if (recipeManager != null)
+            recipeManager.OnRecipeUnlocked -= HandleRecipeUnlocked;
+
         if (skillTreeManager != null)
             skillTreeManager.OnSkillUnlocked -= HandleSkillUnlocked;
+
+        if (dungeonProgression != null)
+            dungeonProgression.OnFloorReached -= HandleFloorReached;
     }
 
     private void OnApplicationQuit() => SaveSystem.SaveAsync(this).GetAwaiter().GetResult();

@@ -30,6 +30,12 @@ public class DefaultEventBus : MonoBehaviour, IEventBus
     public event Action<ResourceSO, int> ResourceChanged;
 
     /// <inheritdoc />
+    public event Action<RecipeSO> RecipeUnlocked;
+
+    /// <inheritdoc />
+    public event Action<int> FloorReached;
+
+    /// <inheritdoc />
     public event Action<MinigameResult> MinigameCompleted;
 
     /// <inheritdoc />
@@ -61,6 +67,14 @@ public class DefaultEventBus : MonoBehaviour, IEventBus
     /// <inheritdoc />
     public void RaiseResourceChanged(ResourceSO resource, int amount)
         => ResourceChanged?.Invoke(resource, amount);
+
+    /// <inheritdoc />
+    public void RaiseRecipeUnlocked(RecipeSO recipe)
+        => RecipeUnlocked?.Invoke(recipe);
+
+    /// <inheritdoc />
+    public void RaiseFloorReached(int floor)
+        => FloorReached?.Invoke(floor);
 
     /// <inheritdoc />
     public void RaiseMinigameCompleted(MinigameResult result)

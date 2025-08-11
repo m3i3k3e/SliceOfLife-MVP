@@ -42,6 +42,16 @@ public interface IEventBus
     event Action<ResourceSO, int> ResourceChanged;
 
     /// <summary>
+    /// Fired whenever a new crafting recipe is unlocked. Payload = recipe data.
+    /// </summary>
+    event Action<RecipeSO> RecipeUnlocked;
+
+    /// <summary>
+    /// Fired each time the player reaches a new dungeon floor. Payload = floor index.
+    /// </summary>
+    event Action<int> FloorReached;
+
+    /// <summary>
     /// Fired whenever an upgrade is successfully purchased. Payload = upgrade data.
     /// Lets UI refresh when new systems or locations unlock.
     /// </summary>
@@ -86,6 +96,16 @@ public interface IEventBus
     /// Helper to invoke <see cref="ResourceChanged"/> safely.
     /// </summary>
     void RaiseResourceChanged(ResourceSO resource, int amount);
+
+    /// <summary>
+    /// Helper to invoke <see cref="RecipeUnlocked"/> safely.
+    /// </summary>
+    void RaiseRecipeUnlocked(RecipeSO recipe);
+
+    /// <summary>
+    /// Helper to invoke <see cref="FloorReached"/> safely.
+    /// </summary>
+    void RaiseFloorReached(int floor);
 
     /// <summary>
     /// Helper to invoke <see cref="UpgradePurchased"/> safely.

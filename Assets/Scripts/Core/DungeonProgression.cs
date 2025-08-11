@@ -34,6 +34,9 @@ public class DungeonProgression : MonoBehaviour, ISaveable
     /// <summary>Highest floor ever reached across all runs.</summary>
     public int MaxFloorReached { get; private set; } = 1;
 
+    /// <summary>Fired whenever a new floor is reached. Payload = floor index.</summary>
+    public event Action<int> OnFloorReached;
+
     /// <summary>
     /// Reset the run back to floor 1. Call when starting a new attempt.
     /// </summary>
@@ -56,6 +59,9 @@ public class DungeonProgression : MonoBehaviour, ISaveable
 
         // Unlock any stations tied to newly reached milestones.
         CheckMilestones();
+
+        // Notify listeners of the floor change.
+        OnFloorReached?.Invoke(CurrentFloor);
 
         // Persist progress so it survives app restarts.
         var gm = GameManager.Instance;
