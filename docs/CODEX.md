@@ -381,6 +381,8 @@ flowchart LR
 
 - 2025-08-11: Introduced `ItemSO` and `IInventoryService`; `InventoryManager` now operates on `ItemSO`. Added temporary `InventoryDebugMenu` and starter item assets.
   - How to test: place `InventoryDebugMenu` in a scene, assign an `InventoryManager` and an item asset, then press Add/Remove and observe console logs for "Inventory changed".
+- 2025-08-11: Added basic world interaction system (`IInteractable`, `Interactable`, `InteractionController`) plus item grant/consume components.
+  - How to test: in a scene, place a camera with `InteractionController`, add a cube with `Interactable` and `ItemGrantOnInteract`, assign a test `ItemSO`, run and click the cube to see the prompt and item grant in console logs.
 
 ## Commenting Style
 
