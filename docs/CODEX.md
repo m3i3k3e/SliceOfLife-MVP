@@ -379,12 +379,14 @@ flowchart LR
 - 2025-08-10: Registered `ResourceManager`, `RecipeManager`, and `DungeonProgression` as saveable systems and bumped save file version to 6.
   - How to test: give yourself some resources, unlock a recipe, advance a dungeon floor, save, then reload to verify resources, recipes, and max floor persist.
 
+## Commenting Style
 
-
+- Every script under `Assets/Scripts/**` begins with a block comment summarizing its role, dependencies, and expansion hooks.
+- Use XML `///` summaries on classes, serialized fields, and public methods to clarify purpose, Unity lifecycle timing, and integration points.
+- Annotate event subscriptions (`OnEnable`/`OnDisable`), complex conditionals, and data transformations with inline comments.
+- Flag extension points with notes like `// Expansion:` so future features know where to plug in.
 
 ---
-
-
 
 \# LINKS
 

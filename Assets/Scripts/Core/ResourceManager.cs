@@ -1,3 +1,9 @@
+/*
+ * ResourceManager.cs
+ * Role: Maintains counts of raw resources and broadcasts changes to listeners.
+ * Key dependencies: ResourceSO catalog for ID resolution; participates in SaveSystem via ISaveable.
+ * Expansion: Add new ResourceSO assets and list them in resourceCatalog to support more materials.
+ */
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,11 +14,12 @@ using UnityEngine;
 /// </summary>
 public class ResourceManager : MonoBehaviour, ISaveable
 {
+    /// <summary>Catalog of all resource definitions used to resolve IDs during load.</summary>
     [Header("Catalog")]
     [Tooltip("All resource definitions available. Used to resolve IDs during load.")]
     [SerializeField] private List<ResourceSO> resourceCatalog = new();
 
-    // Internal lookup from resource to owned quantity
+    /// <summary>Internal lookup from resource to owned quantity.</summary>
     private readonly Dictionary<ResourceSO, int> _counts = new();
 
     /// <summary>Raised whenever a resource total changes. Payload = (resource, newAmount).</summary>
