@@ -7,12 +7,19 @@ using UnityEngine;
 /// conditions complete. Raises <see cref="GameEvents"/> when progress occurs
 /// so UI or other systems can react without referencing this service directly.
 /// </summary>
+/// <remarks>
+/// Requires both <see cref="graph"/> and <see cref="inventory"/> to be assigned
+/// before <see cref="Init(TaskGraphSO, IEnumerable{SaveModelV2.TaskStateDTO})"/> runs.
+/// Call <c>Init</c> during <see cref="Awake"/> or from an external bootstrapper
+/// <b>before</b> the component is enabled so event subscriptions work with
+/// initialized state.
+/// </remarks>
 public class TaskService : MonoBehaviour
 {
     [Header("References")]
     [Tooltip("Ordered task graph defining the tutorial path.")]
     [SerializeField] private TaskGraphSO graph;
-    [Tooltip("Inventory used to query item counts. If left null, one is searched for at runtime.")]
+    [Tooltip("Inventory used to query item counts. Must be assigned in the inspector or injected.")]
     [SerializeField] private InventoryManager inventory;
 
     // Internal state for each task in the graph.
@@ -31,11 +38,15 @@ public class TaskService : MonoBehaviour
     /// <summary>Convenience accessor to the inventory interface.</summary>
     private IInventoryService Inventory => inventory;
 
+    /// <summary>
+    /// Unity lifecycle callback. Builds initial task state.
+    /// </summary>
     private void Awake()
     {
-        // Allow the service to function even if the inventory isn't wired in the prefab.
+        // Inventory is expected to be wired ahead of time. Warn if missing so
+        // designers notice during testing.
         if (inventory == null)
-            inventory = FindObjectOfType<InventoryManager>();
+            Debug.LogError("TaskService requires an InventoryManager reference.");
 
         Init(graph, null); // start with fresh state; load will reapply if needed
     }
@@ -57,22 +68,31 @@ public class TaskService : MonoBehaviour
     /// <summary>
     /// Initialize the service with a task graph and optionally loaded progress.
     /// </summary>
+    /// <param name="newGraph">Graph describing all tutorial tasks in order.</param>
+    /// <param name="loaded">Optional previously saved completion states.</param>
+    /// <remarks>
+    /// Must be invoked after <see cref="inventory"/> is assigned.
+    /// </remarks>
     public void Init(TaskGraphSO newGraph, IEnumerable<SaveModelV2.TaskStateDTO> loaded)
     {
         _states.Clear();
         graph = newGraph;
         if (graph == null) return; // nothing to track
 
+        // Build quick lookup from loaded DTOs so we avoid nested loops when
+        // matching saved completion flags to tasks.
+        var loadedMap = new Dictionary<string, bool>();
+        if (loaded != null)
+        {
+            foreach (var dto in loaded)
+                loadedMap[dto.taskId] = dto.completed; // later duplicates overwrite earlier entries
+        }
+
         // Build runtime state for each task and apply any loaded completion flags.
         foreach (var task in graph.Tasks)
         {
-            bool completed = false;
-            if (loaded != null)
-            {
-                foreach (var dto in loaded)
-                    if (dto.taskId == task.Id)
-                        completed = dto.completed;
-            }
+            // Try to pull a completion flag from the loaded map; default to false.
+            bool completed = loadedMap.TryGetValue(task.Id, out var saved) && saved;
             _states.Add(new TaskState(task, completed));
         }
 
