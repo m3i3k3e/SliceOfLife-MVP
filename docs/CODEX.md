@@ -162,6 +162,8 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
   - **Test**: Attach `GameEventsSanityTest` or `TaskServiceSanityTest` to any scene object, run the game, trigger a click, add an item, advance/complete a task, buy an upgrade, or sleep to advance the day. Each action should log exactly one message.
 
+- **Tasks**: `TaskService.CurrentTaskTitle` exposes the active tutorial step's title. Useful for HUDs that want to display guidance.  **Test**: Start the game and watch `WorldHUD` update as tasks advance.
+
 \- \*\*Persistence\*\*: `SaveSystem` v2 writes a single `SaveModelV2` JSON file instead of sectioned blobs. Core managers expose an `ApplyLoadedState(SaveModelV2 data)` hook so loading can hydrate each system without string keys. `SaveSystem` now offers `HasAnySave()`, `Delete()`, `Save(GameManager)`, and `Load(GameManager)` APIs. **Test**: start a new game, ensure `save.json` appears, then delete it via `SaveSystem.Delete()` and verify a fresh run starts clean.
 \- **Test**: Call `Stations.UnlockStation("farm")` or `Stations.RecruitCompanion("alice")` in play mode and watch the console/UI react via the event bus (`StationUnlocked` or `CompanionRecruited`).
   Trigger a station's `OnProductionComplete` to see `MinigameCompleted` propagate.
