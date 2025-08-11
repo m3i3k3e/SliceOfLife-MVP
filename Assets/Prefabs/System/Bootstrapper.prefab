@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1
+--- !u!1 &3189153514430562715
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,7 +8,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 11400000}
+  - component: {fileID: 790582767314710691}
+  - component: {fileID: 3357502923569085711}
   m_Layer: 0
   m_Name: Bootstrapper
   m_TagString: Untagged
@@ -16,19 +17,34 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &11400000
+--- !u!4 &790582767314710691
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3189153514430562715}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3357502923569085711
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1}
+  m_GameObject: {fileID: 3189153514430562715}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ccf940cf200f4e8a83f83668fbf113a8, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  gameManagerPrefab: {fileID: 11400000, guid: 296628e305ed4dde823e2fea029c88f6, type: 3}
-  inventoryManagerPrefab: {fileID: 11400000, guid: e3cf5fc356b34b6f9c2201ad17598e7e, type: 3}
-  taskServicePrefab: {fileID: 11400000, guid: 0713e03104604d3cb40e4081bc54c417, type: 3}
-  eventBusPrefab: {fileID: 11400000, guid: 76b5c4940f2d41b08627e036fb7ce164, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameBootstrap
+  gameManagerPrefab: {fileID: 1340616383871742601, guid: 296628e305ed4dde823e2fea029c88f6, type: 3}
+  inventoryManagerPrefab: {fileID: 2691595997248209017, guid: e3cf5fc356b34b6f9c2201ad17598e7e, type: 3}
+  taskServicePrefab: {fileID: 1542364268391137338, guid: 0713e03104604d3cb40e4081bc54c417, type: 3}
+  eventBusPrefab: {fileID: 365352149178851293, guid: 76b5c4940f2d41b08627e036fb7ce164, type: 3}
