@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -21,9 +22,12 @@ public class StationSO : ScriptableObject, IStation
     public string Id => id;
 
     /// <inheritdoc />
-    public string DisplayName => displayName;
-
-    /// <inheritdoc />
     // Cast the asset to IMinigame so callers can run PlayAsync.
     public IMinigame Minigame => minigameAsset as IMinigame;
+
+    /// <inheritdoc />
+    public event Action<MinigameResult> OnProductionComplete;
+
+    /// <summary>Display name shown in UI.</summary>
+    public string DisplayName => displayName;
 }

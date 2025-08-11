@@ -125,14 +125,6 @@ public class GameManager : MonoBehaviour, IGameManager
         // Initialize UI state for the current day immediately.
         ReevaluateSleepGate();
 
-        // Bridge station/companion events onto the global bus so UI can react
-        // without referencing StationManager directly.
-        if (stationManager != null)
-        {
-            stationManager.OnStationUnlocked += HandleStationUnlocked;
-            stationManager.OnCompanionRecruited += HandleCompanionRecruited;
-        }
-
         // Persist inventory changes automatically whenever items shift.
         if (inventoryManager != null)
             inventoryManager.OnInventoryChanged += HandleInventoryChanged;
@@ -166,25 +158,6 @@ public class GameManager : MonoBehaviour, IGameManager
     private void HandleDailyClicksChanged(int _)
     {
         ReevaluateSleepGate();
-    }
-
-    /// <summary>
-    /// Forward station unlocks to the static event hub.
-    /// </summary>
-    private void HandleStationUnlocked(IStation station)
-    {
-        // Forward the event onto the bus so listeners don't require a StationManager reference.
-        Events?.RaiseStationUnlocked(station);
-    }
-
-    /// <summary>
-    /// Forward companion recruitment to the static event hub.
-    /// </summary>
-    private void HandleCompanionRecruited(ICompanion companion, IReadOnlyList<CardSO> cards, IReadOnlyList<UpgradeSO> buffs)
-    {
-        // Broadcast companion recruitment through the bus for UI or analytics.
-        // Battle/upgrade systems subscribe directly to StationManager for loadout data.
-        Events?.RaiseCompanionRecruited(companion);
     }
 
     /// <summary>
@@ -442,12 +415,6 @@ public class GameManager : MonoBehaviour, IGameManager
 
         if (upgradeManager != null)
             upgradeManager.OnPurchased -= HandleUpgradePurchased;
-
-        if (stationManager != null)
-        {
-            stationManager.OnStationUnlocked -= HandleStationUnlocked;
-            stationManager.OnCompanionRecruited -= HandleCompanionRecruited;
-        }
 
         if (inventoryManager != null)
             inventoryManager.OnInventoryChanged -= HandleInventoryChanged;

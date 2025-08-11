@@ -132,10 +132,13 @@ This file is the source of truth for design + tech. Keep it short and link out t
 \- \*\*Core wiring\*\*: `GameManager` expects `EssenceManager`, `UpgradeManager`, `StationManager`, `InventoryManager`, and `ResourceManager` references assigned in the scene/prefab; it no longer searches at runtime.
 
 \- \*\*Stations\*\*: `StationManager` maintains `IStation`/`ICompanion` lists, exposed via `GameManager`.
-  `UnlockStation(id)` and `RecruitCompanion(id)` update internal collections and fire
-  `OnStationUnlocked` / `OnCompanionRecruited(ICompanion, IReadOnlyList<CardSO>, IReadOnlyList<UpgradeSO>)`
-  events so battle and upgrade systems can claim a companion's starting deck and buffs.
+  `UnlockStation(id)` and `RecruitCompanion(id)` update internal collections and immediately
+  raise `GameManager.Events.StationUnlocked` / `GameManager.Events.CompanionRecruited`.
+  `RecruitCompanion` also invokes `OnCompanionRecruited(ICompanion, IReadOnlyList<CardSO>, IReadOnlyList<UpgradeSO>)`
+  so battle and upgrade systems can claim a companion's starting deck and buffs.
   Each `CompanionSO` serializes these via `GetStartingCards()` and `GetPassiveBuffs()` accessors.
+  The manager subscribes to `IStation.OnProductionComplete` and forwards results through
+  `GameManager.Events.MinigameCompleted`.
 
 \- \*\*Event bus\*\*: `IEventBus` interface (default `DefaultEventBus` component) exposes cross-system events:
   - `DayChanged(int day)`
@@ -151,6 +154,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 \- \*\*Persistence\*\*: `SaveSystem` now stores a dictionary of JSON sections keyed by system name inside `GameSaveData`. Any manager implementing `ISaveable` registers with `GameManager`, which exposes a read-only list for iteration. During save, each `ISaveable` contributes its own `ToData()` payload; on load, `SaveSystem` fetches the section and passes the deserialized object to `LoadFrom()`. This decoupled approach lets new systems plug into persistence without modifying central code. To add a new participant, implement `ISaveable`, provide a unique `SaveKey`, and call `GameManager.RegisterSaveable(this)` in `Awake`. Disk I/O remains wrapped in try/catch. Version 4 introduces the section-based format. **Test**: recruit a companion, buy an upgrade, save, then reload to ensure state persists.
 \- **Test**: Call `Stations.UnlockStation("farm")` or `Stations.RecruitCompanion("alice")` in play mode and watch the console/UI react via the event bus (`StationUnlocked` or `CompanionRecruited`).
+  Trigger a station's `OnProductionComplete` to see `MinigameCompleted` propagate.
 
 \- \*\*Scenes\*\*: `Start`, `Battle`.
 
