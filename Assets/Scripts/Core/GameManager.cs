@@ -165,7 +165,13 @@ public class GameManager : MonoBehaviour, IGameManager
         // Mirror day change events from the injected event bus onto the static
         // GameEvents hub so lightweight listeners can react without bus refs.
         if (Events != null)
-            Events.DayChanged += GameEvents.RaiseDayChanged;
+        {
+            // Bridge event bus notifications onto the static GameEvents hub so
+            // lightweight listeners (e.g., WorldHUD) don't need a bus reference.
+            Events.DayChanged             += GameEvents.RaiseDayChanged;
+            Events.DungeonKeysChanged     += GameEvents.RaiseDungeonKeysChanged;
+            Events.SleepEligibilityChanged += GameEvents.RaiseSleepEligibilityChanged;
+        }
     }
 
     /// <summary>
@@ -496,7 +502,11 @@ public class GameManager : MonoBehaviour, IGameManager
             dungeonProgression.OnFloorReached -= HandleFloorReached;
 
         if (Events != null)
-            Events.DayChanged -= GameEvents.RaiseDayChanged;
+        {
+            Events.DayChanged             -= GameEvents.RaiseDayChanged;
+            Events.DungeonKeysChanged     -= GameEvents.RaiseDungeonKeysChanged;
+            Events.SleepEligibilityChanged -= GameEvents.RaiseSleepEligibilityChanged;
+        }
     }
 
     /// <summary>

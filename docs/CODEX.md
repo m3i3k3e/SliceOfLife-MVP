@@ -158,9 +158,9 @@ This file is the source of truth for design + tech. Keep it short and link out t
   - **Test**: Call `Recipes.UnlockRecipe("someId")` or `Dungeon.AdvanceFloor()` in play mode and watch subscribed panels respond.
 \- \*\*Other events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnInventoryChanged`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
 
-- **GameEvents**: lightweight static hub mirroring common manager events for quick prototypes. Currently forwards `OnEssenceChanged`, `OnInventoryChanged`, `OnTaskAdvanced`, `OnTaskCompleted`, `OnUpgradePurchased`, and `OnDayChanged`.
+- **GameEvents**: lightweight static hub mirroring common manager events for quick prototypes. Currently forwards `OnEssenceChanged`, `OnInventoryChanged`, `OnTaskAdvanced`, `OnTaskCompleted`, `OnUpgradePurchased`, `OnDayChanged`, `OnDungeonKeysChanged`, and `OnSleepEligibilityChanged`.
 
-  - **Test**: Attach `GameEventsSanityTest` or `TaskServiceSanityTest` to any scene object, run the game, trigger a click, add an item, advance/complete a task, buy an upgrade, or sleep to advance the day. Each action should log exactly one message.
+  - **Test**: Attach `GameEventsSanityTest` or `TaskServiceSanityTest` to any scene object, run the game, trigger a click, add an item, advance/complete a task, buy an upgrade, spend a dungeon key, or sleep to advance the day. Each action should log exactly one message.
 
 - **Tasks**: `TaskService.CurrentTaskTitle` exposes the active tutorial step's title. Useful for HUDs that want to display guidance.  **Test**: Start the game and watch `WorldHUD` update as tasks advance.
 

@@ -352,7 +352,10 @@ public class BattleManager : MonoBehaviour
         OnInfoChanged?.Invoke($"Victory! +{reward} Essence");
         OnBattleEnded?.Invoke(true, reward);
 
-        StartCoroutine(ReturnToStartAfterDelay());
+        // Record that the player attempted the dungeon today so daily gating works.
+        GameManager.Instance?.MarkDungeonAttempted();
+
+        StartCoroutine(ReturnToBasementAfterDelay());
     }
 
     /// <summary>
@@ -371,16 +374,17 @@ public class BattleManager : MonoBehaviour
             GameManager.Instance.MarkDungeonAttempted();
         }
 
-        StartCoroutine(ReturnToStartAfterDelay());
+        StartCoroutine(ReturnToBasementAfterDelay());
     }
 
     /// <summary>
-    /// Delay helper so victory/defeat messages linger before returning to the start scene.
+    /// Delay helper so victory/defeat messages linger before returning to the town scene.
     /// </summary>
-    private IEnumerator ReturnToStartAfterDelay()
+    private IEnumerator ReturnToBasementAfterDelay()
     {
         yield return new WaitForSeconds(config.returnDelay);
-        SceneManager.LoadScene("Start"); // make sure "Start" is in Build Settings
+        // After battle conclude, send the player back to the Basement (home base).
+        SceneManager.LoadScene("Basement"); // ensure "Basement" is in Build Settings
     }
 
     // --- Helpers to notify UI ---
