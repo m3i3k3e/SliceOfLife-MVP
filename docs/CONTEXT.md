@@ -47,14 +47,14 @@ _Generated: 2025-08-10 21:04_
 - ICompanion
 - IEventBus
 - IGameManager
-- IInventory
+ - IInventoryService
 - IMinigame
 - InventoryManager
 - ISaveable
 - IsExternalInit
 - IStation
-- ItemCardSO
-- ItemSO
+ - ItemCardSO
+ - ItemSO
 - LocationSO
 - MinigameLauncher
 - MinigameResult

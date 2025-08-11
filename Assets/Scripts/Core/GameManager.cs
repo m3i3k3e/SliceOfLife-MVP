@@ -83,7 +83,7 @@ public class GameManager : MonoBehaviour, IGameManager
     public IEventBus Events => eventBusSource as IEventBus;
 
     /// <summary>Read-only inventory access for other systems.</summary>
-    public IInventory Inventory => inventoryManager;
+    public IInventoryService Inventory => inventoryManager;
 
     /// <summary>Access to global resource counts.</summary>
     public ResourceManager Resources => resourceManager;

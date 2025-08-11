@@ -379,6 +379,9 @@ flowchart LR
 - 2025-08-10: Registered `ResourceManager`, `RecipeManager`, and `DungeonProgression` as saveable systems and bumped save file version to 6.
   - How to test: give yourself some resources, unlock a recipe, advance a dungeon floor, save, then reload to verify resources, recipes, and max floor persist.
 
+- 2025-08-11: Introduced `ItemSO` and `IInventoryService`; `InventoryManager` now operates on `ItemSO`. Added temporary `InventoryDebugMenu` and starter item assets.
+  - How to test: place `InventoryDebugMenu` in a scene, assign an `InventoryManager` and an item asset, then press Add/Remove and observe console logs for "Inventory changed".
+
 ## Commenting Style
 
 - Every script under `Assets/Scripts/**` begins with a block comment summarizing its role, dependencies, and expansion hooks.
