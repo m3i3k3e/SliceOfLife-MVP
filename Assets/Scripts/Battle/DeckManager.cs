@@ -10,7 +10,24 @@ using UnityEngine;
 [Serializable]
 public class DeckManager
 {
-    // Internal piles. We serialize to make debugging in the Inspector easier.
+    // ---- Persistent deck data ----
+
+    [Header("Deck Setup")]
+    [Tooltip("Cards that make up the battle deck before shuffling.")]
+    [SerializeField] private List<CardSO> _battleDeck = new();
+
+    [Tooltip("Equipment slots holding item cards that modify the battle.")]
+    [SerializeField] private List<ItemCardSO> _equipment = new();
+
+    /// <summary>
+    /// Expose read-only views so callers can inspect but not mutate collections.
+    /// </summary>
+    public IReadOnlyList<CardSO> BattleDeck => _battleDeck;
+    public IReadOnlyList<ItemCardSO> Equipment => _equipment;
+
+    // ---- Runtime piles used during battle ----
+    // We still serialize these lists to make debugging in the Inspector easier.
+    [Header("Runtime Piles (debug)")]
     [SerializeField] private List<CardSO> _drawPile    = new();
     [SerializeField] private List<CardSO> _discardPile = new();
     [SerializeField] private List<CardSO> _hand        = new();
@@ -21,17 +38,57 @@ public class DeckManager
     /// <summary>Notify listeners (UI) whenever the hand contents change.</summary>
     public event Action<IReadOnlyList<CardSO>> OnHandChanged;
 
+    // ---- Deck building helpers -------------------------------------------------
+
+    /// <summary>
+    /// Add a card to the persistent deck list. No uniqueness checks are
+    /// performed so callers can intentionally add duplicates.
+    /// </summary>
+    public void AddToDeck(CardSO card)
+    {
+        if (card == null) return; // defensive: ignore null assignments
+        _battleDeck.Add(card);
+    }
+
+    /// <summary>
+    /// Remove a card instance from the persistent deck. Returns true if the
+    /// card was present. Useful for deck editing screens.
+    /// </summary>
+    public bool RemoveFromDeck(CardSO card)
+    {
+        if (card == null) return false;
+        return _battleDeck.Remove(card);
+    }
+
+    /// <summary>
+    /// Generates a starting hand by taking <paramref name="handSize"/> random
+    /// cards from the current battle deck. The deck itself remains unchanged so
+    /// callers can use it to preview opening hands without committing draws.
+    /// </summary>
+    public List<CardSO> GetStartingHand(int handSize)
+    {
+        // Work on a copy so shuffling doesn't disturb the actual deck order.
+        var temp = new List<CardSO>(_battleDeck);
+        Shuffle(temp);
+        int drawCount = Mathf.Min(handSize, temp.Count);
+        return temp.GetRange(0, drawCount);
+    }
+
     /// <summary>
     /// Copies the provided starting deck into the draw pile and shuffles it.
-    /// Clears any previous state so this can be reused across battles.
+    /// If <paramref name="startingDeck"/> is null, the persistent
+    /// <see cref="BattleDeck"/> list is used instead. Clears any previous state
+    /// so this manager can be reused across battles.
     /// </summary>
-    public void BuildAndShuffle(IEnumerable<CardSO> startingDeck)
+    public void BuildAndShuffle(IEnumerable<CardSO> startingDeck = null)
     {
         _drawPile.Clear();
         _discardPile.Clear();
         _hand.Clear();
 
-        foreach (var c in startingDeck)
+        var source = startingDeck ?? _battleDeck; // fall back to internal deck
+
+        foreach (var c in source)
         {
             if (c) _drawPile.Add(c); // null-safe because decks are edited in the Inspector
         }

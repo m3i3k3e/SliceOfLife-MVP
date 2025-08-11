@@ -20,6 +20,12 @@ public class CompanionSO : ScriptableObject, ICompanion
     [Tooltip("Cards granted to the player when this companion joins.")]
     [SerializeField] private List<CardSO> startingCards = new();
 
+    [Tooltip("Cards making up this companion's personal battle deck.")]
+    [SerializeField] private List<CardSO> startingDeck = new();
+
+    [Tooltip("Equipment item cards this companion has equipped by default.")]
+    [SerializeField] private List<ItemCardSO> equipmentSlots = new();
+
     [Tooltip("Passive upgrades applied while this companion is recruited.")]
     [SerializeField] private List<UpgradeSO> passiveBuffs = new();
 
@@ -53,6 +59,16 @@ public class CompanionSO : ScriptableObject, ICompanion
     /// Cards this companion contributes to the player's deck on recruitment.
     /// </summary>
     public IReadOnlyList<CardSO> GetStartingCards() => startingCards;
+
+    /// <summary>
+    /// Companion's personal deck used when they join the battle party.
+    /// </summary>
+    public IReadOnlyList<CardSO> GetStartingDeck() => startingDeck;
+
+    /// <summary>
+    /// Default equipment this companion brings when recruited.
+    /// </summary>
+    public IReadOnlyList<ItemCardSO> GetEquipmentSlots() => equipmentSlots;
 
     /// <summary>
     /// Permanent buffs granted when this companion is recruited.

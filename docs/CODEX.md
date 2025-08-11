@@ -136,7 +136,8 @@ This file is the source of truth for design + tech. Keep it short and link out t
   raise `GameManager.Events.StationUnlocked` / `GameManager.Events.CompanionRecruited`.
   `RecruitCompanion` also invokes `OnCompanionRecruited(ICompanion, IReadOnlyList<CardSO>, IReadOnlyList<UpgradeSO>)`
   so battle and upgrade systems can claim a companion's starting deck and buffs.
-  Each `CompanionSO` serializes these via `GetStartingCards()` and `GetPassiveBuffs()` accessors.
+  Each `CompanionSO` serializes these via `GetStartingCards()`, `GetStartingDeck()`,
+  `GetEquipmentSlots()` and `GetPassiveBuffs()` accessors.
   The manager subscribes to `IStation.OnProductionComplete` and forwards results through
   `GameManager.Events.MinigameCompleted`.
 
@@ -195,7 +196,7 @@ flowchart LR
 | **Dungeon Key** | Daily token consumed to attempt a dungeon run. |
 | **Upgrade** | ScriptableObject-driven improvement purchased with essence. |
 | **BattleManager** | Orchestrates turn flow by composing DeckManager, EnergyPool, StatusController and BattleRewardService. |
-| **DeckManager** | Shuffles the starting deck and handles draw/discard/hand operations. |
+| **DeckManager** | Stores the battle deck and equipment, offers add/remove helpers, and handles shuffle, draw, discard, and starting hand generation. |
 | **EnergyPool** | Tracks current/max energy and spending. Raises `OnEnergyChanged`. |
 | **StatusController** | Maintains Weak/Vulnerable timers and exposes formatted labels. |
 | **BattleRewardService** | Calculates victory rewards and grants essence. |
