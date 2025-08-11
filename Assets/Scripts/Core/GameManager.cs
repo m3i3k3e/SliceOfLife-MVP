@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [DefaultExecutionOrder(-100)]
 /// <summary>
@@ -24,6 +25,10 @@ public class GameManager : MonoBehaviour, IGameManager
     {
         if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); }
         else { Destroy(gameObject); return; }
+
+        // Capture the initial scene so a fresh save knows where the player started.
+        _currentScene = SceneManager.GetActiveScene().name;
+        _spawnPointId = string.Empty; // default until a spawn point sets this
 
         // Register core systems for saving. Doing this in Awake ensures the list
         // is ready before any save/load operations occur.
@@ -53,6 +58,24 @@ public class GameManager : MonoBehaviour, IGameManager
     [SerializeField] private RecipeManager recipeManager; // crafting recipes
     [SerializeField] private TaskService taskService; // drives tutorial-style task progression
     [SerializeField] private string unlockUpgradeId = UpgradeIds.UnlockBattle; // default to constant to avoid typos
+
+    [Header("Scene Tracking")]
+    [SerializeField] private string _currentScene;
+    [SerializeField] private string _spawnPointId;
+
+    /// <summary>Scene name the player last occupied. Used for save/load.</summary>
+    public string CurrentScene
+    {
+        get => _currentScene;
+        set => _currentScene = value;
+    }
+
+    /// <summary>Identifier for the spawn point used when loading the scene.</summary>
+    public string SpawnPointId
+    {
+        get => _spawnPointId;
+        set => _spawnPointId = value;
+    }
 
     // ----- Saveable registration -----
     // Maintain a list of participating systems so SaveSystem can iterate them generically.

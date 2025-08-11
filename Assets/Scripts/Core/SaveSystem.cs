@@ -92,6 +92,11 @@ public static class SaveSystem
             tempNextDayClickDebuff = gm.TempNextDayClickDebuff
         };
 
+        // ----- Meta -----
+        // Record the scene and spawn point so we can restore the player's location on load.
+        model.lastScene = gm.CurrentScene;
+        model.spawnPointId = gm.SpawnPointId;
+
         // ----- Essence -----
         if (gm.Essence is EssenceManager essence)
         {
@@ -145,6 +150,13 @@ public static class SaveSystem
         (gm?.Inventory as InventoryManager)?.ApplyLoadedState(model);
 
         taskService?.ApplyLoadedState(model);
+
+        if (gm != null)
+        {
+            // Restore last scene and spawn so the next boot can jump to the right location.
+            gm.CurrentScene = model.lastScene;
+            gm.SpawnPointId = model.spawnPointId;
+        }
 
         gm?.ReevaluateSleepGate();
     }

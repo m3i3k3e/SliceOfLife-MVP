@@ -117,6 +117,8 @@ Dungeon.unity
 &nbsp; - `int version = 2`
 
 &nbsp; - Meta: `string lastScene`, `string spawnPointId`
+    - `GameManager` now exposes `CurrentScene` and `SpawnPointId` so the save model can restore the player's last location.
+    - **Test**: switch scenes in play mode, call `SaveSystem.Save`, restart, then `Load` and confirm the scene and spawn point match the previous session.
 
 &nbsp; - Day/Rules: `int day`, `int dungeonKeysRemaining`, `int dungeonKeysPerDay`, `int tempNextDayClickDebuff`
 
