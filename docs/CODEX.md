@@ -198,6 +198,7 @@ flowchart LR
 - To test: assign a `DefaultEventBus` component to `eventBusSource` fields on GameManager, HUD, and BattleManager. Run the game, unlock a station or recruit a companion, and ensure HUD and other listeners react via bus events.
 - Added `MinigameResult`, updated `IMinigame` to `PlayAsync`, and introduced `MinigameLauncher` + new `MinigameCompleted` event.
 - To test: create a scriptable object implementing `IMinigame`, then call `MinigameLauncher.LaunchAsync` and watch listeners receive the result via the event bus.
+- Added `DungeonProgression` system. Tracks `CurrentFloor` and `MaxFloorReached`, unlocking stations at floor milestones (10, 20, 30...). `GameManager` exposes it via the new `Dungeon` property. **Test**: in play mode call `GameManager.Instance.Dungeon.AdvanceFloor()` enough times to cross a milestone and confirm the station unlocks and progress persists after saving/loading.
 - Added `LocationSO` data and `MapUI` that spawns buttons for unlocked locations. Event bus now exposes `UpgradePurchased` for UI refreshes.
 - To test: create LocationSO assets for Hub and Battle, assign them to MapUI, purchase the battle unlock upgrade, and verify the Battle button appears and loads the scene.
 - Split `HUD` into a lightweight container with pluggable `HUDPanel` components. Panels subscribe only to needed `IEventBus` events and register themselves for easy prefab addition.

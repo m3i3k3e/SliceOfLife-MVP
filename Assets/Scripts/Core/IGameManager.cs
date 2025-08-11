@@ -24,6 +24,9 @@ public interface IGameManager : ISaveable
     /// <summary>Access to crafting recipes and unlock state.</summary>
     RecipeManager Recipes { get; }
 
+    /// <summary>Tracks dungeon floor progression and milestones.</summary>
+    DungeonProgression Dungeon { get; }
+
     // -------- Day progression --------
     /// <summary>Current in-game day (starts at 1).</summary>
     int Day { get; }

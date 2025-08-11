@@ -23,6 +23,7 @@ public class GameManager : MonoBehaviour, IGameManager
         if (essenceManager != null) RegisterSaveable(essenceManager);
         if (upgradeManager != null) RegisterSaveable(upgradeManager);
         if (stationManager != null) RegisterSaveable(stationManager);
+        if (dungeonProgression != null) RegisterSaveable(dungeonProgression);
         if (inventoryManager != null) RegisterSaveable(inventoryManager);
         if (resourceManager != null) RegisterSaveable(resourceManager);
         if (skillTreeManager != null) RegisterSaveable(skillTreeManager);
@@ -34,6 +35,7 @@ public class GameManager : MonoBehaviour, IGameManager
     [SerializeField] private EssenceManager essenceManager;
     [SerializeField] private UpgradeManager upgradeManager;
     [SerializeField] private StationManager stationManager; // manages stations/companions
+    [SerializeField] private DungeonProgression dungeonProgression; // tracks dungeon floors
     [SerializeField] private InventoryManager inventoryManager; // holds items
     [SerializeField] private ResourceManager resourceManager; // tracks generic resources
     [SerializeField] private SkillTreeManager skillTreeManager; // governs skill unlocks
@@ -77,6 +79,9 @@ public class GameManager : MonoBehaviour, IGameManager
 
     /// <summary>Access to unlocked crafting recipes.</summary>
     public RecipeManager Recipes => recipeManager;
+
+    /// <summary>Access to dungeon floor tracking and milestones.</summary>
+    public DungeonProgression Dungeon => dungeonProgression;
 
     /// <summary>How many dungeon keys the player receives each day once unlocked.</summary>
     public int DungeonKeysPerDay => dungeonKeysPerDay; // expose for HUD
