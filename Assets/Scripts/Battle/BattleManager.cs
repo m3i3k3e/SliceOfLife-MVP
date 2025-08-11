@@ -3,6 +3,8 @@
  * Purpose: Orchestrates the Player vs. Enemy turn loop and coordinates subsystems.
  * Dependencies: DeckManager, EnergyPool, StatusController, IGameManager, IEventBus.
  * Expansion Hooks: Public events allow UI or other systems to react without tight coupling.
+ *                 Add new card actions via BattleAction/ApplyActionEffect and new enemy intents
+ *                 by extending EnemyIntentType and EnemyTurn's switch.
  * Rationale: Interfaces and event bus keep this class testable and decoupled; async reward grant.
  */
 using System;
@@ -239,6 +241,7 @@ public class BattleManager : MonoBehaviour
                 _status.ApplyVulnerableToEnemy(2);
                 break;
         }
+        // Add new BattleAction cases above to introduce new card effects.
     }
     /// <summary>Wrapper over EnergyPool.TrySpend that also surfaces a UI message.</summary>
     private bool TrySpendEnergy(int amount)
@@ -314,6 +317,7 @@ public class BattleManager : MonoBehaviour
                 _enemyHP = Mathf.Min(config.enemyMaxHP, _enemyHP + config.enemyLeechHeal);
                 break;
         }
+        // Add new EnemyIntentType cases above and update EnemyIntent enum accordingly.
 
         // 3) Update UI with new stats
         PushPlayerStats();
