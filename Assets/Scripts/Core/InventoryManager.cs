@@ -53,6 +53,24 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
     public event Action OnInventoryChanged;
 
     /// <summary>
+    /// Unity lifecycle: bridge local events to the global <see cref="GameEvents"/> hub.
+    /// </summary>
+    private void OnEnable()
+    {
+        // Forward inventory mutations so transient listeners can react without
+        // holding direct references to this manager.
+        OnInventoryChanged += GameEvents.RaiseInventoryChanged;
+    }
+
+    /// <summary>
+    /// Unity lifecycle: unsubscribe from mirrored events to prevent leaks.
+    /// </summary>
+    private void OnDisable()
+    {
+        OnInventoryChanged -= GameEvents.RaiseInventoryChanged;
+    }
+
+    /// <summary>
     /// Attempts to add an item stack, merging into existing stacks before creating new ones.
     /// Returns <c>true</c> only if the entire quantity fits.
     /// </summary>
