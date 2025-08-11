@@ -66,7 +66,7 @@ public class DungeonProgression : MonoBehaviour, ISaveable
         // Persist progress so it survives app restarts.
         var gm = GameManager.Instance;
         if (gm != null)
-            SaveSystem.Save(gm);
+            SaveScheduler.RequestSave(gm); // schedule persistence instead of immediate write
     }
 
     /// <summary>

@@ -200,7 +200,8 @@ public class GameManager : MonoBehaviour, IGameManager
             Events?.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
             ReevaluateSleepGate();
             // Persist the newly unlocked state so the unlock isn't lost.
-            SaveSystem.Save(this);
+            // We route through the scheduler so multiple rapid events don't hammer disk.
+            SaveScheduler.RequestSave(this);
         }
     }
 
@@ -218,7 +219,8 @@ public class GameManager : MonoBehaviour, IGameManager
     /// </summary>
     private void HandleInventoryChanged()
     {
-        SaveSystem.Save(this);
+        // Persist inventory mutations without spamming disk writes.
+        SaveScheduler.RequestSave(this);
     }
 
     /// <summary>
@@ -227,7 +229,7 @@ public class GameManager : MonoBehaviour, IGameManager
     private void HandleResourceChanged(ResourceSO resource, int amount)
     {
         Events?.RaiseResourceChanged(resource, amount);
-        SaveSystem.Save(this);
+        SaveScheduler.RequestSave(this);
     }
 
     /// <summary>
@@ -236,7 +238,7 @@ public class GameManager : MonoBehaviour, IGameManager
     private void HandleSkillUnlocked(SkillSO skill)
     {
         Events?.RaiseSkillUnlocked(skill);
-        SaveSystem.Save(this);
+        SaveScheduler.RequestSave(this);
     }
 
     /// <summary>
@@ -245,7 +247,7 @@ public class GameManager : MonoBehaviour, IGameManager
     private void HandleRecipeUnlocked(RecipeSO recipe)
     {
         Events?.RaiseRecipeUnlocked(recipe);
-        SaveSystem.Save(this);
+        SaveScheduler.RequestSave(this);
     }
 
     /// <summary>
@@ -316,7 +318,8 @@ public class GameManager : MonoBehaviour, IGameManager
         // Let listeners know key counts changed (UI, save system, etc.).
         Events?.RaiseDungeonKeysChanged(DungeonKeysRemaining, dungeonKeysPerDay);
         ReevaluateSleepGate();
-        SaveSystem.Save(this);
+        // Persist new key count via scheduler (debounced).
+        SaveScheduler.RequestSave(this);
         return true;
     }
 
@@ -345,7 +348,8 @@ public class GameManager : MonoBehaviour, IGameManager
         int baseCap = essenceManager ? essenceManager.DailyClickCap : 10;
         _tempNextDayClickDebuff = Mathf.Clamp(_tempNextDayClickDebuff + nextDayClickDebuffOnLoss, 0, baseCap);
 
-        SaveSystem.Save(this);
+        // Capture penalty and debuff in the next save tick.
+        SaveScheduler.RequestSave(this);
     }
 
     // -------- Sleep gate --------
@@ -430,7 +434,8 @@ public class GameManager : MonoBehaviour, IGameManager
 
         // Inform listeners of the new day index.
         Events?.RaiseDayChanged(Day);
-        SaveSystem.Save(this);
+        // Day advancement touches many systems; batch the save to cover them all.
+        SaveScheduler.RequestSave(this);
         ReevaluateSleepGate();
     }
 
@@ -525,5 +530,6 @@ public class GameManager : MonoBehaviour, IGameManager
     /// <summary>
     /// Unity lifecycle: called when the application is closing. Forces a final save.
     /// </summary>
-    private void OnApplicationQuit() => SaveSystem.Save(this);
+    // Ensure a final save happens on shutdown. Scheduler flushes immediately on quit.
+    private void OnApplicationQuit() => SaveScheduler.RequestSave(this);
 }

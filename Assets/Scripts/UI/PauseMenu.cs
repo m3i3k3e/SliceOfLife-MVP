@@ -61,7 +61,7 @@ public class PauseMenu : MonoBehaviour
     {
         var gm = GameManager.Instance;
         if (gm != null)
-            SaveSystem.Save(gm); // persist current state
+            SaveScheduler.RequestSave(gm); // queue save then return to title
 
         Time.timeScale = 1f; // ensure time resumes in title scene
         SceneManager.LoadScene(titleScene);

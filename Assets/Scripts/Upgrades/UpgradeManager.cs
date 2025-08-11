@@ -95,7 +95,8 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable
         ApplyDerivedEffect(upgrade); // incremental update for snappy UI
 
         OnPurchased?.Invoke(upgrade);
-        SaveSystem.Save(GameManager.Instance);
+        // Persist new ownership through the scheduler to avoid write thrash.
+        SaveScheduler.RequestSave(GameManager.Instance);
         return true;
     }
 

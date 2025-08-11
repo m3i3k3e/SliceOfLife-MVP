@@ -120,7 +120,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 | \*\*Generational Legacy\*\* | UI Stub | “Fertilize” button + future reset/bonus flow. |
 
-| \*\*Save/Load\*\* | Full | JSON/PlayerPrefs; re-applies one-shot upgrades on load. |
+| \*\*Save/Load\*\* | Full | JSON/PlayerPrefs; re-applies one-shot upgrades on load. `SaveScheduler` batches multiple save requests and writes once after a short delay to minimize disk churn. |
 
 
 
