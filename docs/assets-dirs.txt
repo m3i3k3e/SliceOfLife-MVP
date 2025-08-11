@@ -14,11 +14,13 @@ Assets/ScriptableObjects
 Assets/ScriptableObjects/Battle
 Assets/ScriptableObjects/Cards
 Assets/ScriptableObjects/Dungeon
+Assets/ScriptableObjects/Items
 Assets/ScriptableObjects/Locations
 Assets/ScriptableObjects/Upgrades
 Assets/Scripts
 Assets/Scripts/Battle
 Assets/Scripts/Core
+Assets/Scripts/Inventory
 Assets/Scripts/UI
 Assets/Scripts/Upgrades
 Assets/ThirdParty

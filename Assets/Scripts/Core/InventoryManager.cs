@@ -1,7 +1,7 @@
 /*
  * InventoryManager.cs
  * Purpose: Maintains the player's inventory at runtime with add/remove/query APIs.
- * Dependencies: ItemCardSO definitions, IInventory surface, ISaveable for persistence.
+ * Dependencies: ItemSO definitions, IInventoryService surface, ISaveable for persistence.
  * Expansion Hooks: OnInventoryChanged event for UI; slot data structure allows future sorting.
  * Rationale: Implements interfaces so other systems talk to abstractions instead of concrete types.
  */
@@ -14,16 +14,16 @@ using UnityEngine;
 /// <see cref="OnInventoryChanged"/> whenever contents mutate.
 /// </summary>
 /// <remarks>
-/// Implements <see cref="IInventory"/> and <see cref="ISaveable"/> to keep the persistence
-/// and consumer code decoupled from this concrete class.
+/// Implements <see cref="IInventoryService"/> and <see cref="ISaveable"/> to keep the
+/// persistence and consumer code decoupled from this concrete class.
 /// </remarks>
-public class InventoryManager : MonoBehaviour, IInventory, ISaveable
+public class InventoryManager : MonoBehaviour, IInventoryService, ISaveable
 {
     private const int SlotsPerRow = 10; // Each row exposes 10 slots in the dungeon bar
 
     [Header("Catalog")]
     [Tooltip("All item definitions available. Used to resolve IDs during load.")]
-    [SerializeField] private List<ItemCardSO> itemCatalog = new();
+    [SerializeField] private List<ItemSO> itemCatalog = new();
 
     [Header("Progression")]
     [Tooltip("How many rows of slots are currently unlocked (1-5).")]
@@ -33,10 +33,10 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
     [Serializable]
     private class Slot
     {
-        public ItemCardSO item;
+        public ItemSO item;
         public int quantity;
 
-        public Slot(ItemCardSO item, int qty)
+        public Slot(ItemSO item, int qty)
         {
             this.item = item;
             quantity = qty;
@@ -74,7 +74,7 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
     /// Attempts to add an item stack, merging into existing stacks before creating new ones.
     /// Returns <c>true</c> only if the entire quantity fits.
     /// </summary>
-    public bool TryAdd(ItemCardSO item, int quantity)
+    public bool TryAdd(ItemSO item, int quantity)
     {
         if (item == null || quantity <= 0) return false;
 
@@ -110,7 +110,7 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
     /// Attempts to remove items, failing if insufficient quantity exists.
     /// Returns <c>true</c> when the full amount was removed.
     /// </summary>
-    public bool TryRemove(ItemCardSO item, int quantity)
+    public bool TryRemove(ItemSO item, int quantity)
     {
         if (item == null || quantity <= 0) return false;
         if (GetCount(item) < quantity) return false; // not enough to remove
@@ -135,7 +135,7 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
     }
 
     /// <summary>Total quantity of the specified item across all stacks.</summary>
-    public int GetCount(ItemCardSO item)
+    public int GetCount(ItemSO item)
     {
         if (item == null) return 0;
         int total = 0;
@@ -230,7 +230,7 @@ public class InventoryManager : MonoBehaviour, IInventory, ISaveable
     }
 
     /// <summary>Lookup helper to resolve an item ID from the catalog.</summary>
-    private ItemCardSO FindItem(string id)
+    private ItemSO FindItem(string id)
     {
         if (string.IsNullOrEmpty(id)) return null;
         // Manual loop avoids allocations from LINQ
