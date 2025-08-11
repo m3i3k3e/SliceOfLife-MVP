@@ -1,3 +1,8 @@
+/*
+ * GameManager.cs
+ * Role: Central orchestrator for high-level game state and persistence.
+ * Expansion: Register new ISaveable systems here and forward new global events via IEventBus.
+ */
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -12,6 +17,10 @@ public class GameManager : MonoBehaviour, IGameManager
 {
     // -------- Singleton --------
     public static GameManager Instance { get; private set; }
+    /// <summary>
+    /// Unity lifecycle: first entry point. Establishes the singleton instance
+    /// and registers core systems so persistence knows about them early.
+    /// </summary>
     private void Awake()
     {
         if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); }
@@ -30,6 +39,7 @@ public class GameManager : MonoBehaviour, IGameManager
         if (recipeManager != null) RegisterSaveable(recipeManager);        // known crafting recipes
         if (dungeonProgression != null) RegisterSaveable(dungeonProgression); // floor milestones
         if (skillTreeManager != null) RegisterSaveable(skillTreeManager);  // unlocked skills
+        // Add new saveable systems here by implementing ISaveable and registering them.
     }
 
     // -------- Core systems --------
@@ -91,21 +101,27 @@ public class GameManager : MonoBehaviour, IGameManager
     /// <summary>Access to the skill tree for UI and systems.</summary>
     public SkillTreeManager Skills => skillTreeManager;
 
+    /// <summary>
+    /// Helper to locate an upgrade by id without allocating LINQ structures.
+    /// </summary>
     private UpgradeSO FindUpgradeById(string id)
     {
-    var up = Upgrades;
-    if (up == null) return null;
-    var list = up.Available;
-    if (list == null) return null;
-    for (int i = 0; i < list.Count; i++)
-        if (list[i] != null && list[i].id == id) return list[i];
-    return null;
+        var up = Upgrades;
+        if (up == null) return null;
+        var list = up.Available;
+        if (list == null) return null;
+        for (int i = 0; i < list.Count; i++)   // manual loop avoids LINQ GC
+            if (list[i] != null && list[i].id == id) return list[i];
+        return null;
     }
 
+    /// <summary>
+    /// Determine whether the player can currently purchase the dungeon unlock upgrade.
+    /// </summary>
     private bool CanAffordUnlock()
     {
         var so = FindUpgradeById(unlockUpgradeId);
-        if (so == null || Essence == null) return false;
+        if (so == null || Essence == null) return false;  // missing data or no currency system
         return !Upgrades.IsPurchased(unlockUpgradeId) && Essence.CurrentEssence >= so.cost;
     }
 
@@ -148,6 +164,9 @@ public class GameManager : MonoBehaviour, IGameManager
             dungeonProgression.OnFloorReached += HandleFloorReached;
     }
 
+    /// <summary>
+    /// React to newly bought upgrades so dependent systems update immediately.
+    /// </summary>
     private async void HandleUpgradePurchased(UpgradeSO up)
     {
         // Always bridge the purchase onto the global event bus so UI systems can react.
@@ -165,6 +184,10 @@ public class GameManager : MonoBehaviour, IGameManager
         }
     }
 
+    /// <summary>
+    /// Invoked when the player's remaining manual clicks change.
+    /// Used to recompute the Sleep gate each time.
+    /// </summary>
     private void HandleDailyClicksChanged(int _)
     {
         ReevaluateSleepGate();
@@ -314,6 +337,9 @@ public class GameManager : MonoBehaviour, IGameManager
 
     // -------- Sleep gate --------
 
+    /// <summary>
+    /// Convenience check: has the player bought the dungeon unlock upgrade yet?
+    /// </summary>
     private bool IsDungeonUnlocked()
     {
         var up = Upgrades;
@@ -367,9 +393,12 @@ public class GameManager : MonoBehaviour, IGameManager
 
     // -------- Day change internals --------
 
+    /// <summary>
+    /// Internal routine that advances the day and resets daily-limited resources.
+    /// </summary>
     private async Task AdvanceDay() // keep this private so everyone uses TrySleep()
     {
-        Day++;
+        Day++; // increment first so save file reflects the new day
 
         // Today's click cap after any queued debuff
         int capToday = EssenceManagerDailyCapMinusDebuff();
@@ -392,9 +421,12 @@ public class GameManager : MonoBehaviour, IGameManager
         ReevaluateSleepGate();
     }
 
+    /// <summary>
+    /// Helper to compute today's click cap after applying any temporary debuffs.
+    /// </summary>
     private int EssenceManagerDailyCapMinusDebuff()
     {
-        int baseCap = essenceManager ? essenceManager.DailyClickCap : 10;
+        int baseCap = essenceManager ? essenceManager.DailyClickCap : 10; // default if manager missing
         return Mathf.Max(0, baseCap - _tempNextDayClickDebuff);
     }
 
@@ -457,5 +489,8 @@ public class GameManager : MonoBehaviour, IGameManager
             dungeonProgression.OnFloorReached -= HandleFloorReached;
     }
 
+    /// <summary>
+    /// Unity lifecycle: called when the application is closing. Forces a final save.
+    /// </summary>
     private void OnApplicationQuit() => SaveSystem.SaveAsync(this).GetAwaiter().GetResult();
 }

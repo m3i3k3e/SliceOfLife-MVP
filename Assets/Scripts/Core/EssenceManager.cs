@@ -1,3 +1,8 @@
+/*
+ * EssenceManager.cs
+ * Role: Handles the player's primary currency and click/passive generation rules.
+ * Expansion: Extend IEssenceProvider to support new currency sources or modifiers.
+ */
 using System;
 using System.Collections;
 using UnityEngine;
@@ -74,12 +79,18 @@ public class EssenceManager : MonoBehaviour, IEssenceProvider, ISaveable
 
     private Coroutine passiveRoutine;
 
+    /// <summary>
+    /// Unity lifecycle: cache baseline values before any other system queries them.
+    /// </summary>
     private void Awake()
     {
         _essencePerClick = baseEssencePerClick;
         _dailyClicksRemaining = dailyClickCap;
     }
 
+    /// <summary>
+    /// Unity lifecycle: begin passive generation if configured.
+    /// </summary>
     private void OnEnable() => StartPassiveIfNeeded();
 
     /// <summary>Consume one click and add essence if under the daily cap.</summary>
@@ -142,23 +153,32 @@ public class EssenceManager : MonoBehaviour, IEssenceProvider, ISaveable
 
     // ---- internals ----
 
+    /// <summary>
+    /// Centralized mutation so all essence changes trigger the event.
+    /// </summary>
     private void AddInternal(int amount)
     {
         _currentEssence += amount;
         OnEssenceChanged?.Invoke(_currentEssence);
     }
 
+    /// <summary>
+    /// Start or stop the passive income coroutine based on the current rate.
+    /// </summary>
     private void StartPassiveIfNeeded()
     {
         if (passivePerSecond > 0f && passiveRoutine == null)
-            passiveRoutine = StartCoroutine(PassiveTick());
+            passiveRoutine = StartCoroutine(PassiveTick()); // begin ticking
         else if (passivePerSecond <= 0f && passiveRoutine != null)
         {
-            StopCoroutine(passiveRoutine);
+            StopCoroutine(passiveRoutine); // disable existing routine
             passiveRoutine = null;
         }
     }
 
+    /// <summary>
+    /// Coroutine that adds floor(passivePerSecond) every second. Keeps logic in one place.
+    /// </summary>
     private IEnumerator PassiveTick()
     {
         var wait = new WaitForSeconds(1f);

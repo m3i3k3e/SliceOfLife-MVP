@@ -1,3 +1,8 @@
+/*
+ * UpgradeManager.cs
+ * Role: Maintains upgrade catalog, purchase flow, and derived stats like reward multipliers.
+ * Expansion: Add new UpgradeEffect cases in ApplyOneShot/ApplyDerivedEffect to support new upgrades.
+ */
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,6 +58,9 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable
     public event Action<UpgradeSO> OnPurchased;
 
     // ---- Purchase flow ----
+    /// <summary>
+    /// Attempt to buy an upgrade, applying one-shot effects and persisting ownership.
+    /// </summary>
     public bool TryPurchase(UpgradeSO upgrade)
     {
         if (upgrade == null) return false;
@@ -75,6 +83,9 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable
         return true;
     }
 
+    /// <summary>
+    /// Check whether the given upgrade ID has been purchased.
+    /// </summary>
     public bool IsPurchased(string upgradeId) => _purchased.Contains(upgradeId);
 
     // ---- Effect application helpers ----
@@ -107,6 +118,7 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable
                 // IMPORTANT: Do NOT bake multipliers into saved numbers here.
                 // Handled in ApplyDerivedEffect/RecalculateDerivedStats.
                 break;
+            // Add new UpgradeEffect cases here by implementing corresponding logic.
         }
     }
 
@@ -123,6 +135,7 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable
                 // Stacks multiplicatively with other bonuses.
                 RewardMultiplier *= 1f + (up.value / 100f);
                 break;
+            // Add new UpgradeEffect cases here for additional derived stats.
         }
     }
 

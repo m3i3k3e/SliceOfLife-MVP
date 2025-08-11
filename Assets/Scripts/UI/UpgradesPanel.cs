@@ -1,3 +1,8 @@
+/*
+ * UpgradesPanel.cs
+ * Role: Renders upgrade buttons and reacts to currency/purchase events.
+ * Expansion: Extend UpgradeButtonView or refresh logic to support new upgrade UI elements.
+ */
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -26,6 +31,9 @@ public class UpgradesPanel : MonoBehaviour
     /// </summary>
     private readonly Dictionary<string, UpgradeSO> _upgradesById = new();
 
+    /// <summary>
+    /// Unity lifecycle: build button list and subscribe to events when panel becomes visible.
+    /// </summary>
     private void OnEnable()
     {
         // Cache provider references and guard against missing systems during init/hot reloads.
@@ -38,6 +46,9 @@ public class UpgradesPanel : MonoBehaviour
         essence.OnEssenceChanged += OnEssenceChanged;
     }
 
+    /// <summary>
+    /// Unity lifecycle: detach listeners to avoid leaks when panel hides.
+    /// </summary>
     private void OnDisable()
     {
         var upgrades = Upgrades;
@@ -54,7 +65,7 @@ public class UpgradesPanel : MonoBehaviour
     private void BuildList()
     {
         // Clear any old rows (useful during hot reloads)
-        foreach (Transform child in contentParent) Destroy(child.gameObject);
+        foreach (Transform child in contentParent) Destroy(child.gameObject); // remove old rows
         _buttonsById.Clear();       // stale references are not valid after rebuild
         _upgradesById.Clear();      // keep upgrade lookup in sync with buttons
 
@@ -80,7 +91,7 @@ public class UpgradesPanel : MonoBehaviour
                 }
                 else
                 {
-                    RefreshRow(row, localUp);
+                    RefreshRow(row, localUp); // purchase succeeded; row becomes disabled
                 }
             });
 
@@ -92,19 +103,22 @@ public class UpgradesPanel : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Update a single row's interactivity and labels based on purchase/affordability.
+    /// </summary>
     private void RefreshRow(Button row, UpgradeSO up)
     {
         // Purchased rows become non-interactable and show "Purchased"
         if (Upgrades.IsPurchased(up.id))
         {
-            row.interactable = false;
+            row.interactable = false; // can't click again
             foreach (var t in row.GetComponentsInChildren<TextMeshProUGUI>(true))
-                if (t.name.ToLower().Contains("cost")) t.text = "Purchased";
+                if (t.name.ToLower().Contains("cost")) t.text = "Purchased"; // show status
             return;
         }
 
         // Not purchased: enable only if affordable
-        row.interactable = Essence.CurrentEssence >= up.cost;
+        row.interactable = Essence.CurrentEssence >= up.cost; // enable only if player can afford
 
         // Keep cost label accurate (optional, in case Essence changed)
         foreach (var t in row.GetComponentsInChildren<TextMeshProUGUI>(true))
@@ -113,8 +127,7 @@ public class UpgradesPanel : MonoBehaviour
     }
 
     /// <summary>
-    /// Called by UpgradeManager whenever an upgrade is successfully purchased.
-    /// Only the affected row needs to update.
+    /// React to purchase events and refresh only the affected row.
     /// </summary>
     private void OnPurchased(UpgradeSO purchased)
     {
@@ -126,7 +139,7 @@ public class UpgradesPanel : MonoBehaviour
     }
 
     /// <summary>
-    /// Fired whenever the player's currency changes. Re-evaluates affordability for all upgrades.
+    /// Fired when currency changes; reevaluates affordability across all upgrades.
     /// </summary>
     private void OnEssenceChanged(int _)
     {
