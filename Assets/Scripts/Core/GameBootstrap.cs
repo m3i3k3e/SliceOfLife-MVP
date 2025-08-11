@@ -54,10 +54,13 @@ public class GameBootstrap : MonoBehaviour
     private void Start()
     {
         var gm = GameManager.Instance ?? FindObjectOfType<GameManager>();
+        var tasks = FindFirstObjectByType<TaskService>(FindObjectsInactive.Include);
         if (gm != null)
         {
+            // Wire the task service into GameManager before loading so SaveSystem has references.
+            gm.InjectTaskService(tasks);
             // Load() returns default data if no save exists; we intentionally ignore it.
-            SaveSystem.Load(gm);
+            SaveSystem.Load(gm, tasks);
         }
     }
 

@@ -51,6 +51,7 @@ public class GameManager : MonoBehaviour, IGameManager
     [SerializeField] private ResourceManager resourceManager; // tracks generic resources
     [SerializeField] private SkillTreeManager skillTreeManager; // governs skill unlocks
     [SerializeField] private RecipeManager recipeManager; // crafting recipes
+    [SerializeField] private TaskService taskService; // drives tutorial-style task progression
     [SerializeField] private string unlockUpgradeId = UpgradeIds.UnlockBattle; // default to constant to avoid typos
 
     // ----- Saveable registration -----
@@ -99,6 +100,15 @@ public class GameManager : MonoBehaviour, IGameManager
 
     /// <summary>Access to the skill tree for UI and systems.</summary>
     public SkillTreeManager Skills => skillTreeManager;
+
+    /// <summary>Access to the tutorial task service.</summary>
+    public TaskService Tasks => taskService;
+
+    /// <summary>Allow the bootstrapper to inject a TaskService instance at runtime.</summary>
+    public void InjectTaskService(TaskService svc)
+    {
+        taskService = svc;
+    }
 
     /// <summary>
     /// Helper to locate an upgrade by id without allocating LINQ structures.
@@ -276,6 +286,9 @@ public class GameManager : MonoBehaviour, IGameManager
 
     /// <summary>Click-cap reduction queued for the next day only.</summary>
     private int _tempNextDayClickDebuff;
+
+    /// <summary>Read-only access for systems needing to persist the pending debuff.</summary>
+    public int TempNextDayClickDebuff => _tempNextDayClickDebuff;
 
 
     // -------- Public API used by UI / buttons --------
