@@ -27,12 +27,6 @@ public class StationManager : MonoBehaviour, ISaveable
     private readonly Dictionary<string, string> _companionAssignments = new();
 
     /// <summary>
-    /// Fired whenever a station becomes unlocked.
-    /// Payload is the station ScriptableObject (typed via interface).
-    /// </summary>
-    public event Action<IStation> OnStationUnlocked;
-
-    /// <summary>
     /// Fired when the player recruits a companion.
     /// The companion is added to our assignment list with no station.
     /// Provides the companion's starting cards and passive buffs for systems
@@ -77,7 +71,9 @@ public class StationManager : MonoBehaviour, ISaveable
             return false; // invalid or already unlocked
 
         _unlockedStationIds.Add(id); // track newly unlocked station
-        OnStationUnlocked?.Invoke(so); // notify listeners
+
+        // Broadcast through the global event bus so UI and other systems stay in sync.
+        GameManager.Instance?.Events?.RaiseStationUnlocked(so);
         return true;
     }
 
@@ -93,9 +89,35 @@ public class StationManager : MonoBehaviour, ISaveable
             return false; // invalid or already recruited
 
         _companionAssignments[id] = null; // recruited, not yet assigned
+
         // Fire event with companion loadout so listeners can update immediately
         OnCompanionRecruited?.Invoke(co, co.GetStartingCards(), co.GetPassiveBuffs());
+
+        // Also notify the global bus for general awareness.
+        GameManager.Instance?.Events?.RaiseCompanionRecruited(co);
         return true;
+    }
+
+    private void OnEnable()
+    {
+        // Subscribe to station production events so we can forward results globally.
+        for (int i = 0; i < _stations.Count; i++)
+            _stations[i].OnProductionComplete += HandleStationProductionComplete;
+    }
+
+    private void OnDisable()
+    {
+        // Unsubscribe to avoid memory leaks when the object is disabled/destroyed.
+        for (int i = 0; i < _stations.Count; i++)
+            _stations[i].OnProductionComplete -= HandleStationProductionComplete;
+    }
+
+    /// <summary>
+    /// Forward station production results to the global event bus.
+    /// </summary>
+    private void HandleStationProductionComplete(MinigameResult result)
+    {
+        GameManager.Instance?.Events?.RaiseMinigameCompleted(result);
     }
 
     // ---- Save/Load helpers ----
