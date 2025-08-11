@@ -1,3 +1,4 @@
+Assets/Prefabs/Battle/BattleRoot.prefab
 Assets/Prefabs/Battle/CardView.prefab
 Assets/Prefabs/UI/UpgradeButtonPrefab.prefab
 Assets/Scenes/Battle.unity

@@ -1,5 +1,5 @@
 # SliceOfLife-MVP — Context Snapshot
-_Generated: 2025-08-10 20:57_
+_Generated: 2025-08-10 21:04_
 
 ## Scenes
 - Battle
@@ -7,6 +7,7 @@ _Generated: 2025-08-10 20:57_
 - Title
 
 ## Prefabs
+- Prefabs/Battle/BattleRoot.prefab
 - Prefabs/Battle/CardView.prefab
 - Prefabs/UI/UpgradeButtonPrefab.prefab
 
