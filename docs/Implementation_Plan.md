@@ -2,7 +2,19 @@
 
 
 
-\_Last updated: YYYY-MM-DD\_
+\_Last updated: 2025-08-11\_
+\## Status Snapshot
+
+\- SaveModel v2 implemented with unified JSON save.
+\- Event bus (`IEventBus`/`DefaultEventBus`) available; some legacy `GameEvents` hooks remain.
+\- Inventory seeds in place via starter `ItemSO` assets.
+\- Task graph (`TaskGraphSO` + `TaskService`) driving tutorial flow.
+
+\### Deviations
+\- `TaskService` listens to `GameEvents` instead of exposing `NotifyItemChanged`; inventory changes are observed via events.
+\- Legacy `GameEvents` still mirrors inventory and task events alongside the event bus.
+\- `SaveSystem.Save` and `Load` now accept an optional `TaskService` parameter to persist tutorial state.
+
 
 
 
@@ -128,7 +140,7 @@ Dungeon.unity
 
 \### C) Event Bus (decoupling)
 
-Static `GameEvents` with typed events:
+Static `GameEvents` with typed events (legacy shim; `IEventBus` available for decoupling):
 
 \- `OnEssenceChanged(int)`, `OnDungeonKeysChanged(int current, int perDay)`, `OnSleepEligibilityChanged(bool ok, string reason)`
 
@@ -194,7 +206,7 @@ Static `GameEvents` with typed events:
 
 &nbsp; - `bool IsComplete(string taskId)`
 
-&nbsp; - `void NotifyItemChanged(ItemSO item)`, `void NotifyInteraction(string interactId)`
+&nbsp; - `void NotifyInteraction(string interactId)` (inventory changes arrive via `GameEvents`)
 
 &nbsp; - `List<TaskStateDTO> CaptureState()`
 
