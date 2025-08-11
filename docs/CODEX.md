@@ -163,10 +163,10 @@ This file is the source of truth for design + tech. Keep it short and link out t
 - **Tasks**: `TaskService.CurrentTaskTitle` exposes the active tutorial step's title. Useful for HUDs that want to display guidance.  **Test**: Start the game and watch `WorldHUD` update as tasks advance.
 
    - **Tasks Access**: `GameManager.Tasks` exposes the `TaskService` so systems can query or save tutorial progress.
-
+   
    - **Debuff Access**: `GameManager.TempNextDayClickDebuff` reveals the click-cap reduction that will apply on the next day.
-
-   - **Persistence**: `SaveSystem` v2 writes a single `SaveModelV2` JSON file instead of sectioned blobs. Core managers expose an `ApplyLoadedState(SaveModelV2 data)` hook so loading can hydrate each system without string keys. `SaveSystem` now offers `HasAnySave()`, `Delete()`, `Save(GameManager, TaskService)`, and `Load(GameManager, TaskService)` APIs (task service parameter is optional if `GameManager` already has one injected). **Test**: start a new game, ensure `save.json` appears, then delete it via `SaveSystem.Delete()` and verify a fresh run starts clean.
+   - **Scene Tracking**: `GameManager.CurrentScene` and `GameManager.SpawnPointId` record the last scene and spawn point for persistence.
+   - **Persistence**: `SaveSystem` v2 writes a single `SaveModelV2` JSON file instead of sectioned blobs. Core managers expose an `ApplyLoadedState(SaveModelV2 data)` hook so loading can hydrate each system without string keys. The model now includes `lastScene` and `spawnPointId` fields so the world can restore to the previous location. `SaveSystem` offers `HasAnySave()`, `Delete()`, `Save(GameManager, TaskService)`, and `Load(GameManager, TaskService)` APIs (task service parameter is optional if `GameManager` already has one injected). **Test**: move to another scene in play mode, call `SaveSystem.Save`, restart, then `Load` and confirm `GameManager.CurrentScene` and `SpawnPointId` match the prior session.
 \- **Test**: Call `Stations.UnlockStation("farm")` or `Stations.RecruitCompanion("alice")` in play mode and watch the console/UI react via the event bus (`StationUnlocked` or `CompanionRecruited`).
   Trigger a station's `OnProductionComplete` to see `MinigameCompleted` propagate.
 
