@@ -18,6 +18,12 @@ public interface ICompanion
     /// <summary>Cards granted when this companion is recruited.</summary>
     IReadOnlyList<CardSO> GetStartingCards();
 
+    /// <summary>Full deck this companion fights with once recruited.</summary>
+    IReadOnlyList<CardSO> GetStartingDeck();
+
+    /// <summary>Equipment item cards this companion brings along.</summary>
+    IReadOnlyList<ItemCardSO> GetEquipmentSlots();
+
     /// <summary>Passive upgrades applied on recruitment.</summary>
     IReadOnlyList<UpgradeSO> GetPassiveBuffs();
 }
