@@ -26,12 +26,21 @@ public class GameBootstrap : MonoBehaviour
     /// </summary>
     private void Awake()
     {
-        // Keep this bootstrap object alive across scene loads so it doesn't spawn
-        // duplicates if a scene directly includes the prefab.
+        // If another bootstrap already exists (active or not), this instance is a
+        // duplicate from an additional scene load. Destroy it immediately so only
+        // one orchestrator persists for the lifetime of the application.
+        if (FindObjectsByType<GameBootstrap>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length > 1)
+        {
+            Destroy(gameObject);
+            return; // Abort startup; a previous bootstrap is already in charge.
+        }
+
+        // Keep the surviving bootstrap object alive across scene loads so it can
+        // spawn services just once.
         DontDestroyOnLoad(gameObject);
 
         // Instantiate or locate each required service. These calls are cheap and
-        // run only once at boot, so using FindObjectOfType is acceptable here.
+        // run only once at boot, so searching the scene hierarchy is acceptable.
         Ensure(inventoryManagerPrefab);
         Ensure(taskServicePrefab);
         Ensure(eventBusPrefab);
@@ -59,8 +68,10 @@ public class GameBootstrap : MonoBehaviour
     {
         if (prefab == null) return; // nothing to create
 
-        // Check for an existing instance of the same component type.
-        var existing = FindObjectOfType(prefab.GetType());
+        // Check for an existing instance of the same component type. We include
+        // inactive objects so services created in earlier scenes are still
+        // detected even if they've been temporarily disabled.
+        var existing = FindFirstObjectByType(prefab.GetType(), FindObjectsInactive.Include);
         if (existing != null) return; // already present
 
         // Spawn and mark the instance to persist between scene loads.
