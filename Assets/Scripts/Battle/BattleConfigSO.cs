@@ -9,10 +9,7 @@ public class BattleConfigSO : ScriptableObject
 {
     [Header("Player")]
     public int playerMaxHP = 20;          // starting/max HP
-    public int attackDamage = 6;          // Attack card damage
-    public int guardBlock = 4;            // Guard adds temporary armor (consumed by next enemy hit)
-    public int mendHeal = 5;              // Mend heals this much
-    public int mendUses = 1;              // Mend is limited-use (1 for MVP)
+    // Card tuning now lives on CardEffect assets; attack/guard/mend numbers removed.
 
     [Header("Enemy")]
     public int enemyMaxHP = 18;

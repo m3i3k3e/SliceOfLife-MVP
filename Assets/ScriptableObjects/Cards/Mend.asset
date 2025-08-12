@@ -15,5 +15,5 @@ MonoBehaviour:
   id: Card_Mend
   title: Mend
   description: Heals HP (Single Use)
-  action: 2
+  effect: {fileID: 11400000, guid: b6c3e7bb1e04451795b5a83240f14dea, type: 2}
   cost: 2

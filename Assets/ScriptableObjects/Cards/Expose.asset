@@ -15,5 +15,5 @@ MonoBehaviour:
   id: expose_card
   title: Expose
   description: Apply Vulnerable (2)
-  action: 3
+  effect: {fileID: 11400000, guid: 0ad68be3b5d7487bb711007f539a951a, type: 2}
   cost: 1

@@ -15,5 +15,5 @@ MonoBehaviour:
   id: hamstring_card
   title: Hamstring
   description: Apply Weak (2)
-  action: 3
+  effect: {fileID: 11400000, guid: 4a76f614ae74449da2a1f171d96da902, type: 2}
   cost: 1

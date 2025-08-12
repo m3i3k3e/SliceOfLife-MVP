@@ -15,5 +15,5 @@ MonoBehaviour:
   id: Card_Attack
   title: Attack
   description: Deals Damage
-  action: 0
+  effect: {fileID: 11400000, guid: 5b246c10af474dd78ff5129152317a29, type: 2}
   cost: 1

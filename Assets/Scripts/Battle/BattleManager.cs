@@ -3,8 +3,8 @@
  * Purpose: Orchestrates the Player vs. Enemy turn loop and coordinates subsystems.
  * Dependencies: DeckManager, EnergyPool, StatusController, IGameManager, IEventBus.
  * Expansion Hooks: Public events allow UI or other systems to react without tight coupling.
- *                 Add new card actions via BattleAction/ApplyActionEffect and new enemy intents
- *                 by extending EnemyIntentType and EnemyTurn's switch.
+ *                 New card behaviors are introduced via <see cref="CardEffect"/> assets
+ *                 and new enemy intents by extending EnemyIntentType and EnemyTurn's switch.
  * Rationale: Interfaces and event bus keep this class testable and decoupled; async reward grant.
  */
 using System;
@@ -168,7 +168,16 @@ public class BattleManager : MonoBehaviour
         // Initialize runtime stats from config
         _playerHP = config.playerMaxHP;
         _playerArmor = 0;
-        _playerMendUsesLeft = Mathf.Max(0, config.mendUses);
+        _playerMendUsesLeft = 0;
+        // Look for a healing card to determine how many mend uses are available.
+        foreach (var c in startingDeck)
+        {
+            if (c && c.Effect != null && c.Effect.Heal > 0 && c.Effect.MaxUses > 0)
+            {
+                _playerMendUsesLeft = c.Effect.MaxUses;
+                break; // assume a single Mend card for MVP
+            }
+        }
 
         _enemyHP = config.enemyMaxHP;
 
@@ -200,8 +209,12 @@ public class BattleManager : MonoBehaviour
         // Spend energy first so UI disables unaffordable cards immediately
         if (!TrySpendEnergy(Mathf.Max(0, card.cost))) return;
 
-        // Apply effect
-        ApplyActionEffect(card.action);
+        // Apply effect using the card's polymorphic CardEffect asset
+        if (card.Effect != null)
+        {
+            var ctx = new BattleContext(this);
+            card.Effect.Execute(ctx);
+        }
 
         // Move the card to discard (all cards are one-use per turn in this MVP)
         _deck.Discard(card);
@@ -210,39 +223,37 @@ public class BattleManager : MonoBehaviour
         PostPlayerCardResolved(); // will end turn if energy hit 0
     }
 
-
-    /// <summary>Apply the effect of an action without spending energy or ending the turn.</summary>
-    private void ApplyActionEffect(BattleAction action)
+    // --- Methods exposed to CardEffect via BattleContext ---
+    /// <summary>Deal player-sourced damage to the enemy and update UI.</summary>
+    internal void DamageEnemy(int amount)
     {
-        switch (action)
-        {
-            case BattleAction.Attack:
-                _enemyHP -= _status.ModPlayerToEnemyDamage(Mathf.Max(0, config.attackDamage));
-                PushEnemyStats();
-                break;
-
-            case BattleAction.Guard:
-                _playerArmor += Mathf.Max(0, config.guardBlock);
-                PushPlayerStats();
-                break;
-
-            case BattleAction.Mend:
-                if (_playerMendUsesLeft <= 0) return;
-                _playerHP = Mathf.Min(config.playerMaxHP, _playerHP + Mathf.Max(0, config.mendHeal));
-                _playerMendUsesLeft--;
-                PushPlayerStats();
-                break;
-
-            case BattleAction.ApplyWeak:
-                _status.ApplyWeakToEnemy(2);   // stackable; tune later
-                break;
-
-            case BattleAction.ApplyVulnerable:
-                _status.ApplyVulnerableToEnemy(2);
-                break;
-        }
-        // Add new BattleAction cases above to introduce new card effects.
+        _enemyHP -= _status.ModPlayerToEnemyDamage(Mathf.Max(0, amount));
+        PushEnemyStats();
     }
+
+    /// <summary>Grant temporary armor to the player.</summary>
+    internal void AddPlayerArmor(int amount)
+    {
+        _playerArmor += Mathf.Max(0, amount);
+        PushPlayerStats();
+    }
+
+    /// <summary>Heal the player if any Mend uses remain.</summary>
+    internal bool MendPlayer(int amount)
+    {
+        if (_playerMendUsesLeft <= 0) return false;
+        _playerHP = Mathf.Min(config.playerMaxHP, _playerHP + Mathf.Max(0, amount));
+        _playerMendUsesLeft--;
+        PushPlayerStats();
+        return true;
+    }
+
+    /// <summary>Apply Weak to the enemy.</summary>
+    internal void ApplyWeak(int stacks) => _status.ApplyWeakToEnemy(stacks);
+
+    /// <summary>Apply Vulnerable to the enemy.</summary>
+    internal void ApplyVulnerable(int stacks) => _status.ApplyVulnerableToEnemy(stacks);
+
     /// <summary>Wrapper over EnergyPool.TrySpend that also surfaces a UI message.</summary>
     private bool TrySpendEnergy(int amount)
     {

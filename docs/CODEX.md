@@ -332,11 +332,11 @@ flowchart LR
 
 \## B. Data Contracts (SO)
 
-\- \*\*BattleConfigSO\*\*: `playerMaxHP, enemyMaxHP, playerAttack, enemyLight/Heavy, enemyLeech, baseEssenceReward, returnDelay`
+\- \*\*BattleConfigSO\*\*: `playerMaxHP, enemyMaxHP, enemyLight/Heavy, enemyLeech, baseEssenceReward, returnDelay`
 
 \- \*\*UpgradeSO\*\*: `id, title, cost, effect (IncreaseClick | IncreasePassive | UnlockBattle | BattleRewardBonus), value`
 
-\- \*\*CardSO\*\*: `id, title, description, action (Attack | Guard | Mend), cost (reserved for energy later)`
+\- \*\*CardSO\*\*: `id, title, description, effect (CardEffect), cost (reserved for energy later)`
 
 
 
@@ -369,6 +369,8 @@ flowchart LR
 3\) Third-party packs live under `Assets/ThirdParty/PackName/` (ignored if solo; use LFS if shared).
 
 \## Recent Changes
+- 2025-08-13: Migrated cards to polymorphic `CardEffect` assets. Removed per-card numbers from `BattleConfigSO`.
+  - How to test: open a card asset, ensure its **Effect** field references a `CardEffect`, then run a battle and play the card to see its configured behavior.
 - 2025-08-13: Removed `GameManager` saveables registry; `SaveModelV2` now captures state directly from managers.
   - How to test: run the game, call `SaveSystem.Save` then `SaveSystem.Load`, and confirm progress persists without registering systems.
 - 2025-08-10: Added `SceneLoader` service and migrated `LoadSceneButton`/`DungeonGateButton` to use it.
