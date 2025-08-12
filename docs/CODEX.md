@@ -2,7 +2,7 @@
 
 
 
-\_Last updated: 2025-08-10 • Engine: Unity 6.2 URP • Target: PC (1080p)\_
+\_Last updated: 2025-08-12 • Engine: Unity 6.2 URP • Target: PC (1080p)\_
 
 
 
@@ -114,13 +114,13 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 | \*\*Waifu Collection\*\* | Partial Stub | Placeholder waifu cards; first passive buff hook. |
 
-| \*\*Inventory\*\* | Stub | Item stacks, slot limits, add/remove APIs, emits OnInventoryChanged. |
+| \*\*Inventory\*\* | Partial | Item stacks, slot limits, add/remove APIs, persists via SaveModelV2; emits OnInventoryChanged. |
 
 | \*\*Resources\*\* | Stub | `ResourceManager` tracks material counts; `AddResource`/`TryConsumeResource` fire `OnResourceChanged`. |
 
 | \*\*Generational Legacy\*\* | UI Stub | “Fertilize” button + future reset/bonus flow. |
 
-| \*\*Save/Load\*\* | Full | JSON/PlayerPrefs; re-applies one-shot upgrades on load. `SaveScheduler` batches multiple save requests and writes once after a short delay to minimize disk churn. |
+| \*\*Save/Load\*\* | Full | `SaveModelV2` writes state directly to managers; `SaveScheduler` batches requests before JSON/PlayerPrefs write. |
 
 
 
