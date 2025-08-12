@@ -130,7 +130,6 @@ Dungeon.unity
 
 &nbsp; - Tasks: `List<TaskStateDTO { string taskId; bool completed; int progress; }>`
 
-&nbsp; - Flags: `float altarPolishProgress`, `bool familiarAwakened`, `bool dungeonUnlocked`
 
 \- `SaveSystem.Save(GameManager gm)`: gather from services → write JSON.
 

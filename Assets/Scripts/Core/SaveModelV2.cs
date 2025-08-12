@@ -40,11 +40,6 @@ public class SaveModelV2
     // ----- Tasks -----
     public List<TaskStateDTO> tasks = new();
 
-    // ----- World flags -----
-    public float altarPolishProgress;
-    public bool familiarAwakened;
-    public bool dungeonUnlocked;
-
     /// <summary>Simple ID+quantity pair used for inventory serialization.</summary>
     [Serializable]
     public class ItemStackDTO
