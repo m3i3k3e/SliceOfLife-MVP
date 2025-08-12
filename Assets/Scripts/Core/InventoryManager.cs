@@ -25,6 +25,11 @@ public class InventoryManager : MonoBehaviour, IInventoryService, ISaveable
     [Tooltip("All item definitions available. Used to resolve IDs during load.")]
     [SerializeField] private List<ItemSO> itemCatalog = new();
 
+    // Cache mapping item IDs to their definitions for O(1) lookups.
+    // Populated at runtime in <see cref="Awake"/> and rebuilt in-editor
+    // via <see cref="OnValidate"/> when the catalog list changes.
+    private readonly Dictionary<string, ItemSO> _catalogLookup = new();
+
     [Header("Progression")]
     [Tooltip("How many rows of slots are currently unlocked (1-5).")]
     [SerializeField, Range(1,5)] private int unlockedRows = 1;
@@ -68,6 +73,40 @@ public class InventoryManager : MonoBehaviour, IInventoryService, ISaveable
     private void OnDisable()
     {
         OnInventoryChanged -= GameEvents.RaiseInventoryChanged;
+    }
+
+    /// <summary>
+    /// Unity lifecycle: build the item lookup cache once when the object awakens.
+    /// </summary>
+    private void Awake()
+    {
+        BuildCatalogLookup();
+    }
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// Editor-only: rebuild the lookup when values change in the inspector so
+    /// runtime lookups stay in sync with the serialized catalog.
+    /// </summary>
+    private void OnValidate()
+    {
+        BuildCatalogLookup();
+    }
+#endif
+
+    /// <summary>
+    /// Populate <see cref="_catalogLookup"/> from <see cref="itemCatalog"/>.
+    /// </summary>
+    private void BuildCatalogLookup()
+    {
+        _catalogLookup.Clear(); // start fresh each time
+
+        // Walk the serialized list once and map IDs to their assets
+        foreach (var item in itemCatalog)
+        {
+            if (item == null || string.IsNullOrEmpty(item.Id)) continue; // skip invalid entries
+            _catalogLookup[item.Id] = item; // later entries overwrite earlier ones
+        }
     }
 
     /// <summary>
@@ -232,13 +271,10 @@ public class InventoryManager : MonoBehaviour, IInventoryService, ISaveable
     /// <summary>Lookup helper to resolve an item ID from the catalog.</summary>
     private ItemSO FindItem(string id)
     {
-        if (string.IsNullOrEmpty(id)) return null;
-        // Manual loop avoids allocations from LINQ
-        for (int i = 0; i < itemCatalog.Count; i++)
-        {
-            var item = itemCatalog[i];
-            if (item != null && item.Id == id) return item;
-        }
-        return null;
+        if (string.IsNullOrEmpty(id)) return null; // no key to search
+
+        // Dictionary lookup avoids O(n) scans of the catalog list
+        _catalogLookup.TryGetValue(id, out var item);
+        return item;
     }
 }
