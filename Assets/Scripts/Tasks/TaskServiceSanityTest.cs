@@ -7,7 +7,7 @@ using UnityEngine;
 
 /// <summary>
 /// Simple driver that marches through all tutorial tasks and logs
-/// when <see cref="GameEvents"/> fire. Useful for verifying the
+/// when <see cref="IEventBus"/> events fire. Useful for verifying the
 /// TaskService wiring without full gameplay.
 /// </summary>
 public class TaskServiceSanityTest : MonoBehaviour
@@ -19,14 +19,22 @@ public class TaskServiceSanityTest : MonoBehaviour
 
     private void OnEnable()
     {
-        GameEvents.OnTaskAdvanced += HandleAdvanced;
-        GameEvents.OnTaskCompleted += HandleCompleted;
+        var events = GameManager.Instance?.Events;
+        if (events != null)
+        {
+            events.TaskAdvanced += HandleAdvanced;
+            events.TaskCompleted += HandleCompleted;
+        }
     }
 
     private void OnDisable()
     {
-        GameEvents.OnTaskAdvanced -= HandleAdvanced;
-        GameEvents.OnTaskCompleted -= HandleCompleted;
+        var events = GameManager.Instance?.Events;
+        if (events != null)
+        {
+            events.TaskAdvanced -= HandleAdvanced;
+            events.TaskCompleted -= HandleCompleted;
+        }
     }
 
     private IEnumerator Start()
@@ -44,7 +52,7 @@ public class TaskServiceSanityTest : MonoBehaviour
         service.NotifyInteraction("build_bed");
         service.NotifyInteraction("cook_meal");
         service.NotifyInteraction("brew_potion");
-        GameEvents.RaiseUpgradePurchased(unlockDungeon);
+        GameManager.Instance?.Events?.RaiseUpgradePurchased(unlockDungeon);
         service.NotifyInteraction("enter_dungeon");
     }
 

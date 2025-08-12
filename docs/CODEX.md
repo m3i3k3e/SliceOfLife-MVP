@@ -145,6 +145,9 @@ This file is the source of truth for design + tech. Keep it short and link out t
   `GameManager.Events.MinigameCompleted`.
 
 \- \*\*Event bus\*\*: `IEventBus` interface (default `DefaultEventBus` component) exposes cross-system events:
+  - `EssenceChanged(int newTotal)`
+  - `InventoryChanged()`
+  - `TaskAdvanced()` / `TaskCompleted()`
   - `DayChanged(int day)`
   - `DungeonKeysChanged(int current, int perDay)`
   - `SleepEligibilityChanged(bool canSleep, string reason)`
@@ -159,9 +162,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
   Subscribe in `OnEnable` and unsubscribe in `OnDisable`.
   - **New**: Added `RecipeUnlocked` and `FloorReached` so UI can react when crafting expands or the dungeon deepens.
   - **Test**: Call `Recipes.UnlockRecipe("someId")` or `Dungeon.AdvanceFloor()` in play mode and watch subscribed panels respond.
-\- \*\*Other events\*\*: `OnEssenceChanged`, `OnClicksLeftChanged`, `OnPurchased`, `OnInventoryChanged`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
-
-- **GameEvents**: lightweight static hub mirroring common manager events for quick prototypes. Currently forwards `OnEssenceChanged`, `OnInventoryChanged`, `OnTaskAdvanced`, `OnTaskCompleted`, `OnUpgradePurchased`, `OnDayChanged`, `OnDungeonKeysChanged`, and `OnSleepEligibilityChanged`.
+\- \*\*Other events\*\*: `OnClicksLeftChanged`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
 
 - **Tasks**: `TaskService.CurrentTaskTitle` exposes the active tutorial step's title. Useful for HUDs that want to display guidance.
   - *New*: Task requirements are modular `TaskConditionSO` assets (e.g., `CollectItemCondition`, `InteractCondition`). Each overrides `IsMet(TaskService)`.

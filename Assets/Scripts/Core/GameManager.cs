@@ -135,9 +135,13 @@ public class GameManager : MonoBehaviour, IGameManager
         if (upgradeManager != null)
             upgradeManager.OnPurchased += HandleUpgradePurchased;
 
-        // Watch daily click changes to reevaluate Sleep eligibility each time.
+        // Watch daily click changes to reevaluate Sleep eligibility each time and
+        // forward total essence changes through the event bus for HUD consumers.
         if (essenceManager != null)
+        {
             essenceManager.OnDailyClicksChanged += HandleDailyClicksChanged;
+            essenceManager.OnEssenceChanged += HandleEssenceChanged;
+        }
 
         // Initialize UI state for the current day immediately.
         ReevaluateSleepGate();
@@ -161,17 +165,6 @@ public class GameManager : MonoBehaviour, IGameManager
         // Notify listeners when deeper dungeon floors are reached.
         if (dungeonProgression != null)
             dungeonProgression.OnFloorReached += HandleFloorReached;
-
-        // Mirror day change events from the injected event bus onto the static
-        // GameEvents hub so lightweight listeners can react without bus refs.
-        if (Events != null)
-        {
-            // Bridge event bus notifications onto the static GameEvents hub so
-            // lightweight listeners (e.g., WorldHUD) don't need a bus reference.
-            Events.DayChanged             += GameEvents.RaiseDayChanged;
-            Events.DungeonKeysChanged     += GameEvents.RaiseDungeonKeysChanged;
-            Events.SleepEligibilityChanged += GameEvents.RaiseSleepEligibilityChanged;
-        }
     }
 
     /// <summary>
@@ -205,12 +198,21 @@ public class GameManager : MonoBehaviour, IGameManager
     }
 
     /// <summary>
-    /// Persist inventory whenever items are added or removed.
+    /// Persist inventory whenever items are added or removed and notify listeners.
     /// </summary>
     private void HandleInventoryChanged()
     {
+        Events?.RaiseInventoryChanged();
         // Persist inventory mutations without spamming disk writes.
         SaveScheduler.RequestSave(this);
+    }
+
+    /// <summary>
+    /// Forward essence changes through the event bus.
+    /// </summary>
+    private void HandleEssenceChanged(int amount)
+    {
+        Events?.RaiseEssenceChanged(amount);
     }
 
     /// <summary>
@@ -489,7 +491,10 @@ public class GameManager : MonoBehaviour, IGameManager
     private void OnDisable()
     {
         if (essenceManager != null)
+        {
             essenceManager.OnDailyClicksChanged -= HandleDailyClicksChanged;
+            essenceManager.OnEssenceChanged -= HandleEssenceChanged;
+        }
 
         if (upgradeManager != null)
             upgradeManager.OnPurchased -= HandleUpgradePurchased;
@@ -508,13 +513,6 @@ public class GameManager : MonoBehaviour, IGameManager
 
         if (dungeonProgression != null)
             dungeonProgression.OnFloorReached -= HandleFloorReached;
-
-        if (Events != null)
-        {
-            Events.DayChanged             -= GameEvents.RaiseDayChanged;
-            Events.DungeonKeysChanged     -= GameEvents.RaiseDungeonKeysChanged;
-            Events.SleepEligibilityChanged -= GameEvents.RaiseSleepEligibilityChanged;
-        }
     }
 
     /// <summary>

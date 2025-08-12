@@ -30,6 +30,18 @@ public class DefaultEventBus : MonoBehaviour, IEventBus
     public event Action<ResourceSO, int> ResourceChanged;
 
     /// <inheritdoc />
+    public event Action<int> EssenceChanged;
+
+    /// <inheritdoc />
+    public event Action InventoryChanged;
+
+    /// <inheritdoc />
+    public event Action TaskAdvanced;
+
+    /// <inheritdoc />
+    public event Action TaskCompleted;
+
+    /// <inheritdoc />
     public event Action<RecipeSO> RecipeUnlocked;
 
     /// <inheritdoc />
@@ -67,6 +79,22 @@ public class DefaultEventBus : MonoBehaviour, IEventBus
     /// <inheritdoc />
     public void RaiseResourceChanged(ResourceSO resource, int amount)
         => ResourceChanged?.Invoke(resource, amount);
+
+    /// <inheritdoc />
+    public void RaiseEssenceChanged(int amount)
+        => EssenceChanged?.Invoke(amount);
+
+    /// <inheritdoc />
+    public void RaiseInventoryChanged()
+        => InventoryChanged?.Invoke();
+
+    /// <inheritdoc />
+    public void RaiseTaskAdvanced()
+        => TaskAdvanced?.Invoke();
+
+    /// <inheritdoc />
+    public void RaiseTaskCompleted()
+        => TaskCompleted?.Invoke();
 
     /// <inheritdoc />
     public void RaiseRecipeUnlocked(RecipeSO recipe)

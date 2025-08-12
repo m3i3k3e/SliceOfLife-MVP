@@ -57,23 +57,7 @@ public class InventoryManager : MonoBehaviour, IInventoryService, ISaveable
     /// <summary>Raised whenever inventory contents change.</summary>
     public event Action OnInventoryChanged;
 
-    /// <summary>
-    /// Unity lifecycle: bridge local events to the global <see cref="GameEvents"/> hub.
-    /// </summary>
-    private void OnEnable()
-    {
-        // Forward inventory mutations so transient listeners can react without
-        // holding direct references to this manager.
-        OnInventoryChanged += GameEvents.RaiseInventoryChanged;
-    }
-
-    /// <summary>
-    /// Unity lifecycle: unsubscribe from mirrored events to prevent leaks.
-    /// </summary>
-    private void OnDisable()
-    {
-        OnInventoryChanged -= GameEvents.RaiseInventoryChanged;
-    }
+    // No bridging needed; other systems subscribe directly to OnInventoryChanged.
 
     /// <summary>
     /// Unity lifecycle: build the item lookup cache once when the object awakens.

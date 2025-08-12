@@ -4,8 +4,9 @@ using UnityEngine;
 
 /// <summary>
 /// Coordinates sequential tutorial tasks and watches global events to mark
-/// conditions complete. Raises <see cref="GameEvents"/> when progress occurs
-/// so UI or other systems can react without referencing this service directly.
+/// conditions complete. Progress notifications propagate through the
+/// <see cref="IEventBus"/> so UI or other systems can react without referencing
+/// this service directly.
 /// </summary>
 /// <remarks>
 /// Requires both <see cref="graph"/> and <see cref="inventory"/> to be assigned
@@ -60,18 +61,22 @@ public class TaskService : MonoBehaviour
         Init(graph, null); // start with fresh state; load will reapply if needed
     }
 
-    /// <summary>Subscribe to global events when enabled.</summary>
+    /// <summary>Subscribe to required events when enabled.</summary>
     private void OnEnable()
     {
-        GameEvents.OnInventoryChanged += HandleInventoryChanged;
-        GameEvents.OnUpgradePurchased += HandleUpgradePurchased;
+        inventory.OnInventoryChanged += HandleInventoryChanged;
+        var events = GameManager.Instance?.Events;
+        if (events != null)
+            events.UpgradePurchased += HandleUpgradePurchased;
     }
 
-    /// <summary>Unsubscribe from global events when disabled.</summary>
+    /// <summary>Unsubscribe from events when disabled.</summary>
     private void OnDisable()
     {
-        GameEvents.OnInventoryChanged -= HandleInventoryChanged;
-        GameEvents.OnUpgradePurchased -= HandleUpgradePurchased;
+        inventory.OnInventoryChanged -= HandleInventoryChanged;
+        var events = GameManager.Instance?.Events;
+        if (events != null)
+            events.UpgradePurchased -= HandleUpgradePurchased;
     }
 
     /// <summary>
@@ -157,7 +162,7 @@ public class TaskService : MonoBehaviour
     // ----- Core evaluation -----
 
     /// <summary>
-    /// Check the active task and fire <see cref="GameEvents"/> when progress occurs.
+    /// Check the active task and fire event bus notifications when progress occurs.
     /// </summary>
     private void EvaluateCurrent()
     {
@@ -178,7 +183,7 @@ public class TaskService : MonoBehaviour
         }
 
         if (advanced)
-            GameEvents.RaiseTaskAdvanced();
+            GameManager.Instance?.Events?.RaiseTaskAdvanced();
 
         // If all conditions complete, mark the task finished and move to the next.
         bool allDone = true;
@@ -191,7 +196,7 @@ public class TaskService : MonoBehaviour
         if (allDone)
         {
             state.completed = true;
-            GameEvents.RaiseTaskCompleted();
+            GameManager.Instance?.Events?.RaiseTaskCompleted();
             _currentIndex++;
         }
 

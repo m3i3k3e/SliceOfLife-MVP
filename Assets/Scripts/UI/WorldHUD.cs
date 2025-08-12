@@ -3,8 +3,9 @@ using UnityEngine;
 
 /// <summary>
 /// Minimal HUD overlay for world scenes. Displays essence, dungeon keys,
-/// current day, and the active tutorial task. Listens to <see cref="GameEvents"/>
-/// so it stays in sync without direct event bus references.
+/// current day, and the active tutorial task. Listens to the global
+/// <see cref="IEventBus"/> via <see cref="GameManager.Events"/> so it stays in
+/// sync without holding explicit references to each manager.
 /// </summary>
 public class WorldHUD : MonoBehaviour
 {
@@ -19,17 +20,22 @@ public class WorldHUD : MonoBehaviour
 
     // Cache GameManager so we can grab initial values safely.
     private GameManager _gm;
+    private IEventBus _events;
 
     private void OnEnable()
     {
         _gm = GameManager.Instance;
+        _events = _gm?.Events;
 
-        // Subscribe to static GameEvents for essence, day, task, and key updates.
-        GameEvents.OnEssenceChanged      += HandleEssenceChanged;
-        GameEvents.OnDayChanged          += HandleDayChanged;
-        GameEvents.OnTaskAdvanced        += HandleTaskChanged;
-        GameEvents.OnTaskCompleted       += HandleTaskChanged;
-        GameEvents.OnDungeonKeysChanged  += HandleKeysChanged;
+        if (_events != null)
+        {
+            // Subscribe to bus events for essence, day, task, and key updates.
+            _events.EssenceChanged      += HandleEssenceChanged;
+            _events.DayChanged          += HandleDayChanged;
+            _events.TaskAdvanced        += HandleTaskChanged;
+            _events.TaskCompleted       += HandleTaskChanged;
+            _events.DungeonKeysChanged  += HandleKeysChanged;
+        }
 
         // Initialize labels with current values so the HUD is immediately correct.
         HandleEssenceChanged(_gm?.Essence?.CurrentEssence ?? 0);
@@ -41,11 +47,14 @@ public class WorldHUD : MonoBehaviour
 
     private void OnDisable()
     {
-        GameEvents.OnEssenceChanged     -= HandleEssenceChanged;
-        GameEvents.OnDayChanged         -= HandleDayChanged;
-        GameEvents.OnTaskAdvanced       -= HandleTaskChanged;
-        GameEvents.OnTaskCompleted      -= HandleTaskChanged;
-        GameEvents.OnDungeonKeysChanged -= HandleKeysChanged;
+        if (_events != null)
+        {
+            _events.EssenceChanged     -= HandleEssenceChanged;
+            _events.DayChanged         -= HandleDayChanged;
+            _events.TaskAdvanced       -= HandleTaskChanged;
+            _events.TaskCompleted      -= HandleTaskChanged;
+            _events.DungeonKeysChanged -= HandleKeysChanged;
+        }
     }
 
     private void HandleEssenceChanged(int amount)
