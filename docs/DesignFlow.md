@@ -33,6 +33,14 @@ This document outlines the runtime pipeline from launching the game to persistin
 1. Ensure `TaskService` exists (spawned by bootstrapper) and its **Graph** and **Inventory** fields are assigned.
 2. For world objects, route interaction callbacks to `TaskService.NotifyInteraction`.
 
+## Dungeon Stage
+- **DungeonProgression** (`Assets/Scripts/Core/DungeonProgression.cs`) keeps the current run's floor and the highest floor ever reached.
+- `AdvanceFloor` increments progress, checks station milestones, and schedules a save; `StartRun` resets to floor 1 and now
+  raises `GameManager.Events.RaiseFloorReached` so HUD elements show the proper floor immediately.
+
+### Scene wiring
+1. Ensure `GameManager`'s **Dungeon Progression** field references a `DungeonProgression` component in the scene or prefab.
+
 ## Save Stage
 - **SaveSystem** (`Assets/Scripts/Core/SaveSystem.cs`) writes and loads `SaveModelV2` JSON.
 - **SaveScheduler** (`Assets/Scripts/Core/SaveScheduler.cs`) batches save requests; call `SaveScheduler.RequestSave(GameManager.Instance)` after meaningful changes.
@@ -46,4 +54,5 @@ This document outlines the runtime pipeline from launching the game to persistin
 1. **Boot:** `GameBootstrap` instantiates services and loads the last save.
 2. **Interaction:** `InteractionController` detects `Interactable` objects; interaction scripts dispatch IDs and side effects.
 3. **Task:** `TaskService` evaluates conditions based on inventory, upgrades, and interactions.
-4. **Save:** `SaveScheduler`/`SaveSystem` persist aggregated state, ready for the next boot.
+4. **Dungeon:** `DungeonProgression` tracks floor depth, unlocks stations at milestones, and fires events for the UI.
+5. **Save:** `SaveScheduler`/`SaveSystem` persist aggregated state, ready for the next boot.

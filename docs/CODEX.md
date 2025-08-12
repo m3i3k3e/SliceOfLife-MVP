@@ -234,6 +234,9 @@ flowchart LR
   - Added `IInputReader` interface with `MouseKeyboardInputReader` implementation. `InteractionController` now queries this interface each frame, allowing future input sources like gamepads without code changes.
     - To test: add a `MouseKeyboardInputReader` component to a GameObject and assign it to the `InteractionController`'s **Input Reader** field. Play the scene and interact with objects using the mouse.
 
+- `DungeonProgression` now saves its unlocked floor milestones and emits a floor event when a run starts so UI labels show "Floor 1" immediately. `SaveModelV2` adds `unlockedDungeonMilestones`.
+  - To test: start a new run and confirm the HUD shows floor 1; climb a few floors, save, reload, and verify previously unlocked stations remain available.
+
 \## 8) Art \& Audio Direction
 
 \- \*\*MVP\*\*: grey-box tavern basement \& dungeon; simple essence icon; placeholder waifu portraits/cards.

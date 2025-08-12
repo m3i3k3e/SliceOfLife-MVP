@@ -43,6 +43,13 @@ public class DungeonProgression : MonoBehaviour, ISaveParticipant
     public void StartRun()
     {
         CurrentFloor = 1;
+
+        // Starting a run should immediately inform UI of the current floor so
+        // labels like the dungeon HUD reflect "Floor 1" right away. Going
+        // through <see cref="GameManager.Events"/> ensures any listeners wired
+        // to the global event bus react even before the player advances.
+        var events = GameManager.Instance?.Events;
+        events?.RaiseFloorReached(CurrentFloor);
     }
 
     /// <summary>
@@ -96,6 +103,10 @@ public class DungeonProgression : MonoBehaviour, ISaveParticipant
         if (model == null) return;
         model.currentFloor = CurrentFloor;
         model.maxFloorReached = MaxFloorReached;
+
+        // Persist which milestone floors have already granted their rewards so
+        // we don't double unlock stations after loading.
+        model.unlockedDungeonMilestones = new List<int>(_unlockedMilestones);
     }
 
     /// <summary>Restore floor progress from the save model.</summary>
@@ -106,8 +117,16 @@ public class DungeonProgression : MonoBehaviour, ISaveParticipant
         CurrentFloor = Mathf.Max(1, model.currentFloor);
         MaxFloorReached = Mathf.Max(CurrentFloor, model.maxFloorReached);
 
-        // Rebuild milestone cache so already-granted stations are not re-awarded.
+        // Restore previously granted milestone floors so we don't double unlock
+        // stations after loading. Fall back to recomputing from the max floor
+        // for backward compatibility with older saves that lack the list.
         _unlockedMilestones.Clear();
+        if (model.unlockedDungeonMilestones != null)
+        {
+            foreach (var floor in model.unlockedDungeonMilestones)
+                _unlockedMilestones.Add(floor);
+        }
+
         foreach (var milestone in stationMilestones)
         {
             if (milestone == null) continue;
