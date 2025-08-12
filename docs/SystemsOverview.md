@@ -39,7 +39,7 @@ UpgradeManager --(OnPurchased)--> EventBus --> UpgradesPanel
 ```
 
 ## Save / Load
-`SaveModelV2` captures state directly from managers and `SaveSystem` writes it to disk.  `GameManager` no longer maintains a saveables list; new systems hook in by extending the model's capture/apply logic.  `SaveScheduler` coalesces rapid save calls before hitting disk.
+`SaveModelV2` captures state from any system implementing `ISaveParticipant`.  `GameManager` keeps a registry of these participants so `SaveSystem` can iterate them generically.  `SaveScheduler` coalesces rapid save calls before hitting disk.
 
 ```text
 [GameManager, InventoryManager, UpgradeManager, ...]

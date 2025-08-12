@@ -65,7 +65,7 @@ public class GameBootstrap : MonoBehaviour
             // Wire the task service into GameManager before loading so SaveSystem has references.
             gm.InjectTaskService(tasks);
             // Load() returns default data if no save exists; we intentionally ignore it.
-            SaveSystem.Load(gm, tasks);
+            SaveSystem.Load(gm);
         }
     }
 

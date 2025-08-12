@@ -17,7 +17,7 @@ using UnityEngine;
 /// Implements <see cref="IInventoryService"/> and <see cref="ISaveable"/> to keep the
 /// persistence and consumer code decoupled from this concrete class.
 /// </remarks>
-public class InventoryManager : MonoBehaviour, IInventoryService, ISaveable
+public class InventoryManager : MonoBehaviour, IInventoryService, ISaveable, ISaveParticipant
 {
     private const int SlotsPerRow = 10; // Each row exposes 10 slots in the dungeon bar
 
@@ -260,5 +260,31 @@ public class InventoryManager : MonoBehaviour, IInventoryService, ISaveable
         // Dictionary lookup avoids O(n) scans of the catalog list
         _catalogLookup.TryGetValue(id, out var item);
         return item;
+    }
+
+    // ---- ISaveParticipant implementation ----
+
+    /// <summary>
+    /// Push current inventory contents into the save model.
+    /// </summary>
+    public void Capture(SaveModelV2 model)
+    {
+        if (model == null) return;
+        foreach (var slot in _slots)
+        {
+            model.inventory.Add(new SaveModelV2.ItemStackDTO
+            {
+                itemId = slot.item ? slot.item.Id : string.Empty,
+                qty = slot.quantity
+            });
+        }
+    }
+
+    /// <summary>
+    /// Rebuild inventory state from the save model.
+    /// </summary>
+    public void Apply(SaveModelV2 model)
+    {
+        ApplyLoadedState(model);
     }
 }

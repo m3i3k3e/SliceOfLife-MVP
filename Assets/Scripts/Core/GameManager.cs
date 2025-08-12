@@ -4,6 +4,7 @@
  * Expansion: Forward new global events via IEventBus.
  */
 using System;
+using System.Collections.Generic; // maintains save participant list
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,7 +13,7 @@ using UnityEngine.SceneManagement;
 /// Central orchestrator. Uses the Singleton pattern so other systems can easily locate
 /// one persistent instance that survives scene loads.
 /// </summary>
-public class GameManager : MonoBehaviour, IGameManager
+public class GameManager : MonoBehaviour, IGameManager, ISaveParticipant
 {
     // -------- Singleton --------
     public static GameManager Instance { get; private set; }
@@ -29,8 +30,12 @@ public class GameManager : MonoBehaviour, IGameManager
         _currentScene = SceneManager.GetActiveScene().name;
         _spawnPointId = string.Empty; // default until a spawn point sets this
 
-        // SaveModelV2 pulls data directly from assigned managers so no explicit
-        // registration step is required here.
+        // Automatically register built-in managers for persistence. Future systems
+        // can call <see cref="RegisterSaveParticipant"/> during their own Awake/OnEnable.
+        RegisterSaveParticipant(essenceManager);
+        RegisterSaveParticipant(upgradeManager);
+        RegisterSaveParticipant(inventoryManager);
+        RegisterSaveParticipant(taskService);
     }
 
     // -------- Core systems --------
@@ -98,6 +103,63 @@ public class GameManager : MonoBehaviour, IGameManager
     public void InjectTaskService(TaskService svc)
     {
         taskService = svc;
+        // Ensure newly injected services participate in saves automatically.
+        RegisterSaveParticipant(svc);
+    }
+
+    // -------- Save participant registry --------
+    /// <summary>
+    /// Internal list of systems that contribute to the save file. New gameplay
+    /// systems can register themselves here so <see cref="SaveSystem"/> remains
+    /// unaware of concrete types.
+    /// </summary>
+    private readonly List<ISaveParticipant> _saveParticipants = new();
+
+    /// <summary>Read-only view of all save-aware systems.</summary>
+    public IReadOnlyList<ISaveParticipant> SaveParticipants => _saveParticipants;
+
+    /// <summary>
+    /// Register a system so it participates in save/load operations.
+    /// Call from Awake or OnEnable in the participant to hook into persistence
+    /// without modifying <see cref="SaveSystem"/>.
+    /// </summary>
+    public void RegisterSaveParticipant(ISaveParticipant participant)
+    {
+        if (participant == null || _saveParticipants.Contains(participant)) return;
+        _saveParticipants.Add(participant);
+    }
+
+    /// <summary>
+    /// Remove a system from the save list, e.g. when it is destroyed.
+    /// </summary>
+    public void UnregisterSaveParticipant(ISaveParticipant participant)
+    {
+        if (participant == null) return;
+        _saveParticipants.Remove(participant);
+    }
+
+    // ---- ISaveParticipant implementation ----
+
+    /// <summary>
+    /// Write GameManager-owned fields into the save model.
+    /// </summary>
+    public void Capture(SaveModelV2 model)
+    {
+        if (model == null) return;
+        model.day = Day;
+        model.dungeonKeysRemaining = DungeonKeysRemaining;
+        model.dungeonKeysPerDay = dungeonKeysPerDay;
+        model.tempNextDayClickDebuff = _tempNextDayClickDebuff;
+        model.lastScene = CurrentScene;
+        model.spawnPointId = SpawnPointId;
+    }
+
+    /// <summary>
+    /// Restore GameManager-owned fields from the save model.
+    /// </summary>
+    public void Apply(SaveModelV2 model)
+    {
+        ApplyLoadedState(model); // reuse existing method
     }
 
     /// <summary>
@@ -483,6 +545,9 @@ public class GameManager : MonoBehaviour, IGameManager
         DungeonKeysRemaining = Mathf.Max(0, data.dungeonKeysRemaining);
         dungeonKeysPerDay = data.dungeonKeysPerDay;
         _tempNextDayClickDebuff = Mathf.Max(0, data.tempNextDayClickDebuff);
+        // Scene + spawn info restore the player's last location on boot.
+        CurrentScene = data.lastScene;
+        SpawnPointId = data.spawnPointId;
     }
 
     /// <summary>

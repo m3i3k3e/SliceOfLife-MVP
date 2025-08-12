@@ -32,11 +32,10 @@ public static class SaveSystem
     /// <summary>
     /// Serialize runtime state to disk.
     /// </summary>
-    public static void Save(GameManager gm, TaskService taskService = null)
+    public static void Save(GameManager gm)
     {
         if (gm == null) return;
-        taskService ??= gm.Tasks; // fall back to manager's reference if none provided
-        var model = BuildModel(gm, taskService);
+        var model = BuildModel(gm);
         WriteToDisk(model);
     }
 
@@ -44,16 +43,15 @@ public static class SaveSystem
     /// Load state from disk, migrating v1 data if encountered, and apply to managers.
     /// Returns the loaded model for convenience.
     /// </summary>
-    public static SaveModelV2 Load(GameManager gm, TaskService taskService = null)
+    public static SaveModelV2 Load(GameManager gm)
     {
         var model = new SaveModelV2();
         if (gm == null) return model;
-        taskService ??= gm.Tasks;
         var path = PathToFile;
 
         if (!File.Exists(path))
         {
-            ApplyModel(gm, model, taskService);
+            ApplyModel(gm, model);
             return model; // nothing to load yet
         }
 
@@ -77,85 +75,35 @@ public static class SaveSystem
             model = new SaveModelV2();
         }
 
-        ApplyModel(gm, model, taskService);
+        ApplyModel(gm, model);
         return model;
     }
 
-    /// <summary>Gather data from services into a <see cref="SaveModelV2"/>.</summary>
-    private static SaveModelV2 BuildModel(GameManager gm, TaskService taskService)
+    /// <summary>Gather data from registered systems into a <see cref="SaveModelV2"/>.</summary>
+    private static SaveModelV2 BuildModel(GameManager gm)
     {
-        var model = new SaveModelV2
-        {
-            day = gm.Day,
-            dungeonKeysRemaining = gm.DungeonKeysRemaining,
-            dungeonKeysPerDay = gm.DungeonKeysPerDay,
-            tempNextDayClickDebuff = gm.TempNextDayClickDebuff
-        };
+        var model = new SaveModelV2();
+        // GameManager captures its own fields first.
+        gm.Capture(model);
 
-        // ----- Meta -----
-        // Record the scene and spawn point so we can restore the player's location on load.
-        model.lastScene = gm.CurrentScene;
-        model.spawnPointId = gm.SpawnPointId;
+        // Then ask each registered participant to append their data.
+        var participants = gm.SaveParticipants;
+        for (int i = 0; i < participants.Count; i++)
+            participants[i]?.Capture(model);
 
-        // ----- Essence -----
-        if (gm.Essence is EssenceManager essence)
-        {
-            var data = essence.ToData() as EssenceManager.SaveData;
-            if (data != null)
-            {
-                model.essence = data.currentEssence;
-                model.dailyClicksRemaining = data.dailyClicksRemaining;
-                model.essencePerClick = data.essencePerClick;
-                model.passivePerSecond = data.passivePerSecond;
-            }
-        }
-
-        // ----- Inventory -----
-        if (gm.Inventory is InventoryManager inv)
-        {
-            var data = inv.ToData() as InventoryManager.SaveData;
-            if (data != null)
-            {
-                foreach (var s in data.items)
-                    model.inventory.Add(new SaveModelV2.ItemStackDTO { itemId = s.itemId, qty = s.quantity });
-            }
-        }
-
-        // ----- Upgrades -----
-        if (gm.Upgrades is UpgradeManager up)
-        {
-            var data = up.ToData() as UpgradeManager.SaveData;
-            if (data != null)
-            {
-                model.purchasedUpgradeIds.AddRange(data.purchasedUpgradeIds);
-                // Derived flag for convenience in save browsing.
-                model.dungeonUnlocked = data.purchasedUpgradeIds.Contains(UpgradeIds.UnlockBattle);
-            }
-        }
-
-        // ----- Tasks -----
-        if (taskService != null)
-            model.tasks.AddRange(taskService.CaptureState());
-
-        // Flags not yet driven by runtime systems default to their existing values.
         return model;
     }
 
-    /// <summary>Apply a loaded model to all known systems.</summary>
-    private static void ApplyModel(GameManager gm, SaveModelV2 model, TaskService taskService)
+    /// <summary>Apply a loaded model to all registered systems.</summary>
+    private static void ApplyModel(GameManager gm, SaveModelV2 model)
     {
-        gm?.ApplyLoadedState(model);
-        (gm?.Essence as EssenceManager)?.ApplyLoadedState(model);
-        (gm?.Upgrades as UpgradeManager)?.ApplyLoadedState(model);
-        (gm?.Inventory as InventoryManager)?.ApplyLoadedState(model);
+        gm?.Apply(model);
 
-        taskService?.ApplyLoadedState(model);
-
-        if (gm != null)
+        var participants = gm?.SaveParticipants;
+        if (participants != null)
         {
-            // Restore last scene and spawn so the next boot can jump to the right location.
-            gm.CurrentScene = model.lastScene;
-            gm.SpawnPointId = model.spawnPointId;
+            for (int i = 0; i < participants.Count; i++)
+                participants[i]?.Apply(model);
         }
 
         gm?.ReevaluateSleepGate();

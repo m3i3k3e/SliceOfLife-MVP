@@ -37,7 +37,7 @@ public interface IUpgradeProvider
 /// - "Derived" effects (e.g., multipliers) are recomputed from PurchasedIds so they
 ///   never double-apply.
 /// </summary>
-public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable
+public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable, ISaveParticipant
 {
     [Tooltip("Drag your UpgradeSO assets here in the Inspector.")]
     [SerializeField] private List<UpgradeSO> available = new();
@@ -192,5 +192,25 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable
     {
         if (data == null) return;
         LoadPurchased(data.purchasedUpgradeIds);
+    }
+
+    // ---- ISaveParticipant implementation ----
+
+    /// <summary>
+    /// Persist purchased upgrade identifiers into the save model.
+    /// </summary>
+    public void Capture(SaveModelV2 model)
+    {
+        if (model == null) return;
+        model.purchasedUpgradeIds.AddRange(_purchased);
+        model.dungeonUnlocked = _purchased.Contains(UpgradeIds.UnlockBattle);
+    }
+
+    /// <summary>
+    /// Restore purchased upgrades from the save model and rebuild effects.
+    /// </summary>
+    public void Apply(SaveModelV2 model)
+    {
+        ApplyLoadedState(model);
     }
 }
