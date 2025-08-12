@@ -6,7 +6,7 @@ using UnityEngine;
 /// Keeps track of how far the player has climbed in the endless dungeon.
 /// Also handles unlocking crafting stations at floor milestones.
 /// </summary>
-public class DungeonProgression : MonoBehaviour, ISaveable
+public class DungeonProgression : MonoBehaviour
 {
     // ----- Milestone configuration -----
     [Serializable]
@@ -88,49 +88,6 @@ public class DungeonProgression : MonoBehaviour, ISaveable
         }
     }
 
-    // ----- Persistence -----
-
-    /// <inheritdoc/>
-    public string SaveKey => "Dungeon";
-
-    [Serializable]
-    private class SaveData
-    {
-        public int maxFloorReached;
-        public List<int> unlockedMilestones = new();
-    }
-
-    /// <inheritdoc/>
-    public object ToData()
-    {
-        return new SaveData
-        {
-            maxFloorReached = MaxFloorReached,
-            unlockedMilestones = new List<int>(_unlockedMilestones)
-        };
-    }
-
-    /// <inheritdoc/>
-    public void LoadFrom(object data)
-    {
-        var d = data as SaveData;
-        MaxFloorReached = d != null ? Mathf.Max(1, d.maxFloorReached) : 1;
-        CurrentFloor = 1; // fresh run after load
-
-        _unlockedMilestones.Clear();
-        var stations = GameManager.Instance?.Stations;
-        if (d != null && d.unlockedMilestones != null)
-        {
-            foreach (var floor in d.unlockedMilestones)
-            {
-                _unlockedMilestones.Add(floor);
-
-                // Ensure the corresponding station is unlocked on load.
-                var milestone = stationMilestones.Find(m => m.floor == floor);
-                if (milestone != null && milestone.station != null)
-                    stations?.UnlockStation(milestone.station.Id);
-            }
-        }
-    }
+    // Legacy persistence removed; progression resets each session.
 }
 

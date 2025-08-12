@@ -13,7 +13,7 @@ using UnityEngine;
 /// Keeps runtime lists typed by interfaces so gameplay systems remain decoupled
 /// from specific ScriptableObject implementations.
 /// </summary>
-public class StationManager : MonoBehaviour, ISaveable
+public class StationManager : MonoBehaviour
 {
     [Header("Data Sources (assign in Inspector)")]
     /// <summary>List of all station definitions available in the game.</summary>
@@ -188,82 +188,7 @@ public class StationManager : MonoBehaviour, ISaveable
         GameManager.Instance?.Events?.RaiseMinigameCompleted(result);
     }
 
-    // ---- Save/Load helpers ----
-
-    // ---- ISaveable implementation ----
-
-    /// <summary>Key used for station/companion section in save file.</summary>
-    public string SaveKey => "Stations";
-
-    /// <summary>
-    /// Convert runtime station/companion state into serializable records.
-    /// </summary>
-    public object ToData()
-    {
-        var data = new SaveData
-        {
-            unlockedStationIds = new List<string>(_unlockedStationIds)
-        };
-
-        foreach (var kvp in _companionAssignments)
-        {
-            data.assignments.Add(new SaveData.Assignment
-            {
-                companionId = kvp.Key,
-                stationId = kvp.Value
-            });
-        }
-
-        return data;
-    }
-
-    /// <summary>
-    /// Restore unlocked stations and companion assignments from save data.
-    /// </summary>
-    public void LoadFrom(object data)
-    {
-        var d = data as SaveData;
-
-        // ---- Stations ----
-        _unlockedStationIds.Clear();
-        if (d != null && d.unlockedStationIds != null)
-            foreach (var id in d.unlockedStationIds)
-                _unlockedStationIds.Add(id);
-
-        // ---- Companions ----
-        _companionAssignments.Clear();
-        if (d != null && d.assignments != null)
-            foreach (var a in d.assignments)
-                if (!string.IsNullOrEmpty(a.companionId))
-                    _companionAssignments[a.companionId] = a.stationId;
-
-        // Apply assignments to ScriptableObjects so runtime queries reflect loaded state.
-        foreach (var co in companionAssets)
-        {
-            if (co == null) continue;
-
-            if (_companionAssignments.TryGetValue(co.Id, out var stationId))
-                co.SetAssignedStation(GetStationById(stationId));
-            else
-                co.SetAssignedStation(co.StartingStation); // default if missing
-        }
-    }
-
-    /// <summary>Serializable container combining station unlocks and companion assignments.</summary>
-    [Serializable]
-    public class SaveData
-    {
-        public List<string> unlockedStationIds = new();
-
-        [Serializable]
-        public class Assignment
-        {
-            public string companionId;
-            public string stationId; // null/empty means unassigned
-        }
-
-        public List<Assignment> assignments = new();
-    }
+    // ---- Save/Load helpers removed ----
 
     /// <summary>
     /// Helper to locate a <see cref="StationSO"/> by its stable ID.

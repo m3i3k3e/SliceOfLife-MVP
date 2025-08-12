@@ -504,36 +504,6 @@ public class GameManager : MonoBehaviour, IGameManager, ISaveParticipant
 
     // ---- Save/Load integration ----
 
-    // ---- ISaveable implementation ----
-
-    /// <summary>Key used in the save file dictionary.</summary>
-    public string SaveKey => "Game";
-
-    /// <summary>
-    /// Package the tiny bit of GameManager state that needs to persist.
-    /// </summary>
-    public object ToData() => new GameData { day = Day };
-
-    /// <summary>
-    /// Restore GameManager values from serialized data.
-    /// </summary>
-    public void LoadFrom(object data)
-    {
-        var d = data as GameData;
-        if (d == null) return;
-        Day = Mathf.Max(1, d.day); // clamp to sensible minimum
-    }
-
-    /// <summary>
-    /// Plain serializable container for GameManager's tiny bit of state.
-    /// Kept nested to emphasize its exclusive use by this manager.
-    /// </summary>
-    [Serializable]
-    public class GameData
-    {
-        public int day;
-    }
-
     /// <summary>
     /// Populate runtime fields from the aggregated <see cref="SaveModelV2"/> data.
     /// Only touches values owned by <see cref="GameManager"/> itself.

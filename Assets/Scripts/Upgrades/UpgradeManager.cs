@@ -37,7 +37,7 @@ public interface IUpgradeProvider
 /// - "Derived" effects (e.g., multipliers) are recomputed from PurchasedIds so they
 ///   never double-apply.
 /// </summary>
-public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable, ISaveParticipant
+public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveParticipant
 {
     [Tooltip("Drag your UpgradeSO assets here in the Inspector.")]
     [SerializeField] private List<UpgradeSO> available = new();
@@ -128,40 +128,7 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable, ISaveP
         }
     }
 
-    // ---- Save/Load integration ----
-    
-    // ---- ISaveable implementation ----
-
-    /// <summary>Key used for the upgrades section in the save file.</summary>
-    public string SaveKey => "Upgrades";
-
-    /// <summary>
-    /// Extract the minimal persistence data for upgrades.
-    /// </summary>
-    public object ToData()
-    {
-        // Copy IDs to a list so the DTO is decoupled from our HashSet.
-        return new SaveData
-        {
-            purchasedUpgradeIds = _purchased.ToList()
-        };
-    }
-
-    /// <summary>
-    /// Restore upgrade ownership and rebuild runtime effects.
-    /// </summary>
-    public void LoadFrom(object data)
-    {
-        var d = data as SaveData;
-        LoadPurchased(d?.purchasedUpgradeIds);
-    }
-
-    /// <summary>Serializable list of purchased upgrade IDs.</summary>
-    [Serializable]
-    public class SaveData
-    {
-        public List<string> purchasedUpgradeIds = new();
-    }
+    // ---- Save/Load integration via SaveModelV2 ----
 
     /// <summary>
     /// Called internally to rehydrate from disk.

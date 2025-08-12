@@ -1,7 +1,7 @@
 /*
  * ResourceManager.cs
  * Role: Maintains counts of raw resources and broadcasts changes to listeners.
- * Key dependencies: ResourceSO catalog for ID resolution; participates in SaveSystem via ISaveable.
+ * Key dependencies: ResourceSO catalog for ID resolution.
  * Expansion: Add new ResourceSO assets and list them in resourceCatalog to support more materials.
  */
 using System;
@@ -10,9 +10,9 @@ using UnityEngine;
 
 /// <summary>
 /// Tracks quantities of raw resources collected by the player.
-/// Exposes simple add/consume APIs and persists amounts via <see cref="ISaveable"/>.
+/// Exposes simple add/consume APIs; counts reset on new session.
 /// </summary>
-public class ResourceManager : MonoBehaviour, ISaveable
+public class ResourceManager : MonoBehaviour
 {
     /// <summary>Catalog of all resource definitions used to resolve IDs during load.</summary>
     [Header("Catalog")]
@@ -63,55 +63,7 @@ public class ResourceManager : MonoBehaviour, ISaveable
         return _counts.TryGetValue(resource, out int value) ? value : 0;
     }
 
-    // ---- Persistence ----
-    public string SaveKey => "Resources"; // unique section name for SaveSystem
-
-    [Serializable]
-    private class ResourceStack
-    {
-        public string id;
-        public int quantity;
-    }
-
-    [Serializable]
-    private class SaveData
-    {
-        public List<ResourceStack> resources = new();
-    }
-
-    /// <summary>Package current resource counts into a serializable container.</summary>
-    public object ToData()
-    {
-        var data = new SaveData();
-        foreach (var kvp in _counts)
-        {
-            data.resources.Add(new ResourceStack
-            {
-                id = kvp.Key ? kvp.Key.Id : string.Empty,
-                quantity = kvp.Value
-            });
-        }
-        return data;
-    }
-
-    /// <summary>Restore resource amounts from serialized data.</summary>
-    public void LoadFrom(object data)
-    {
-        _counts.Clear();
-        var d = data as SaveData;
-        if (d == null) return; // nothing to load
-
-        foreach (var entry in d.resources)
-        {
-            var res = FindResource(entry.id);
-            if (res != null)
-                _counts[res] = entry.quantity;
-        }
-
-        // notify listeners so UI refreshes after load
-        foreach (var kvp in _counts)
-            OnResourceChanged?.Invoke(kvp.Key, kvp.Value);
-    }
+    // ---- Persistence removed ----
 
     /// <summary>Lookup helper to resolve a resource ID from the catalog.</summary>
     private ResourceSO FindResource(string id)

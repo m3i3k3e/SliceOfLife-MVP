@@ -39,13 +39,11 @@ Assets/Scripts/Core/DefaultEventBus.cs
 Assets/Scripts/Core/DungeonProgression.cs
 Assets/Scripts/Core/EssenceManager.cs
 Assets/Scripts/Core/GameManager.cs
-Assets/Scripts/Core/GameSaveData.cs
 Assets/Scripts/Core/ICompanion.cs
 Assets/Scripts/Core/IEventBus.cs
 Assets/Scripts/Core/IGameManager.cs
 Assets/Scripts/Core/IMinigame.cs
 Assets/Scripts/Core/InventoryManager.cs
-Assets/Scripts/Core/ISaveable.cs
 Assets/Scripts/Core/IsExternalInit.cs
 Assets/Scripts/Core/IStation.cs
 Assets/Scripts/Core/ItemCardSO.cs

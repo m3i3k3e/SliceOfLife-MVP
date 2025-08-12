@@ -5,9 +5,9 @@ using UnityEngine;
 /// <summary>
 /// Tracks the player's unlocked skills and enforces prerequisite chains.
 /// Lives as a MonoBehaviour so GameManager and UI can reference it directly.
-/// Implements <see cref="ISaveable"/> so unlocked IDs persist via <see cref="SaveSystem"/>.
+/// Currently does not persist unlocked IDs.
 /// </summary>
-public class SkillTreeManager : MonoBehaviour, ISaveable
+public class SkillTreeManager : MonoBehaviour
 {
     [Header("Catalog")]
     [Tooltip("All skills available in the game. Order is irrelevant; referenced by Id.")]
@@ -68,37 +68,6 @@ public class SkillTreeManager : MonoBehaviour, ISaveable
         return true;
     }
 
-    // ------- Saving -------
-    private const string SaveKeyConst = "skill_tree";
-
-    /// <inheritdoc/>
-    public string SaveKey => SaveKeyConst;
-
-    [Serializable]
-    private class SkillTreeData
-    {
-        public List<string> unlocked = new();
-    }
-
-    /// <inheritdoc/>
-    public object ToData()
-    {
-        // Serialize as a simple list of strings for minimal JSON footprint.
-        return new SkillTreeData { unlocked = new List<string>(_unlocked) };
-    }
-
-    /// <inheritdoc/>
-    public void LoadFrom(object data)
-    {
-        var dto = data as SkillTreeData;
-        _unlocked.Clear();
-        if (dto?.unlocked == null) return;
-
-        foreach (var id in dto.unlocked)
-        {
-            if (!string.IsNullOrEmpty(id))
-                _unlocked.Add(id);
-        }
-    }
+    // Persistence removed; skills reset between sessions.
 }
 

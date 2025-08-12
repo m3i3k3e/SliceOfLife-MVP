@@ -4,9 +4,9 @@ using UnityEngine;
 
 /// <summary>
 /// Tracks all known crafting recipes and which ones the player has unlocked.
-/// Implements <see cref="ISaveable"/> so recipe progress persists across sessions.
+/// Currently recipes reset each session and do not persist.
 /// </summary>
-public class RecipeManager : MonoBehaviour, ISaveable
+public class RecipeManager : MonoBehaviour
 {
     [Header("Catalog")]
     [Tooltip("List of every recipe available in the game. Referenced by Id.")]
@@ -49,31 +49,5 @@ public class RecipeManager : MonoBehaviour, ISaveable
         return true;
     }
 
-    // -------- Saving --------
-    private const string SaveKeyConst = "recipes";
-    /// <inheritdoc/>
-    public string SaveKey => SaveKeyConst;
-
-    [Serializable]
-    private class RecipeSaveData
-    {
-        public List<string> unlocked = new();
-    }
-
-    /// <inheritdoc/>
-    public object ToData()
-        => new RecipeSaveData { unlocked = new List<string>(_unlocked) };
-
-    /// <inheritdoc/>
-    public void LoadFrom(object data)
-    {
-        var dto = data as RecipeSaveData;
-        _unlocked.Clear();
-        if (dto?.unlocked == null) return;
-        foreach (var id in dto.unlocked)
-        {
-            if (!string.IsNullOrEmpty(id))
-                _unlocked.Add(id);
-        }
-    }
+    // Persistence removed for now; recipes reset each session.
 }
