@@ -31,6 +31,21 @@ public class RecipeManager : MonoBehaviour, ISaveParticipant
         }
     }
 
+    /// <summary>
+    /// Refresh the lookup cache whenever the list changes in the inspector.
+    /// This keeps edits made during iterative content creation reflected
+    /// immediately without having to enter Play Mode first.
+    /// </summary>
+    private void OnValidate()
+    {
+        _recipeLookup.Clear();
+        foreach (var recipe in allRecipes)
+        {
+            if (recipe != null && !_recipeLookup.ContainsKey(recipe.Id))
+                _recipeLookup.Add(recipe.Id, recipe); // skip nulls and duplicate Ids
+        }
+    }
+
     /// <summary>Check if the player already knows a recipe.</summary>
     public bool IsUnlocked(string id) => _unlocked.Contains(id);
 

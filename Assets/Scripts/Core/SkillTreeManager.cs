@@ -34,6 +34,21 @@ public class SkillTreeManager : MonoBehaviour, ISaveParticipant
         }
     }
 
+    /// <summary>
+    /// Rebuild the lookup when values change in the inspector so editor tweaks
+    /// immediately reflect in the cache. This aids fast iteration on content
+    /// without requiring a full play mode restart.
+    /// </summary>
+    private void OnValidate()
+    {
+        _skillLookup.Clear();
+        foreach (var skill in allSkills)
+        {
+            if (skill != null && !_skillLookup.ContainsKey(skill.Id))
+                _skillLookup.Add(skill.Id, skill); // ignore nulls and duplicates
+        }
+    }
+
     /// <summary>Public view of unlocked IDs for save/load or debugging.</summary>
     public IReadOnlyCollection<string> UnlockedIds => _unlocked;
 
