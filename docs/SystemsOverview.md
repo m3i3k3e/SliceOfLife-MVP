@@ -39,13 +39,13 @@ UpgradeManager --(OnPurchased)--> GameEvents --> UpgradesPanel
 ```
 
 ## Save / Load
-All persistent systems implement `ISaveable` and register with `GameManager`.
+`SaveModelV2` captures state directly from managers and `SaveSystem` writes it to disk.  No `ISaveable` registration is required; managers expose explicit capture/apply methods.  `SaveScheduler` coalesces rapid save calls before hitting disk.
 
 ```text
-ISaveable systems
-    |
-    v
-GameManager --> SaveSystem --> Disk
+[GameManager, InventoryManager, UpgradeManager, ...]
+    |                    |
+    v                    v
+        SaveModelV2 <--> SaveSystem --(deferred)--> Disk
 ```
 
 ## Event Bus

@@ -2,17 +2,17 @@
 
 
 
-\_Last updated: 2025-08-11\_
+\_Last updated: 2025-08-12\_
 \## Status Snapshot
 
-\- SaveModel v2 implemented with unified JSON save.
-\- Event bus (`IEventBus`/`DefaultEventBus`) available; some legacy `GameEvents` hooks remain.
+\- SaveModel v2 implemented with unified JSON save; `SaveScheduler` batches disk writes.
+\- Event bus (`IEventBus`/`DefaultEventBus`) available; `GameEvents` still mirrors essence, inventory, task, upgrade, day/key, and sleep events for transitional UI.
 \- Inventory seeds in place via starter `ItemSO` assets.
 \- Task graph (`TaskGraphSO` + `TaskService`) driving tutorial flow.
 
 \### Deviations
 \- `TaskService` listens to `GameEvents` instead of exposing `NotifyItemChanged`; inventory changes are observed via events.
-\- Legacy `GameEvents` still mirrors inventory and task events alongside the event bus.
+\- Legacy `GameEvents` still mirrors essence, inventory, task, upgrade, day/key, and sleep events alongside the event bus.
 \- `SaveSystem.Save` and `Load` now accept an optional `TaskService` parameter to persist tutorial state.
 
 
