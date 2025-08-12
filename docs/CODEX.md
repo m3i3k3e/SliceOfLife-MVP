@@ -144,6 +144,8 @@ This file is the source of truth for design + tech. Keep it short and link out t
   The manager subscribes to `IStation.OnProductionComplete` and forwards results through
   `GameManager.Events.MinigameCompleted`.
 
+\- \*\*Input abstraction\*\*: `IInputReader` interface decouples device-specific input from gameplay. `MouseKeyboardInputReader` provides the default implementation; swap in future readers (e.g., gamepad) without code changes.
+
 \- \*\*Event bus\*\*: `IEventBus` interface (default `DefaultEventBus` component) exposes cross-system events:
   - `EssenceChanged(int newTotal)`
   - `InventoryChanged()`
@@ -226,7 +228,10 @@ flowchart LR
 - Added `LocationSO` data and `MapUI` that spawns buttons for unlocked locations. Event bus now exposes `UpgradePurchased` for UI refreshes.
 - To test: create LocationSO assets for Hub and Battle, assign them to MapUI, purchase the battle unlock upgrade, and verify the Battle button appears and loads the scene.
 - Split `HUD` into a lightweight container with pluggable `HUDPanel` components. Panels subscribe only to needed `IEventBus` events and register themselves for easy prefab addition.
-- To test: in a scene with HUD, add `CurrencyHUDPanel`, `KeysHUDPanel`, and `SleepHUDPanel` components to appropriate UI objects. Wire button OnClick events to the panels and ensure essence, keys, and sleep states update when playing.
+  - To test: in a scene with HUD, add `CurrencyHUDPanel`, `KeysHUDPanel`, and `SleepHUDPanel` components to appropriate UI objects. Wire button OnClick events to the panels and ensure essence, keys, and sleep states update when playing.
+
+  - Added `IInputReader` interface with `MouseKeyboardInputReader` implementation. `InteractionController` now queries this interface each frame, allowing future input sources like gamepads without code changes.
+    - To test: add a `MouseKeyboardInputReader` component to a GameObject and assign it to the `InteractionController`'s **Input Reader** field. Play the scene and interact with objects using the mouse.
 
 \## 8) Art \& Audio Direction
 
