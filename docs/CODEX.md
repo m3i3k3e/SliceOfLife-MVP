@@ -12,6 +12,8 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
   (Update via \*\*Unity Menu → Tools → Generate Project Snapshot\*\*)
 
+\- Vision snapshot: `docs/vision/Systems.md` for long-term system goals.
+
 
 
 ---
@@ -110,13 +112,17 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 | \*\*Exploration/Harvesting\*\* | Stub | Single room interactables (Altar, Bed, Door). |
 
-| \*\*Stations (Farm/Kitchen/Alchemy/Blacksmith)\*\* | Data Stubs | Interfaces + SOs + manager to track stations/companions. |
+| \*\*Stations (Farm/Kitchen/Alchemy/Blacksmith)\*\* | Data Stubs | Interfaces + SOs; `StationManager` unlocks stations and assigns companions; saved via `unlockedStationIds` & `companionAssignments`. |
 
-| \*\*Waifu Collection\*\* | Partial Stub | Placeholder waifu cards; first passive buff hook. |
+| \*\*Companions\*\* | Data Stubs | Recruit waifu managers with starting cards; station slots persisted through `companionAssignments`. |
 
 | \*\*Inventory\*\* | Partial | Item stacks, slot limits, add/remove APIs, persists via SaveModelV2; emits OnInventoryChanged. |
 
-| \*\*Resources\*\* | Stub | `ResourceManager` tracks material counts; `AddResource`/`TryConsumeResource` fire `OnResourceChanged`. |
+| \*\*Resources\*\* | Stub | `ResourceManager` tracks material counts; saved as `resources[]` in `SaveModelV2`. |
+
+| \*\*Recipes\*\* | Stub | `RecipeManager` unlocks craftables; IDs persisted in `unlockedRecipeIds`. |
+
+| \*\*Skills\*\* | Stub | `SkillManager` exposes unlocked ability IDs; persisted via `unlockedSkillIds`. |
 
 | \*\*Generational Legacy\*\* | UI Stub | “Fertilize” button + future reset/bonus flow. |
 
@@ -175,7 +181,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
    
    - **Debuff Access**: `GameManager.TempNextDayClickDebuff` reveals the click-cap reduction that will apply on the next day.
    - **Scene Tracking**: `GameManager.CurrentScene` and `GameManager.SpawnPointId` record the last scene and spawn point for persistence.
-  - **Persistence**: `SaveSystem` writes a single `SaveModelV2` JSON file. Legacy `ISaveable` sections were removed; only `ISaveParticipant` systems contribute via `Capture`/`Apply` and register through `GameManager.RegisterSaveParticipant(...)`. APIs: `HasAnySave()`, `Delete()`, `Save(GameManager)`, `Load(GameManager)`. **Test**: move to another scene, call `SaveSystem.Save`, restart, then `Load` and confirm `GameManager.CurrentScene` and `SpawnPointId` restore.
+  - **Persistence**: `SaveSystem` writes a single `SaveModelV2` JSON file. Legacy `ISaveable` sections were removed; only `ISaveParticipant` systems contribute via `Capture`/`Apply` and register through `GameManager.RegisterSaveParticipant(...)`. `SaveModelV2` now stores resource stacks, unlocked recipe and skill IDs, station unlocks, and companion assignments alongside existing fields. APIs: `HasAnySave()`, `Delete()`, `Save(GameManager)`, `Load(GameManager)`. **Test**: move to another scene, call `SaveSystem.Save`, restart, then `Load` and confirm `GameManager.CurrentScene` and `SpawnPointId` restore.
 \- **Test**: Call `Stations.UnlockStation("farm")` or `Stations.RecruitCompanion("alice")` in play mode and watch the console/UI react via the event bus (`StationUnlocked` or `CompanionRecruited`).
   Trigger a station's `OnProductionComplete` to see `MinigameCompleted` propagate.
 

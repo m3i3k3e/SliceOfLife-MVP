@@ -5,10 +5,12 @@
 \_Last updated: 2025-08-12\_
 \## Status Snapshot
 
+\- Bootstrapper (`GameBootstrap`) wires core services and loads saves on startup.
 \- SaveModel v2 implemented with unified JSON save; `SaveScheduler` batches disk writes.
 \- Event bus (`IEventBus`/`DefaultEventBus`) now handles essence, inventory, task, upgrade, day/key, and sleep events.
 \- Inventory seeds in place via starter `ItemSO` assets.
 \- Task graph (`TaskGraphSO` + `TaskService`) driving tutorial flow.
+\- Next persistence steps: save resources, recipes, skills, station unlocks, and companion assignments.
 
 \### Deviations
 \- `TaskService` listens to the event bus instead of exposing `NotifyItemChanged`; inventory changes are observed via events.

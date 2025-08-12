@@ -39,7 +39,7 @@ UpgradeManager --(OnPurchased)--> EventBus --> UpgradesPanel
 ```
 
 ## Save / Load
-`SaveModelV2` captures state from any system implementing `ISaveParticipant`.  `GameManager` keeps a registry of these participants so `SaveSystem` can iterate them generically.  `SaveScheduler` coalesces rapid save calls before hitting disk.
+`SaveModelV2` captures state from any system implementing `ISaveParticipant`.  `GameManager` keeps a registry of these participants so `SaveSystem` can iterate them generically.  `SaveScheduler` coalesces rapid save calls before hitting disk.  The model stores resource stacks and lists of unlocked recipe, skill, and station IDs plus companion assignments.
 
 ```text
 [GameManager, InventoryManager, UpgradeManager, ...]
@@ -58,8 +58,17 @@ UpgradeManager --(OnPurchased)--> EventBus --> UpgradesPanel
       EventBus -> UI (HUD, UpgradesPanel, BattleUI, ...)
 ```
 
+## Resources
+`ResourceManager` tracks counts for each `ResourceSO` and fires `OnResourceChanged` events. Stacks persist to `SaveModelV2.resources`.
+
+## Recipes
+`RecipeManager` records unlocked crafting recipes. IDs persist via `SaveModelV2.unlockedRecipeIds`.
+
+## Skills
+`SkillManager` tracks unlocked abilities and raises `SkillUnlocked` on the bus. IDs persist via `SaveModelV2.unlockedSkillIds`.
+
 ## Stations & Companions (stubs)
-`StationManager` will map recruited companions to production stations.  Production results bubble through the bus.
+`StationManager` maps recruited companions to production stations and exposes unlock APIs. `SaveModelV2` stores `unlockedStationIds` and a `companionAssignments` dictionary (`stationId` → `companionId`). Production results bubble through the bus.
 
 ```text
 CompanionSO -> StationManager -> EventBus -> HUD
