@@ -7,7 +7,7 @@ using UnityEngine;
 /// Lives as a MonoBehaviour so GameManager and UI can reference it directly.
 /// Currently does not persist unlocked IDs.
 /// </summary>
-public class SkillTreeManager : MonoBehaviour
+public class SkillTreeManager : MonoBehaviour, ISaveParticipant
 {
     [Header("Catalog")]
     [Tooltip("All skills available in the game. Order is irrelevant; referenced by Id.")]
@@ -65,9 +65,41 @@ public class SkillTreeManager : MonoBehaviour
 
         _unlocked.Add(skill.Id);
         OnSkillUnlocked?.Invoke(skill); // fire after mutating state
+        // Queue a save so the unlocked skill persists.
+        SaveScheduler.RequestSave(GameManager.Instance);
         return true;
     }
 
-    // Persistence removed; skills reset between sessions.
+    // ---- Save/Load via SaveModelV2 ----
+
+    /// <summary>Restore unlocked skills from the save model.</summary>
+    public void ApplyLoadedState(SaveModelV2 data)
+    {
+        _unlocked.Clear();
+        if (data == null) return;
+
+        foreach (var id in data.unlockedSkillIds)
+        {
+            if (_skillLookup.TryGetValue(id, out var skill))
+            {
+                _unlocked.Add(id);
+                OnSkillUnlocked?.Invoke(skill); // notify listeners for UI
+            }
+        }
+    }
+
+    /// <summary>Write unlocked skill IDs into the save model.</summary>
+    public void Capture(SaveModelV2 model)
+    {
+        if (model == null) return;
+        foreach (var id in _unlocked)
+            model.unlockedSkillIds.Add(id);
+    }
+
+    /// <summary>Load unlocked skill IDs from the save model.</summary>
+    public void Apply(SaveModelV2 model)
+    {
+        ApplyLoadedState(model);
+    }
 }
 

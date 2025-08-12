@@ -6,7 +6,7 @@ using UnityEngine;
 /// Keeps track of how far the player has climbed in the endless dungeon.
 /// Also handles unlocking crafting stations at floor milestones.
 /// </summary>
-public class DungeonProgression : MonoBehaviour
+public class DungeonProgression : MonoBehaviour, ISaveParticipant
 {
     // ----- Milestone configuration -----
     [Serializable]
@@ -88,6 +88,35 @@ public class DungeonProgression : MonoBehaviour
         }
     }
 
-    // Legacy persistence removed; progression resets each session.
+    // ---- Save/Load via SaveModelV2 ----
+
+    /// <summary>Write current floor progress into the save model.</summary>
+    public void Capture(SaveModelV2 model)
+    {
+        if (model == null) return;
+        model.currentFloor = CurrentFloor;
+        model.maxFloorReached = MaxFloorReached;
+    }
+
+    /// <summary>Restore floor progress from the save model.</summary>
+    public void Apply(SaveModelV2 model)
+    {
+        if (model == null) return;
+
+        CurrentFloor = Mathf.Max(1, model.currentFloor);
+        MaxFloorReached = Mathf.Max(CurrentFloor, model.maxFloorReached);
+
+        // Rebuild milestone cache so already-granted stations are not re-awarded.
+        _unlockedMilestones.Clear();
+        foreach (var milestone in stationMilestones)
+        {
+            if (milestone == null) continue;
+            if (MaxFloorReached >= milestone.floor)
+                _unlockedMilestones.Add(milestone.floor);
+        }
+
+        // Inform listeners of the restored floor so UI can update.
+        OnFloorReached?.Invoke(CurrentFloor);
+    }
 }
 

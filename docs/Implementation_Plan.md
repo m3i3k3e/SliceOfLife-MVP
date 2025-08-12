@@ -132,12 +132,24 @@ See `docs/DesignFlow.md#save-stage` for how persistence fits into the pipeline.
 
 &nbsp; - Tasks: `List<TaskStateDTO { string taskId; bool completed; int progress; }>`
 
+&nbsp; - Resources: `List<ResourceStackDTO { string resourceId; int qty; }>`
+
+&nbsp; - Recipes: `List<string> unlockedRecipeIds`
+
+&nbsp; - Skills: `List<string> unlockedSkillIds`
+
+&nbsp; - Stations: `List<string> unlockedStationIds`, `Dictionary<string,string> companionAssignments`
+
+&nbsp; - Dungeon: `int currentFloor`, `int maxFloorReached`
+
 
 \- `SaveSystem.Save(GameManager gm)`: gather from services → write JSON.
 
 \- `SaveSystem.Load(GameManager gm)`: load JSON, migrate v1→v2 if needed, call services’ `ApplyLoadedState(...)`.
 
 \- `SaveSystem.HasAnySave()` and `SaveSystem.Delete()` helpers.
+
+**Test**: gather a resource, unlock a recipe and skill, recruit a companion, unlock a station, advance a floor, then `SaveSystem.Save` and reload to ensure all data persists.
 
 
 

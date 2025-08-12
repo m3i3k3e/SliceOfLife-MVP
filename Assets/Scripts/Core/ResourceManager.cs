@@ -12,7 +12,7 @@ using UnityEngine;
 /// Tracks quantities of raw resources collected by the player.
 /// Exposes simple add/consume APIs; counts reset on new session.
 /// </summary>
-public class ResourceManager : MonoBehaviour
+public class ResourceManager : MonoBehaviour, ISaveParticipant
 {
     /// <summary>Catalog of all resource definitions used to resolve IDs during load.</summary>
     [Header("Catalog")]
@@ -34,6 +34,8 @@ public class ResourceManager : MonoBehaviour
         int newAmount = current + amount;
         _counts[resource] = newAmount;
         OnResourceChanged?.Invoke(resource, newAmount);
+        // Request a save so the new count persists without spamming disk writes.
+        SaveScheduler.RequestSave(GameManager.Instance);
     }
 
     /// <summary>
@@ -53,6 +55,8 @@ public class ResourceManager : MonoBehaviour
             _counts.Remove(resource); // keep dictionary tidy
 
         OnResourceChanged?.Invoke(resource, newAmount);
+        // Persist mutation so resource totals survive restarts.
+        SaveScheduler.RequestSave(GameManager.Instance);
         return true;
     }
 
@@ -63,7 +67,44 @@ public class ResourceManager : MonoBehaviour
         return _counts.TryGetValue(resource, out int value) ? value : 0;
     }
 
-    // ---- Persistence removed ----
+    // ---- Save/Load via SaveModelV2 ----
+
+    /// <summary>Restore resource counts from the aggregated save model.</summary>
+    public void ApplyLoadedState(SaveModelV2 data)
+    {
+        _counts.Clear();
+        if (data == null) return;
+
+        foreach (var stack in data.resources)
+        {
+            var res = FindResource(stack.resourceId);
+            if (res != null)
+            {
+                _counts[res] = stack.qty;
+                OnResourceChanged?.Invoke(res, stack.qty); // notify listeners for UI refresh
+            }
+        }
+    }
+
+    /// <summary>Write current resource counts into the save model.</summary>
+    public void Capture(SaveModelV2 model)
+    {
+        if (model == null) return;
+        foreach (var kvp in _counts)
+        {
+            model.resources.Add(new SaveModelV2.ResourceStackDTO
+            {
+                resourceId = kvp.Key ? kvp.Key.Id : string.Empty,
+                qty = kvp.Value
+            });
+        }
+    }
+
+    /// <summary>Apply resource counts from the save model.</summary>
+    public void Apply(SaveModelV2 model)
+    {
+        ApplyLoadedState(model);
+    }
 
     /// <summary>Lookup helper to resolve a resource ID from the catalog.</summary>
     private ResourceSO FindResource(string id)

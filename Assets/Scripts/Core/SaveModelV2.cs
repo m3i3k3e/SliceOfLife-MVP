@@ -40,11 +40,36 @@ public class SaveModelV2
     // ----- Tasks -----
     public List<TaskStateDTO> tasks = new();
 
+    // ----- Resources -----
+    public List<ResourceStackDTO> resources = new();
+
+    // ----- Recipes -----
+    public List<string> unlockedRecipeIds = new();
+
+    // ----- Skills -----
+    public List<string> unlockedSkillIds = new();
+
+    // ----- Stations & Companions -----
+    public List<string> unlockedStationIds = new();
+    public Dictionary<string, string> companionAssignments = new();
+
+    // ----- Dungeon -----
+    public int currentFloor;
+    public int maxFloorReached;
+
     /// <summary>Simple ID+quantity pair used for inventory serialization.</summary>
     [Serializable]
     public class ItemStackDTO
     {
         public string itemId;
+        public int qty;
+    }
+
+    /// <summary>Simple ID+quantity pair used for resource serialization.</summary>
+    [Serializable]
+    public class ResourceStackDTO
+    {
+        public string resourceId;
         public int qty;
     }
 
