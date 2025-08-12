@@ -3,11 +3,7 @@
 /// Exposes core systems and day progression without
 /// tying callers to the concrete <see cref="GameManager"/>.
 /// </summary>
-/// <summary>
-/// Public surface for the central game orchestrator.
-/// Extends <see cref="ISaveable"/> so the manager can participate in persistence.
-/// </summary>
-public interface IGameManager : ISaveable
+public interface IGameManager
 {
     // -------- Core systems --------
     /// <summary>Read-only access to the currency system.</summary>

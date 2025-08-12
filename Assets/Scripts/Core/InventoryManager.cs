@@ -1,7 +1,7 @@
 /*
  * InventoryManager.cs
  * Purpose: Maintains the player's inventory at runtime with add/remove/query APIs.
- * Dependencies: ItemSO definitions, IInventoryService surface, ISaveable for persistence.
+ * Dependencies: ItemSO definitions, IInventoryService surface, participates in save/load via ISaveParticipant.
  * Expansion Hooks: OnInventoryChanged event for UI; slot data structure allows future sorting.
  * Rationale: Implements interfaces so other systems talk to abstractions instead of concrete types.
  */
@@ -14,10 +14,10 @@ using UnityEngine;
 /// <see cref="OnInventoryChanged"/> whenever contents mutate.
 /// </summary>
 /// <remarks>
-/// Implements <see cref="IInventoryService"/> and <see cref="ISaveable"/> to keep the
-/// persistence and consumer code decoupled from this concrete class.
+/// Implements <see cref="IInventoryService"/> and participates in save/load via
+/// <see cref="ISaveParticipant"/> to keep the persistence layer decoupled.
 /// </remarks>
-public class InventoryManager : MonoBehaviour, IInventoryService, ISaveable, ISaveParticipant
+public class InventoryManager : MonoBehaviour, IInventoryService, ISaveParticipant
 {
     private const int SlotsPerRow = 10; // Each row exposes 10 slots in the dungeon bar
 
@@ -168,71 +168,7 @@ public class InventoryManager : MonoBehaviour, IInventoryService, ISaveable, ISa
         return total;
     }
 
-    // ----- Persistence -----
-
-    // ---- ISaveable implementation ----
-
-    /// <summary>Key used in the save file for inventory data.</summary>
-    public string SaveKey => "Inventory";
-
-    /// <summary>
-    /// Extract plain data for JSON serialization.
-    /// </summary>
-    public object ToData()
-    {
-        var data = new SaveData
-        {
-            unlockedRows = unlockedRows,
-        };
-
-        foreach (var slot in _slots)
-        {
-            data.items.Add(new ItemStack
-            {
-                itemId = slot.item ? slot.item.Id : string.Empty,
-                quantity = slot.quantity
-            });
-        } // capture each stack as plain data
-
-        return data;
-    }
-
-    /// <summary>
-    /// Rebuild runtime state from serialized data.
-    /// </summary>
-    public void LoadFrom(object data)
-    {
-        var d = data as SaveData;
-        _slots.Clear();
-        if (d == null) return;
-
-        unlockedRows = Mathf.Clamp(d.unlockedRows, 1, 5);
-
-        foreach (var stack in d.items)
-        {
-            var item = FindItem(stack.itemId); // resolve SO from saved ID
-            if (item != null)
-                _slots.Add(new Slot(item, stack.quantity));
-        }
-
-        OnInventoryChanged?.Invoke();
-    }
-
-    /// <summary>Serializable representation of the inventory grid.</summary>
-    [Serializable]
-    public class SaveData
-    {
-        public int unlockedRows;
-        public List<ItemStack> items = new();
-    }
-
-    /// <summary>Simple ID/quantity pair for one slot.</summary>
-    [Serializable]
-    public class ItemStack
-    {
-        public string itemId;
-        public int quantity;
-    }
+    // ----- Persistence via SaveModelV2 -----
 
     /// <summary>
     /// Apply loaded inventory state from the aggregate save model.

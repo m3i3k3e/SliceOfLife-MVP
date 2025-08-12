@@ -50,7 +50,7 @@ public interface IEssenceProvider
 /// Concrete currency manager. Implements <see cref="IEssenceProvider"/> so the rest of
 /// the game can stay decoupled from MonoBehaviour specifics.
 /// </summary>
-public class EssenceManager : MonoBehaviour, IEssenceProvider, ISaveable, ISaveParticipant
+public class EssenceManager : MonoBehaviour, IEssenceProvider, ISaveParticipant
 {
     [Header("Tuning")]
     [Tooltip("How many manual clicks are allowed each day (MVP default = 10).")]
@@ -192,59 +192,7 @@ public class EssenceManager : MonoBehaviour, IEssenceProvider, ISaveable, ISaveP
         }
     }
 
-    // ---- Save/Load ----
-
-    // ---- ISaveable implementation ----
-
-    /// <summary>Key used by SaveSystem to store essence data.</summary>
-    public string SaveKey => "Essence";
-
-    /// <summary>
-    /// Extract the minimal persistence data for the essence system.
-    /// </summary>
-    public object ToData()
-    {
-        // Build a plain container that captures only the fields we want to persist.
-        return new SaveData
-        {
-            currentEssence = _currentEssence,
-            dailyClicksRemaining = _dailyClicksRemaining,
-            essencePerClick = _essencePerClick,
-            passivePerSecond = passivePerSecond
-        };
-    }
-
-    /// <summary>
-    /// Restore state from disk. Called by <see cref="SaveSystem"/> after deserializing.
-    /// </summary>
-    public void LoadFrom(object data)
-    {
-        var d = data as SaveData;
-        if (d == null) return; // defensive: save file may be missing fields
-
-        // Directly assign fields instead of using reflection. We notify listeners so
-        // any UI hooked up at load time refreshes with accurate numbers.
-        _currentEssence = d.currentEssence;
-        _dailyClicksRemaining = d.dailyClicksRemaining;
-        _essencePerClick = d.essencePerClick;
-        passivePerSecond = d.passivePerSecond;
-
-        OnEssenceChanged?.Invoke(_currentEssence);
-        OnDailyClicksChanged?.Invoke(_dailyClicksRemaining);
-
-        // Make sure passive income coroutine reflects the loaded rate.
-        StartPassiveIfNeeded();
-    }
-
-    /// <summary>Simple DTO capturing essence-related persistence fields.</summary>
-    [Serializable]
-    public class SaveData
-    {
-        public int currentEssence;
-        public int dailyClicksRemaining;
-        public int essencePerClick;
-        public float passivePerSecond;
-    }
+    // ---- Save/Load via SaveModelV2 ----
 
     /// <summary>
     /// Restore runtime values from the unified <see cref="SaveModelV2"/>.

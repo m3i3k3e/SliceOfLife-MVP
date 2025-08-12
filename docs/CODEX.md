@@ -174,7 +174,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
    
    - **Debuff Access**: `GameManager.TempNextDayClickDebuff` reveals the click-cap reduction that will apply on the next day.
    - **Scene Tracking**: `GameManager.CurrentScene` and `GameManager.SpawnPointId` record the last scene and spawn point for persistence.
-  - **Persistence**: `SaveSystem` v2 writes a single `SaveModelV2` JSON file. `GameManager` now maintains a list of `ISaveParticipant` systems; each participant implements `Capture(SaveModelV2)`/`Apply(SaveModelV2)` and registers via `GameManager.RegisterSaveParticipant(...)`. `SaveSystem` simply iterates that list so new systems can hook into saves without modifying it. APIs: `HasAnySave()`, `Delete()`, `Save(GameManager)`, and `Load(GameManager)`. **Test**: move to another scene, call `SaveSystem.Save`, restart, then `Load` and confirm `GameManager.CurrentScene` and `SpawnPointId` restore.
+  - **Persistence**: `SaveSystem` writes a single `SaveModelV2` JSON file. Legacy `ISaveable` sections were removed; only `ISaveParticipant` systems contribute via `Capture`/`Apply` and register through `GameManager.RegisterSaveParticipant(...)`. APIs: `HasAnySave()`, `Delete()`, `Save(GameManager)`, `Load(GameManager)`. **Test**: move to another scene, call `SaveSystem.Save`, restart, then `Load` and confirm `GameManager.CurrentScene` and `SpawnPointId` restore.
 \- **Test**: Call `Stations.UnlockStation("farm")` or `Stations.RecruitCompanion("alice")` in play mode and watch the console/UI react via the event bus (`StationUnlocked` or `CompanionRecruited`).
   Trigger a station's `OnProductionComplete` to see `MinigameCompleted` propagate.
 
@@ -381,6 +381,8 @@ flowchart LR
 3\) Third-party packs live under `Assets/ThirdParty/PackName/` (ignored if solo; use LFS if shared).
 
 \## Recent Changes
+- 2025-08-15: Removed legacy `ISaveable` interface and `SaveData` classes; `SaveSystem` now uses only `SaveModelV2` without migration.
+  - How to test: delete existing `save.json`, run, call `SaveSystem.Save`, restart, then `Load` and observe inventory/essence/upgrades restored while other systems reset.
 - 2025-08-13: Migrated cards to polymorphic `CardEffect` assets. Removed per-card numbers from `BattleConfigSO`.
   - How to test: open a card asset, ensure its **Effect** field references a `CardEffect`, then run a battle and play the card to see its configured behavior.
 - 2025-08-13: Introduced `ISaveParticipant` and `GameManager.RegisterSaveParticipant` for modular save/load.

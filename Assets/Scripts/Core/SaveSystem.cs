@@ -40,7 +40,7 @@ public static class SaveSystem
     }
 
     /// <summary>
-    /// Load state from disk, migrating v1 data if encountered, and apply to managers.
+    /// Load state from disk and apply to managers.
     /// Returns the loaded model for convenience.
     /// </summary>
     public static SaveModelV2 Load(GameManager gm)
@@ -60,13 +60,11 @@ public static class SaveSystem
             var json = File.ReadAllText(path);
             model = JsonUtility.FromJson<SaveModelV2>(json);
 
+            // If deserialization fails or version mismatch, start fresh.
             if (model == null || model.version != SaveModelV2.Version)
             {
-                // Old schema detected — attempt migration from GameSaveData sections.
-                var legacy = JsonUtility.FromJson<GameSaveData>(json);
-                model = MigrateFromLegacy(legacy);
-                WriteToDisk(model); // persist upgraded schema
-                Debug.Log("Migrated legacy save to SaveModelV2");
+                model = new SaveModelV2();
+                Debug.LogWarning("Save file version mismatch; starting with defaults.");
             }
         }
         catch (Exception ex)
@@ -125,50 +123,5 @@ public static class SaveSystem
         }
     }
 
-    /// <summary>
-    /// Convert legacy <see cref="GameSaveData"/> into the new <see cref="SaveModelV2"/>.
-    /// Only maps sections that existed in v1; new fields fall back to defaults.
-    /// </summary>
-    private static SaveModelV2 MigrateFromLegacy(GameSaveData legacy)
-    {
-        var model = new SaveModelV2();
-        if (legacy == null) return model;
-
-        // Game section -> day
-        var gameJson = legacy.GetSection("Game");
-        var game = string.IsNullOrEmpty(gameJson) ? null : JsonUtility.FromJson<GameManager.GameData>(gameJson);
-        model.day = game?.day ?? 1;
-
-        // Essence section
-        var essenceJson = legacy.GetSection("Essence");
-        var ess = string.IsNullOrEmpty(essenceJson) ? null : JsonUtility.FromJson<EssenceManager.SaveData>(essenceJson);
-        if (ess != null)
-        {
-            model.essence = ess.currentEssence;
-            model.dailyClicksRemaining = ess.dailyClicksRemaining;
-            model.essencePerClick = ess.essencePerClick;
-            model.passivePerSecond = ess.passivePerSecond;
-        }
-
-        // Inventory section
-        var invJson = legacy.GetSection("Inventory");
-        var inv = string.IsNullOrEmpty(invJson) ? null : JsonUtility.FromJson<InventoryManager.SaveData>(invJson);
-        if (inv != null)
-        {
-            foreach (var s in inv.items)
-                model.inventory.Add(new SaveModelV2.ItemStackDTO { itemId = s.itemId, qty = s.quantity });
-        }
-
-        // Upgrades section
-        var upJson = legacy.GetSection("Upgrades");
-        var up = string.IsNullOrEmpty(upJson) ? null : JsonUtility.FromJson<UpgradeManager.SaveData>(upJson);
-        if (up != null)
-        {
-            model.purchasedUpgradeIds.AddRange(up.purchasedUpgradeIds);
-            model.dungeonUnlocked = up.purchasedUpgradeIds.Contains(UpgradeIds.UnlockBattle);
-        }
-
-        return model;
-    }
 }
 
