@@ -1,7 +1,7 @@
 /*
  * UpgradeManager.cs
  * Role: Maintains upgrade catalog, purchase flow, and derived stats like reward multipliers.
- * Expansion: Add new UpgradeEffect cases in ApplyOneShot/ApplyDerivedEffect to support new upgrades.
+ * Expansion: New upgrade types are added by authoring new IUpgradeEffect implementations.
  */
 using System;
 using System.Collections.Generic;
@@ -113,30 +113,8 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable
     /// </summary>
     private void ApplyOneShot(UpgradeSO up)
     {
-        var essence = GameManager.Instance.Essence;
-
-        switch (up.effect)
-        {
-            case UpgradeEffect.IncreaseClick:
-                // Treat value as a flat increase to essence-per-click
-                essence.AddEssencePerClick(Mathf.RoundToInt(up.value));
-                break;
-
-            case UpgradeEffect.IncreasePassive:
-                // Treat value as flat passive essence per second
-                essence.AddPassivePerSecond(up.value);
-                break;
-
-            case UpgradeEffect.UnlockBattle:
-                // No numeric state; UI checks IsPurchased(UpgradeIds.UnlockBattle) to enable the button
-                break;
-
-            case UpgradeEffect.BattleRewardBonus:
-                // IMPORTANT: Do NOT bake multipliers into saved numbers here.
-                // Handled in ApplyDerivedEffect/RecalculateDerivedStats.
-                break;
-            // Add new UpgradeEffect cases here by implementing corresponding logic.
-        }
+        // Delegate the behavior to the effect asset. Null-check keeps faulty data from crashing.
+        up?.Effect?.Apply(GameManager.Instance);
     }
 
     /// <summary>
@@ -145,15 +123,8 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable
     /// </summary>
     private void ApplyDerivedEffect(UpgradeSO up)
     {
-        switch (up.effect)
-        {
-            case UpgradeEffect.BattleRewardBonus:
-                // Interpret UpgradeSO.value as a percentage (25 => +25% => x1.25)
-                // Stacks multiplicatively with other bonuses.
-                RewardMultiplier *= 1f + (up.value / 100f);
-                break;
-            // Add new UpgradeEffect cases here for additional derived stats.
-        }
+        // Effects that influence derived stats override ApplyDerived. Others no-op by default.
+        up?.Effect?.ApplyDerived(this);
     }
 
     /// <summary>
@@ -167,8 +138,7 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveable
         foreach (var id in _purchased)
         {
             var so = available.FirstOrDefault(u => u != null && u.id == id);
-            if (so != null)
-                ApplyDerivedEffect(so);
+            so?.Effect?.ApplyDerived(this);
         }
     }
 
