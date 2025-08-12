@@ -170,7 +170,6 @@ public class UpgradeManager : MonoBehaviour, IUpgradeProvider, ISaveParticipant
     {
         if (model == null) return;
         model.purchasedUpgradeIds.AddRange(_purchased);
-        model.dungeonUnlocked = _purchased.Contains(UpgradeIds.UnlockBattle);
     }
 
     /// <summary>
