@@ -50,7 +50,7 @@ public interface IEssenceProvider
 /// Concrete currency manager. Implements <see cref="IEssenceProvider"/> so the rest of
 /// the game can stay decoupled from MonoBehaviour specifics.
 /// </summary>
-public class EssenceManager : MonoBehaviour, IEssenceProvider, ISaveable
+public class EssenceManager : MonoBehaviour, IEssenceProvider, ISaveable, ISaveParticipant
 {
     [Header("Tuning")]
     [Tooltip("How many manual clicks are allowed each day (MVP default = 10).")]
@@ -261,5 +261,27 @@ public class EssenceManager : MonoBehaviour, IEssenceProvider, ISaveable
         OnEssenceChanged?.Invoke(_currentEssence);
         OnDailyClicksChanged?.Invoke(_dailyClicksRemaining);
         StartPassiveIfNeeded();
+    }
+
+    // ---- ISaveParticipant implementation ----
+
+    /// <summary>
+    /// Record essence-related fields into the aggregated save model.
+    /// </summary>
+    public void Capture(SaveModelV2 model)
+    {
+        if (model == null) return;
+        model.essence = _currentEssence;
+        model.dailyClicksRemaining = _dailyClicksRemaining;
+        model.essencePerClick = _essencePerClick;
+        model.passivePerSecond = passivePerSecond;
+    }
+
+    /// <summary>
+    /// Restore essence fields from the save model and notify listeners.
+    /// </summary>
+    public void Apply(SaveModelV2 model)
+    {
+        ApplyLoadedState(model);
     }
 }

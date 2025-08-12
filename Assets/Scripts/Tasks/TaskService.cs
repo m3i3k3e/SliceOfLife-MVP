@@ -15,7 +15,7 @@ using UnityEngine;
 /// <b>before</b> the component is enabled so event subscriptions work with
 /// initialized state.
 /// </remarks>
-public class TaskService : MonoBehaviour
+public class TaskService : MonoBehaviour, ISaveParticipant
 {
     [Header("References")]
     [Tooltip("Ordered task graph defining the tutorial path.")]
@@ -148,6 +148,25 @@ public class TaskService : MonoBehaviour
     public void ApplyLoadedState(SaveModelV2 data)
     {
         Init(graph, data?.tasks);
+    }
+
+    // ---- ISaveParticipant implementation ----
+
+    /// <summary>
+    /// Push current task completion flags into the save model.
+    /// </summary>
+    public void Capture(SaveModelV2 model)
+    {
+        if (model == null) return;
+        model.tasks.AddRange(CaptureState());
+    }
+
+    /// <summary>
+    /// Reinitialize tasks based on the save model.
+    /// </summary>
+    public void Apply(SaveModelV2 model)
+    {
+        ApplyLoadedState(model);
     }
 
     // ----- Event handlers -----

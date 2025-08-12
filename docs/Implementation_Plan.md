@@ -13,7 +13,7 @@
 \### Deviations
 \- `TaskService` listens to the event bus instead of exposing `NotifyItemChanged`; inventory changes are observed via events.
 \- Legacy `GameEvents` has been removed in favor of the event bus.
-\- `SaveSystem.Save` and `Load` now accept an optional `TaskService` parameter to persist tutorial state.
+\- `SaveSystem.Save`/`Load` iterate over `GameManager`'s registered `ISaveParticipant` systems; no special TaskService parameter required.
 
 
 
