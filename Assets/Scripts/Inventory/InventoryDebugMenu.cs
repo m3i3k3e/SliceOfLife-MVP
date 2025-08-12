@@ -1,3 +1,8 @@
+// This entire file is only meant for in-editor testing utilities. Wrapping in
+// UNITY_EDITOR ensures it is stripped from player builds, preventing accidental
+// inclusion of debugging UI in production.
+#if UNITY_EDITOR
+
 using UnityEngine;
 
 /// <summary>
@@ -42,3 +47,5 @@ public class InventoryDebugMenu : MonoBehaviour
         GUILayout.EndArea();
     }
 }
+
+#endif
