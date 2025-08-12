@@ -16,7 +16,7 @@ public class TaskSO : ScriptableObject
 
     [Header("Conditions")]
     [Tooltip("All conditions must be satisfied to complete the task.")]
-    [SerializeField] private TaskCondition[] conditions = Array.Empty<TaskCondition>();
+    [SerializeField] private TaskConditionSO[] conditions = Array.Empty<TaskConditionSO>();
 
     /// <summary>Unique id for save files.</summary>
     public string Id => id;
@@ -25,29 +25,5 @@ public class TaskSO : ScriptableObject
     /// <summary>Flavor text or instructions for the player.</summary>
     public string Description => description;
     /// <summary>Array of conditions that must all be met.</summary>
-    public TaskCondition[] Conditions => conditions;
+    public TaskConditionSO[] Conditions => conditions;
 }
-
-/// <summary>Serializable requirement used by <see cref="TaskSO"/>.</summary>
-[Serializable]
-public class TaskCondition
-{
-    [Tooltip("Type of check performed for this condition.")]
-    public TaskConditionType type = TaskConditionType.Interact;
-
-    [Tooltip("Item to count when type is CollectItem.")]
-    public ItemSO item;
-    [Tooltip("Required quantity when collecting items.")]
-    public int requiredQty = 1;
-
-    [Tooltip("Interaction identifier when type is Interact.")]
-    public string interactId;
-
-    [Tooltip("Upgrade reference when type is UpgradePurchased.")]
-    public UpgradeSO upgrade;
-
-    [NonSerialized] public bool completed; // runtime flag only
-}
-
-/// <summary>Supported condition categories.</summary>
-public enum TaskConditionType { CollectItem, Interact, UpgradePurchased }

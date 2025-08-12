@@ -36,7 +36,16 @@ public class TaskService : MonoBehaviour
             : string.Empty;
 
     /// <summary>Convenience accessor to the inventory interface.</summary>
-    private IInventoryService Inventory => inventory;
+    internal IInventoryService Inventory => inventory;
+
+    // Transient context captured from the last external event so conditions can query it.
+    private string _lastInteractionId;
+    private string _lastUpgradeId;
+
+    /// <summary>Identifier of the most recent interaction.</summary>
+    internal string LastInteractionId => _lastInteractionId;
+    /// <summary>Identifier of the most recently purchased upgrade.</summary>
+    internal string LastUpgradeId => _lastUpgradeId;
 
     /// <summary>
     /// Unity lifecycle callback. Builds initial task state.
@@ -102,7 +111,7 @@ public class TaskService : MonoBehaviour
             _currentIndex = _states.Count; // all tasks done
 
         // Evaluate immediately in case inventory already satisfies early tasks.
-        EvaluateCurrent(TaskEvent.Inventory);
+        EvaluateCurrent();
     }
 
     /// <summary>Is the specified task finished?</summary>
@@ -117,7 +126,8 @@ public class TaskService : MonoBehaviour
     /// <summary>External callers notify when an interaction completes.</summary>
     public void NotifyInteraction(string interactId)
     {
-        EvaluateCurrent(TaskEvent.Interaction, interactId);
+        _lastInteractionId = interactId;
+        EvaluateCurrent();
     }
 
     /// <summary>Extract plain data for persistence.</summary>
@@ -137,50 +147,33 @@ public class TaskService : MonoBehaviour
 
     // ----- Event handlers -----
 
-    private void HandleInventoryChanged() => EvaluateCurrent(TaskEvent.Inventory);
-    private void HandleUpgradePurchased(UpgradeSO up) => EvaluateCurrent(TaskEvent.Upgrade, up != null ? up.id : null);
+    private void HandleInventoryChanged() => EvaluateCurrent();
 
+    private void HandleUpgradePurchased(UpgradeSO up)
+    {
+        _lastUpgradeId = up != null ? up.id : null;
+        EvaluateCurrent();
+    }
     // ----- Core evaluation -----
 
-    private enum TaskEvent { Inventory, Interaction, Upgrade }
-
     /// <summary>
-    /// Check the active task against the provided event and fire GameEvents when progress occurs.
+    /// Check the active task and fire <see cref="GameEvents"/> when progress occurs.
     /// </summary>
-    private void EvaluateCurrent(TaskEvent evt, string param = null)
+    private void EvaluateCurrent()
     {
         if (_currentIndex < 0 || _currentIndex >= _states.Count) return; // nothing active
         var state = _states[_currentIndex];
         bool advanced = false;
 
-        foreach (var cond in state.task.Conditions)
+        for (int i = 0; i < state.task.Conditions.Length; i++)
         {
-            if (cond.completed) continue; // skip already satisfied conditions
+            if (state.conditionCompleted[i]) continue; // skip already satisfied conditions
 
-            switch (cond.type)
+            var cond = state.task.Conditions[i];
+            if (cond != null && cond.IsMet(this))
             {
-                case TaskConditionType.CollectItem:
-                    if (evt == TaskEvent.Inventory && Inventory != null && cond.item != null &&
-                        Inventory.GetCount(cond.item) >= cond.requiredQty)
-                    {
-                        cond.completed = true;
-                        advanced = true;
-                    }
-                    break;
-                case TaskConditionType.Interact:
-                    if (evt == TaskEvent.Interaction && param == cond.interactId)
-                    {
-                        cond.completed = true;
-                        advanced = true;
-                    }
-                    break;
-                case TaskConditionType.UpgradePurchased:
-                    if (evt == TaskEvent.Upgrade && cond.upgrade != null && param == cond.upgrade.id)
-                    {
-                        cond.completed = true;
-                        advanced = true;
-                    }
-                    break;
+                state.conditionCompleted[i] = true;
+                advanced = true;
             }
         }
 
@@ -189,8 +182,8 @@ public class TaskService : MonoBehaviour
 
         // If all conditions complete, mark the task finished and move to the next.
         bool allDone = true;
-        foreach (var c in state.task.Conditions)
-            if (!c.completed)
+        foreach (var done in state.conditionCompleted)
+            if (!done)
             {
                 allDone = false;
                 break;
@@ -201,6 +194,10 @@ public class TaskService : MonoBehaviour
             GameEvents.RaiseTaskCompleted();
             _currentIndex++;
         }
+
+        // Clear transient event info so one interaction doesn't satisfy future tasks.
+        _lastInteractionId = null;
+        _lastUpgradeId = null;
     }
 
     /// <summary>Runtime container pairing a task with its completion flag.</summary>
@@ -208,10 +205,18 @@ public class TaskService : MonoBehaviour
     {
         public TaskSO task;
         public bool completed;
+        public bool[] conditionCompleted;
+
         public TaskState(TaskSO task, bool completed)
         {
             this.task = task;
             this.completed = completed;
+            conditionCompleted = new bool[task != null ? task.Conditions.Length : 0];
+            if (completed)
+            {
+                for (int i = 0; i < conditionCompleted.Length; i++)
+                    conditionCompleted[i] = true;
+            }
         }
     }
 }
