@@ -6,13 +6,13 @@
 \## Status Snapshot
 
 \- SaveModel v2 implemented with unified JSON save; `SaveScheduler` batches disk writes.
-\- Event bus (`IEventBus`/`DefaultEventBus`) available; `GameEvents` still mirrors essence, inventory, task, upgrade, day/key, and sleep events for transitional UI.
+\- Event bus (`IEventBus`/`DefaultEventBus`) now handles essence, inventory, task, upgrade, day/key, and sleep events.
 \- Inventory seeds in place via starter `ItemSO` assets.
 \- Task graph (`TaskGraphSO` + `TaskService`) driving tutorial flow.
 
 \### Deviations
-\- `TaskService` listens to `GameEvents` instead of exposing `NotifyItemChanged`; inventory changes are observed via events.
-\- Legacy `GameEvents` still mirrors essence, inventory, task, upgrade, day/key, and sleep events alongside the event bus.
+\- `TaskService` listens to the event bus instead of exposing `NotifyItemChanged`; inventory changes are observed via events.
+\- Legacy `GameEvents` has been removed in favor of the event bus.
 \- `SaveSystem.Save` and `Load` now accept an optional `TaskService` parameter to persist tutorial state.
 
 
@@ -142,15 +142,15 @@ Dungeon.unity
 
 \### C) Event Bus (decoupling)
 
-Static `GameEvents` with typed events (legacy shim; `IEventBus` available for decoupling):
+`IEventBus` provides typed events for cross-system communication:
 
-\- `OnEssenceChanged(int)`, `OnDungeonKeysChanged(int current, int perDay)`, `OnSleepEligibilityChanged(bool ok, string reason)`
+\- `EssenceChanged(int newTotal)`, `InventoryChanged()`, `TaskAdvanced()`, `TaskCompleted()`
 
-\- `OnItemAdded(ItemSO item, int qty)`
+\- `DayChanged(int day)`, `DungeonKeysChanged(int current, int perDay)`, `SleepEligibilityChanged(bool ok, string reason)`
 
-\- `OnTaskAdvanced(string taskId)` / `OnTaskCompleted(string taskId)`
+\- `UpgradePurchased(UpgradeSO up)`, `StationUnlocked(IStation station)`, etc.
 
-(UI listens; managers raise.)
+(Managers raise; UI listens.)
 
 
 
@@ -208,11 +208,11 @@ Static `GameEvents` with typed events (legacy shim; `IEventBus` available for de
 
 &nbsp; - `bool IsComplete(string taskId)`
 
-&nbsp; - `void NotifyInteraction(string interactId)` (inventory changes arrive via `GameEvents`)
+&nbsp; - `void NotifyInteraction(string interactId)` (inventory changes observed via events)
 
 &nbsp; - `List<TaskStateDTO> CaptureState()`
 
-\- Raises `GameEvents.OnTaskAdvanced/OnTaskCompleted`.
+\- Raises event bus `TaskAdvanced`/`TaskCompleted`.
 
 
 
@@ -220,7 +220,7 @@ Static `GameEvents` with typed events (legacy shim; `IEventBus` available for de
 
 \- \*\*TitleController\*\*: New Game (delete save → load Basement), Continue (if `HasAnySave()`), Load (stub), Settings (stub).
 
-\- \*\*WorldHUD\*\*: essence/keys/day/current task label; subscribes to GameEvents.
+\- \*\*WorldHUD\*\*: essence/keys/day/current task label; subscribes to `GameManager.Events`.
 
 \- \*\*PauseMenu\*\*: ESC toggles; Resume / Settings (stub) / Save \& Quit (save then load Title).
 
@@ -230,7 +230,7 @@ Static `GameEvents` with typed events (legacy shim; `IEventBus` available for de
 
 \- \*\*GameManager\*\*: keep singleton, day/keys gate, `TrySleep()` behavior. Add `ApplyLoadedState(SaveModelV2)`.
 
-\- \*\*EssenceManager\*\*: add safe setters used by load (`SetCurrentEssence`, `SetDailyClicks`, `SetEssencePerClick`, `SetPassivePerSecond`); mirror events to `GameEvents`.
+\- \*\*EssenceManager\*\*: add safe setters used by load (`SetCurrentEssence`, `SetDailyClicks`, `SetEssencePerClick`, `SetPassivePerSecond`); events consumed by `GameManager` to broadcast via the event bus.
 
 \- \*\*UpgradeManager\*\*: `ApplyLoadedState(List<string>)`.
 

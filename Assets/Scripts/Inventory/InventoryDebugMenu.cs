@@ -23,13 +23,13 @@ public class InventoryDebugMenu : MonoBehaviour
 
     private void OnEnable()
     {
-        // Listen to the global event to prove our actions fire notifications.
-        GameEvents.OnInventoryChanged += HandleChanged;
+        // Listen to the event bus to prove our actions fire notifications.
+        GameManager.Instance?.Events?.InventoryChanged += HandleChanged;
     }
 
     private void OnDisable()
     {
-        GameEvents.OnInventoryChanged -= HandleChanged;
+        GameManager.Instance?.Events?.InventoryChanged -= HandleChanged;
     }
 
     private void HandleChanged()

@@ -9,10 +9,10 @@ This document sketches how major MVP systems talk to each other.  Boxes are majo
 Player Input
     |
     v
-EssenceManager --(OnEssenceChanged)--> GameEvents --> HUD
-        ^                                    |
-        |                                    v
-GameManager (daily click gates) <--------- UpgradeManager
+EssenceManager --(OnEssenceChanged)--> GameManager.Events --> HUD
+        ^                                         |
+        |                                         v
+GameManager (daily click gates) <-------------- UpgradeManager
 ```
 
 **Key API**
@@ -23,7 +23,7 @@ GameManager (daily click gates) <--------- UpgradeManager
 `BattleManager` handles turn flow and grants essence rewards through the economy.
 
 ```text
-BattleManager -> GameEvents -> BattleUI
+BattleManager -> EventBus -> BattleUI
       |
       v
 EssenceManager.AddExternal(reward)
@@ -33,7 +33,7 @@ EssenceManager.AddExternal(reward)
 `UpgradeManager` owns purchasable upgrades and forwards unlocks via the bus.
 
 ```text
-UpgradeManager --(OnPurchased)--> GameEvents --> UpgradesPanel
+UpgradeManager --(OnPurchased)--> EventBus --> UpgradesPanel
         \
          -> GameManager (e.g., unlock battle)
 ```
@@ -62,7 +62,7 @@ UpgradeManager --(OnPurchased)--> GameEvents --> UpgradesPanel
 `StationManager` will map recruited companions to production stations.  Production results bubble through the bus.
 
 ```text
-CompanionSO -> StationManager -> GameEvents -> HUD
+CompanionSO -> StationManager -> EventBus -> HUD
 ```
 
 ## Future Hooks

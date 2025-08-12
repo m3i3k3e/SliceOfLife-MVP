@@ -42,6 +42,26 @@ public interface IEventBus
     event Action<ResourceSO, int> ResourceChanged;
 
     /// <summary>
+    /// Fired whenever total essence changes. Payload = new essence total.
+    /// </summary>
+    event Action<int> EssenceChanged;
+
+    /// <summary>
+    /// Fired whenever inventory contents mutate.
+    /// </summary>
+    event Action InventoryChanged;
+
+    /// <summary>
+    /// Fired when a tutorial task advances.
+    /// </summary>
+    event Action TaskAdvanced;
+
+    /// <summary>
+    /// Fired when a tutorial task completes.
+    /// </summary>
+    event Action TaskCompleted;
+
+    /// <summary>
     /// Fired whenever a new crafting recipe is unlocked. Payload = recipe data.
     /// </summary>
     event Action<RecipeSO> RecipeUnlocked;
@@ -96,6 +116,26 @@ public interface IEventBus
     /// Helper to invoke <see cref="ResourceChanged"/> safely.
     /// </summary>
     void RaiseResourceChanged(ResourceSO resource, int amount);
+
+    /// <summary>
+    /// Helper to invoke <see cref="EssenceChanged"/> safely.
+    /// </summary>
+    void RaiseEssenceChanged(int amount);
+
+    /// <summary>
+    /// Helper to invoke <see cref="InventoryChanged"/> safely.
+    /// </summary>
+    void RaiseInventoryChanged();
+
+    /// <summary>
+    /// Helper to invoke <see cref="TaskAdvanced"/> safely.
+    /// </summary>
+    void RaiseTaskAdvanced();
+
+    /// <summary>
+    /// Helper to invoke <see cref="TaskCompleted"/> safely.
+    /// </summary>
+    void RaiseTaskCompleted();
 
     /// <summary>
     /// Helper to invoke <see cref="RecipeUnlocked"/> safely.
