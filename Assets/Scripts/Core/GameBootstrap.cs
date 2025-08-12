@@ -53,7 +53,12 @@ public class GameBootstrap : MonoBehaviour
     /// </summary>
     private void Start()
     {
-        var gm = GameManager.Instance ?? FindObjectOfType<GameManager>();
+        // When running a single scene in the editor, the GameManager instance spawned
+        // by another Bootstrapper may exist but remain inactive. Including inactive
+        // objects ensures editor scene testing and secondary scene boots still find
+        // that existing manager instead of creating a duplicate.
+        var gm = GameManager.Instance
+                 ?? FindFirstObjectByType<GameManager>(FindObjectsInactive.Include);
         var tasks = FindFirstObjectByType<TaskService>(FindObjectsInactive.Include);
         if (gm != null)
         {
