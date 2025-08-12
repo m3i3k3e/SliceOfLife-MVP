@@ -15,5 +15,5 @@ MonoBehaviour:
   id: Card_Gaurd
   title: Guard
   description: Gain Armor
-  action: 1
+  effect: {fileID: 11400000, guid: f6fa784e6dbf48afb9e411887ceaf160, type: 2}
   cost: 1

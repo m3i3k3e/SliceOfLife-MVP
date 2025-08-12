@@ -1,8 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// Data-only description of a card. For MVP we just map to one of the
-/// existing actions; later you can swap this to a polymorphic Execute().
+/// Data-only description of a card. Each card now references a <see cref="CardEffect"/>
+/// ScriptableObject which performs the actual gameplay logic when played.
 /// </summary>
 [CreateAssetMenu(menuName = "SliceOfLife/Card", fileName = "Card")]
 public class CardSO : ScriptableObject
@@ -13,9 +13,7 @@ public class CardSO : ScriptableObject
     [TextArea] public string description;
 
     [Header("Gameplay")]
-    public BattleAction action;       // Which built-in action this card invokes
+    [SerializeField] private CardEffect effect; // effect asset defining this card's behavior
+    public CardEffect Effect => effect;
     public int cost = 0;              // For later (energy), ignored in MVP
 }
-
-/// <summary>Actions BattleManager understands.</summary>
-public enum BattleAction { Attack, Guard, Mend, ApplyWeak, ApplyVulnerable }

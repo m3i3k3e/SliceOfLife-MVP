@@ -13,10 +13,6 @@ MonoBehaviour:
   m_Name: BattleConfig
   m_EditorClassIdentifier: Assembly-CSharp::BattleConfigSO
   playerMaxHP: 20
-  attackDamage: 6
-  guardBlock: 4
-  mendHeal: 5
-  mendUses: 1
   enemyMaxHP: 18
   enemyLightDamage: 4
   enemyHeavyDamage: 7
