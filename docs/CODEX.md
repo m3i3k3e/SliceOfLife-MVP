@@ -332,9 +332,10 @@ flowchart LR
 
 \## B. Data Contracts (SO)
 
-\- \*\*BattleConfigSO\*\*: `playerMaxHP, enemyMaxHP, enemyLight/Heavy, enemyLeech, baseEssenceReward, returnDelay`
+\- **BattleConfigSO**: `playerMaxHP, enemy (EnemySO), baseEssenceReward, returnDelay`
+\- **EnemySO**: `maxHP, lightDamage, heavyDamage, leechHeal, light/Heavy/Leech weights, ai`
 
-\- \*\*UpgradeSO\*\*: `id, title, cost, effect (IncreaseClick | IncreasePassive | UnlockBattle | BattleRewardBonus), value`
+\- **UpgradeSO**: `id, title, cost, effect (IncreaseClick | IncreasePassive | UnlockBattle | BattleRewardBonus), value`
 
 \- \*\*CardSO\*\*: `id, title, description, effect (CardEffect), cost (reserved for energy later)`
 
@@ -344,7 +345,7 @@ flowchart LR
 
 **Start**: Systems (GameManager, EssenceManager, UpgradeManager, SceneLoader), `HUD` (Gather/Sleep), `UpgradesPanel`, `DungeonGateButton` (needs `unlock_battle`, loads "Battle")
 
-\*\*BattleRoot prefab\*\*: BattleManager + EnemyAI w/ `BattleConfig`; `BattleUI` with Player/Enemy/Info + HP bars; `HandPanel + CardHandUI` (`PopulateHand(IEnumerable<CardSO>)` + `RefreshAffordability(int)` spawns `CardView` from `CardSO`s)
+**BattleRoot prefab**: BattleManager w/ `BattleConfig` (selects `EnemySO` + AI); `BattleUI` with Player/Enemy/Info + HP bars; `HandPanel + CardHandUI` (`PopulateHand(IEnumerable<CardSO>)` + `RefreshAffordability(int)` spawns `CardView` from `CardSO`s)
 
 
 

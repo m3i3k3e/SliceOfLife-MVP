@@ -13,10 +13,7 @@ MonoBehaviour:
   m_Name: BattleConfig
   m_EditorClassIdentifier: Assembly-CSharp::BattleConfigSO
   playerMaxHP: 20
-  enemyMaxHP: 18
-  enemyLightDamage: 4
-  enemyHeavyDamage: 7
-  enemyLeechHeal: 3
+  enemy: {fileID: 11400000, guid: 11be5ba6232a456c9094191d1523f43c, type: 2}
   baseEssenceReward: 20
   recipeReward: {fileID: 0}
   returnDelay: 5
