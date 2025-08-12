@@ -30,6 +30,12 @@ public class StationManager : MonoBehaviour, ISaveable
     /// <summary>Runtime list of companion interfaces for decoupled access.</summary>
     private readonly List<ICompanion> _companions = new();
 
+    // Lookup dictionaries for O(1) ID resolution.
+    // Built from the serialized lists during Awake so other systems can
+    // quickly fetch a specific asset without scanning linearly.
+    private readonly Dictionary<string, StationSO> _stationLookup = new();
+    private readonly Dictionary<string, CompanionSO> _companionLookup = new();
+
     // Persistence containers
     /// <summary>Tracks unlocked stations by their stable IDs.</summary>
     private readonly HashSet<string> _unlockedStationIds = new();
@@ -50,7 +56,11 @@ public class StationManager : MonoBehaviour, ISaveable
     /// </summary>
     private void Awake()
     {
+        BuildLookups();
+
         // Build interface lists once on startup; ScriptableObjects live in memory.
+        // We iterate the serialized lists rather than dictionary values to
+        // preserve inspector ordering for any UI that might rely on it.
         _stations.Clear();
         foreach (var so in stationAssets)
             if (so != null) _stations.Add(so);
@@ -68,11 +78,48 @@ public class StationManager : MonoBehaviour, ISaveable
         }
     }
 
+#if UNITY_EDITOR
+    /// <summary>
+    /// Editor-only: keep lookup dictionaries in sync when values change in the inspector.
+    /// </summary>
+    private void OnValidate()
+    {
+        BuildLookups();
+    }
+#endif
+
+    /// <summary>
+    /// Populate the ID lookup dictionaries from the serialized asset lists.
+    /// </summary>
+    private void BuildLookups()
+    {
+        _stationLookup.Clear();
+        foreach (var so in stationAssets)
+        {
+            // Skip null entries or assets missing an ID to avoid exceptions later.
+            if (so == null || string.IsNullOrEmpty(so.Id)) continue;
+            _stationLookup[so.Id] = so; // last one wins on duplicate IDs
+        }
+
+        _companionLookup.Clear();
+        foreach (var co in companionAssets)
+        {
+            if (co == null || string.IsNullOrEmpty(co.Id)) continue;
+            _companionLookup[co.Id] = co;
+        }
+    }
+
     /// <summary>Enumerate all known stations.</summary>
     public IReadOnlyList<IStation> Stations => _stations;
 
     /// <summary>Enumerate all companions.</summary>
     public IReadOnlyList<ICompanion> Companions => _companions;
+
+    /// <summary>Read-only map of station IDs to their definitions.</summary>
+    public IReadOnlyDictionary<string, StationSO> StationLookup => _stationLookup;
+
+    /// <summary>Read-only map of companion IDs to their definitions.</summary>
+    public IReadOnlyDictionary<string, CompanionSO> CompanionLookup => _companionLookup;
 
     /// <summary>
     /// Unlock a station by its ID.
@@ -80,7 +127,8 @@ public class StationManager : MonoBehaviour, ISaveable
     /// </summary>
     public bool UnlockStation(string id)
     {
-        var so = FindStationById(id);
+        // Lookup via dictionary instead of scanning the list each time.
+        var so = GetStationById(id);
         if (so == null || _unlockedStationIds.Contains(id))
             return false; // invalid or already unlocked
 
@@ -98,7 +146,8 @@ public class StationManager : MonoBehaviour, ISaveable
     /// </summary>
     public bool RecruitCompanion(string id)
     {
-        var co = FindCompanionById(id);
+        // Dictionary lookup avoids O(n) scans over companion assets.
+        var co = GetCompanionById(id);
         if (co == null || _companionAssignments.ContainsKey(id))
             return false; // invalid or already recruited
 
@@ -194,7 +243,7 @@ public class StationManager : MonoBehaviour, ISaveable
             if (co == null) continue;
 
             if (_companionAssignments.TryGetValue(co.Id, out var stationId))
-                co.SetAssignedStation(FindStationById(stationId));
+                co.SetAssignedStation(GetStationById(stationId));
             else
                 co.SetAssignedStation(co.StartingStation); // default if missing
         }
@@ -217,28 +266,32 @@ public class StationManager : MonoBehaviour, ISaveable
     }
 
     /// <summary>
-    /// Helper to locate a StationSO by ID.
+    /// Helper to locate a <see cref="StationSO"/> by its stable ID.
     /// </summary>
-    private StationSO FindStationById(string id)
+    /// <remarks>
+    /// Exposed publicly so callers outside this manager can perform quick lookups
+    /// without needing to maintain their own references.
+    /// </remarks>
+    public StationSO GetStationById(string id)
     {
-        for (int i = 0; i < stationAssets.Count; i++)
-        {
-            var so = stationAssets[i];
-            if (so != null && so.Id == id) return so;
-        }
-        return null;
+        if (string.IsNullOrEmpty(id)) return null; // guard against bad input
+
+        // TryGetValue avoids KeyNotFoundException and returns null when missing.
+        _stationLookup.TryGetValue(id, out var so);
+        return so;
     }
 
     /// <summary>
-    /// Helper to locate a CompanionSO by ID.
+    /// Helper to locate a <see cref="CompanionSO"/> by ID.
     /// </summary>
-    private CompanionSO FindCompanionById(string id)
+    /// <remarks>
+    /// Public so other systems can fetch companion data directly.
+    /// </remarks>
+    public CompanionSO GetCompanionById(string id)
     {
-        for (int i = 0; i < companionAssets.Count; i++)
-        {
-            var co = companionAssets[i];
-            if (co != null && co.Id == id) return co;
-        }
-        return null;
+        if (string.IsNullOrEmpty(id)) return null;
+
+        _companionLookup.TryGetValue(id, out var co);
+        return co;
     }
 }

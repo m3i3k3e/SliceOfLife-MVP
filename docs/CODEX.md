@@ -131,9 +131,12 @@ This file is the source of truth for design + tech. Keep it short and link out t
 \- \*\*Singleton\*\*: `GameManager` (DontDestroyOnLoad).
 \- \*\*Core wiring\*\*: `GameManager` expects `EssenceManager`, `UpgradeManager`, `StationManager`, `InventoryManager`, and `ResourceManager` references assigned in the scene/prefab; it no longer searches at runtime.
 
-\- \*\*Stations\*\*: `StationManager` maintains `IStation`/`ICompanion` lists, exposed via `GameManager`.
-  `UnlockStation(id)` and `RecruitCompanion(id)` update internal collections and immediately
-  raise `GameManager.Events.StationUnlocked` / `GameManager.Events.CompanionRecruited`.
+\- \*\*Stations\*\*: `StationManager` maintains `IStation`/`ICompanion` lists and now builds
+  ID-to-asset dictionaries on `Awake` for O(1) lookups. External systems can fetch
+  assets via `GetStationById(id)` / `GetCompanionById(id)` or inspect the read-only
+  `StationLookup` / `CompanionLookup` dictionaries. `UnlockStation(id)` and
+  `RecruitCompanion(id)` update internal collections and immediately raise
+  `GameManager.Events.StationUnlocked` / `GameManager.Events.CompanionRecruited`.
   `RecruitCompanion` also invokes `OnCompanionRecruited(ICompanion, IReadOnlyList<CardSO>, IReadOnlyList<UpgradeSO>)`
   so battle and upgrade systems can claim a companion's starting deck and buffs.
   Each `CompanionSO` serializes these via `GetStartingCards()`, `GetStartingDeck()`,
