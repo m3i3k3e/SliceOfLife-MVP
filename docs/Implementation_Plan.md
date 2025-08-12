@@ -28,7 +28,7 @@ We’re pivoting from a 2D UI prototype to a 3D-first, card-driven experience wi
 
 Title → Basement (static 3D scene with interactables) → Dungeon (card battle) → return to Basement.
 
-
+For a runtime handoff overview of boot, interaction, task, and save, see `docs/DesignFlow.md`.
 
 Baseline tutorial tasks in Basement:
 
@@ -60,7 +60,7 @@ Core/ (Bootstrap, GameManager glue, EventBus, SaveSystem v2)
 
 Inventory/ (ItemSO, InventoryManager)
 
-Interaction/ (IInteractable, Interactable, InteractionController, helpers)
+Interaction/ (IInteractable, Interactable, InteractionController, helpers) — see `docs/DesignFlow.md#interaction-stage`
 
 Tasks/ (TaskService, TaskSO, TaskGraphSO, Task conditions)
 
@@ -101,6 +101,7 @@ Dungeon.unity
 
 
 \### A) Bootstrap / Service Wiring
+See `docs/DesignFlow.md#boot-stage` for runtime sequence.
 
 \- \*\*Prefab\*\*: `Prefabs/System/Bootstrapper` with `GameBootstrap` (DontDestroyOnLoad).
 
@@ -111,6 +112,7 @@ Dungeon.unity
 
 
 \### B) Save System v2 (versioned)
+See `docs/DesignFlow.md#save-stage` for how persistence fits into the pipeline.
 
 \- \*\*DTO\*\*: `SaveModelV2`
 
@@ -188,6 +190,7 @@ Dungeon.unity
 
 
 \### F) Tasks (guided tutorial)
+See `docs/DesignFlow.md#task-stage` for how interactions advance tasks.
 
 \- \*\*SO\*\*: `TaskSO` (`id`, `title`, `description`, array of `TaskCondition` which AND together)
 

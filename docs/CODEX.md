@@ -422,6 +422,6 @@ flowchart LR
 \# LINKS
 
 \- Snapshots: `docs/CONTEXT.md`, `docs/assets-files.txt`, `docs/assets-dirs.txt`
-
+\- Design flow: `docs/DesignFlow.md`
 \- (Optional) Vision docs: `docs/vision/HighLevel.md`, `docs/vision/3DWrapper.md`, `docs/vision/Companions.md`, `docs/vision/Systems.md`
 
