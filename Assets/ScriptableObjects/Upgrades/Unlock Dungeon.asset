@@ -16,5 +16,4 @@ MonoBehaviour:
   title: Unlock Dungeon
   description: Opens the dungeon for battle.
   cost: 50
-  effect: 2
-  value: 0
+  effect: {fileID: 11400000, guid: bda5355fd9254981ab639df0a2467bda, type: 2}

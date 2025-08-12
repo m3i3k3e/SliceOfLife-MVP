@@ -335,7 +335,7 @@ flowchart LR
 \- **BattleConfigSO**: `playerMaxHP, enemy (EnemySO), baseEssenceReward, returnDelay`
 \- **EnemySO**: `maxHP, lightDamage, heavyDamage, leechHeal, light/Heavy/Leech weights, ai`
 
-\- **UpgradeSO**: `id, title, cost, effect (IncreaseClick | IncreasePassive | UnlockBattle | BattleRewardBonus), value`
+\- **UpgradeSO**: `id, title, cost, effect (IUpgradeEffect asset)`
 
 \- \*\*CardSO\*\*: `id, title, description, effect (CardEffect), cost (reserved for energy later)`
 

@@ -16,5 +16,4 @@ MonoBehaviour:
   title: +1 Click Power
   description: Increases Essence gained per click by 1.
   cost: 30
-  effect: 0
-  value: 1
+  effect: {fileID: 11400000, guid: 6aaba85d6fb84a86a1f9d5953c6e29d5, type: 2}

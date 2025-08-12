@@ -16,5 +16,4 @@ MonoBehaviour:
   title: Dungeon Payout +25%
   description: Increase essence from dungeon wins by 25%.
   cost: 75
-  effect: 3
-  value: 25
+  effect: {fileID: 11400000, guid: ed7510314ddd4dc9ba8d6caaa27c1a98, type: 2}
