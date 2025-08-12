@@ -13,7 +13,7 @@ using UnityEngine;
 /// Keeps runtime lists typed by interfaces so gameplay systems remain decoupled
 /// from specific ScriptableObject implementations.
 /// </summary>
-public class StationManager : MonoBehaviour
+public class StationManager : MonoBehaviour, ISaveParticipant
 {
     [Header("Data Sources (assign in Inspector)")]
     /// <summary>List of all station definitions available in the game.</summary>
@@ -136,6 +136,8 @@ public class StationManager : MonoBehaviour
 
         // Broadcast through the global event bus so UI and other systems stay in sync.
         GameManager.Instance?.Events?.RaiseStationUnlocked(so);
+        // Persist the unlock asynchronously.
+        SaveScheduler.RequestSave(GameManager.Instance);
         return true;
     }
 
@@ -158,6 +160,9 @@ public class StationManager : MonoBehaviour
 
         // Also notify the global bus for general awareness.
         GameManager.Instance?.Events?.RaiseCompanionRecruited(co);
+
+        // Persist recruitment and assignment changes.
+        SaveScheduler.RequestSave(GameManager.Instance);
         return true;
     }
 
@@ -188,7 +193,53 @@ public class StationManager : MonoBehaviour
         GameManager.Instance?.Events?.RaiseMinigameCompleted(result);
     }
 
-    // ---- Save/Load helpers removed ----
+    // ---- Save/Load via SaveModelV2 ----
+
+    /// <summary>Restore station and companion state from the save model.</summary>
+    public void ApplyLoadedState(SaveModelV2 data)
+    {
+        _unlockedStationIds.Clear();
+        _companionAssignments.Clear();
+        if (data == null) return;
+
+        var gm = GameManager.Instance;
+
+        // Reapply unlocked stations and notify listeners so UI can refresh.
+        foreach (var id in data.unlockedStationIds)
+        {
+            var so = GetStationById(id);
+            if (so == null) continue;
+            _unlockedStationIds.Add(id);
+            gm?.Events?.RaiseStationUnlocked(so);
+        }
+
+        // Restore companion assignments (key = companion ID, value = station ID or null).
+        foreach (var kvp in data.companionAssignments)
+        {
+            _companionAssignments[kvp.Key] = kvp.Value;
+            var co = GetCompanionById(kvp.Key);
+            var station = GetStationById(kvp.Value);
+            co?.SetAssignedStation(station);
+            gm?.Events?.RaiseCompanionRecruited(co);
+        }
+    }
+
+    /// <summary>Write station unlocks and companion assignments into the save model.</summary>
+    public void Capture(SaveModelV2 model)
+    {
+        if (model == null) return;
+        foreach (var id in _unlockedStationIds)
+            model.unlockedStationIds.Add(id);
+
+        foreach (var kvp in _companionAssignments)
+            model.companionAssignments[kvp.Key] = kvp.Value;
+    }
+
+    /// <summary>Apply station and companion state from the save model.</summary>
+    public void Apply(SaveModelV2 model)
+    {
+        ApplyLoadedState(model);
+    }
 
     /// <summary>
     /// Helper to locate a <see cref="StationSO"/> by its stable ID.

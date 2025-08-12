@@ -381,6 +381,8 @@ flowchart LR
 3\) Third-party packs live under `Assets/ThirdParty/PackName/` (ignored if solo; use LFS if shared).
 
 \## Recent Changes
+- 2025-08-16: Expanded `SaveModelV2` with resources, recipe/skill/station unlocks, companion assignments, and dungeon floor tracking. `ResourceManager`, `RecipeManager`, `SkillTreeManager`, `StationManager`, and `DungeonProgression` now implement `ISaveParticipant` and request saves when their state mutates.
+  - How to test: collect a resource, unlock a recipe and skill, recruit a companion, unlock a station, advance a floor, then save and reload to verify all data persists.
 - 2025-08-15: Removed legacy `ISaveable` interface and `SaveData` classes; `SaveSystem` now uses only `SaveModelV2` without migration.
   - How to test: delete existing `save.json`, run, call `SaveSystem.Save`, restart, then `Load` and observe inventory/essence/upgrades restored while other systems reset.
 - 2025-08-13: Migrated cards to polymorphic `CardEffect` assets. Removed per-card numbers from `BattleConfigSO`.

@@ -6,7 +6,7 @@ using UnityEngine;
 /// Tracks all known crafting recipes and which ones the player has unlocked.
 /// Currently recipes reset each session and do not persist.
 /// </summary>
-public class RecipeManager : MonoBehaviour
+public class RecipeManager : MonoBehaviour, ISaveParticipant
 {
     [Header("Catalog")]
     [Tooltip("List of every recipe available in the game. Referenced by Id.")]
@@ -46,8 +46,40 @@ public class RecipeManager : MonoBehaviour
 
         _unlocked.Add(id);                             // mutate state
         OnRecipeUnlocked?.Invoke(recipe);              // notify listeners
+        // Schedule persistence so newly unlocked recipes survive restarts.
+        SaveScheduler.RequestSave(GameManager.Instance);
         return true;
     }
 
-    // Persistence removed for now; recipes reset each session.
+    // ---- Save/Load via SaveModelV2 ----
+
+    /// <summary>Restore unlocked recipe IDs from the save model.</summary>
+    public void ApplyLoadedState(SaveModelV2 data)
+    {
+        _unlocked.Clear();
+        if (data == null) return;
+
+        foreach (var id in data.unlockedRecipeIds)
+        {
+            if (_recipeLookup.TryGetValue(id, out var recipe))
+            {
+                _unlocked.Add(id);
+                OnRecipeUnlocked?.Invoke(recipe); // inform listeners for UI rebuild
+            }
+        }
+    }
+
+    /// <summary>Write unlocked recipe IDs into the save model.</summary>
+    public void Capture(SaveModelV2 model)
+    {
+        if (model == null) return;
+        foreach (var id in _unlocked)
+            model.unlockedRecipeIds.Add(id);
+    }
+
+    /// <summary>Load unlocked recipe IDs from the save model.</summary>
+    public void Apply(SaveModelV2 model)
+    {
+        ApplyLoadedState(model);
+    }
 }

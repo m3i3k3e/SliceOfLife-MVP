@@ -36,6 +36,11 @@ public class GameManager : MonoBehaviour, IGameManager, ISaveParticipant
         RegisterSaveParticipant(upgradeManager);
         RegisterSaveParticipant(inventoryManager);
         RegisterSaveParticipant(taskService);
+        RegisterSaveParticipant(resourceManager);
+        RegisterSaveParticipant(recipeManager);
+        RegisterSaveParticipant(skillTreeManager);
+        RegisterSaveParticipant(stationManager);
+        RegisterSaveParticipant(dungeonProgression);
     }
 
     // -------- Core systems --------
