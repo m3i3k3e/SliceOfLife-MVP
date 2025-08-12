@@ -1,3 +1,7 @@
+// This helper exists purely for editor-side sanity checks. Wrapping the file in
+// UNITY_EDITOR removes it from player builds so no stray test drivers slip in.
+#if UNITY_EDITOR
+
 using System.Collections;
 using UnityEngine;
 
@@ -47,3 +51,5 @@ public class TaskServiceSanityTest : MonoBehaviour
     private void HandleAdvanced() => Debug.Log("Task advanced");
     private void HandleCompleted() => Debug.Log("Task completed");
 }
+
+#endif
