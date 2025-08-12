@@ -137,8 +137,9 @@ This file is the source of truth for design + tech. Keep it short and link out t
   `StationLookup` / `CompanionLookup` dictionaries. `UnlockStation(id)` and
   `RecruitCompanion(id)` update internal collections and immediately raise
   `GameManager.Events.StationUnlocked` / `GameManager.Events.CompanionRecruited`.
-  `RecruitCompanion` also invokes `OnCompanionRecruited(ICompanion, IReadOnlyList<CardSO>, IReadOnlyList<UpgradeSO>)`
-  so battle and upgrade systems can claim a companion's starting deck and buffs.
+  `RecruitCompanion` also invokes `OnCompanionRecruited(CompanionRecruitedPayload)`
+  bundling the companion, current station ID, starting cards, and passive upgrades
+  so battle and upgrade systems can claim the companion's loadout immediately.
   Each `CompanionSO` serializes these via `GetStartingCards()`, `GetStartingDeck()`,
   `GetEquipmentSlots()` and `GetPassiveBuffs()` accessors.
   The manager subscribes to `IStation.OnProductionComplete` and forwards results through
