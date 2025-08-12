@@ -1,37 +1,54 @@
 using UnityEngine;
 
 /// <summary>
-/// Super tiny AI: randomly chooses one of three intents with rough weights.
-/// You can later swap this for per-enemy patterns.
+/// Basic weighted-random enemy AI. Uses intent weights defined on the EnemySO.
 /// </summary>
-public class EnemyAI : MonoBehaviour
+[CreateAssetMenu(menuName = "SliceOfLife/Enemy AI/Weighted", fileName = "EnemyAI")]
+public class EnemyAI : ScriptableObject, IEnemyAI
 {
-    /// <summary>Rolls the next intent using the given config.</summary>
-    public EnemyIntent DecideNextIntent(BattleConfigSO cfg)
+    /// <inheritdoc />
+    public EnemyIntent DecideNextIntent(EnemySO enemy)
     {
-        // Weighted random: 60% light, 30% heavy, 10% leech heal
-        int roll = Random.Range(0, 100);
-        if (roll < 60)
+        if (enemy == null)
         {
-            return new EnemyIntent {
+            // Fallback so callers never deal with null intents
+            return default;
+        }
+
+        // Sum weights to get range for random roll
+        int totalWeight = Mathf.Max(0, enemy.LightWeight) + Mathf.Max(0, enemy.HeavyWeight) + Mathf.Max(0, enemy.LeechWeight);
+        if (totalWeight <= 0) totalWeight = 1; // avoid division by zero
+
+        int roll = Random.Range(0, totalWeight);
+
+        if (roll < enemy.LightWeight)
+        {
+            // Light attack branch
+            return new EnemyIntent
+            {
                 type = EnemyIntentType.LightAttack,
-                magnitude = Mathf.Max(1, cfg.enemyLightDamage),
-                label = $"Light Attack ({cfg.enemyLightDamage})"
+                magnitude = Mathf.Max(1, enemy.LightDamage),
+                label = $"Light Attack ({enemy.LightDamage})"
             };
         }
-        if (roll < 90)
+
+        if (roll < enemy.LightWeight + enemy.HeavyWeight)
         {
-            return new EnemyIntent {
+            // Heavy attack branch
+            return new EnemyIntent
+            {
                 type = EnemyIntentType.HeavyAttack,
-                magnitude = Mathf.Max(1, cfg.enemyHeavyDamage),
-                label = $"Heavy Attack ({cfg.enemyHeavyDamage})"
+                magnitude = Mathf.Max(1, enemy.HeavyDamage),
+                label = $"Heavy Attack ({enemy.HeavyDamage})"
             };
         }
-        // Leech heal (no damage; heals enemy during execution)
-        return new EnemyIntent {
+
+        // Otherwise choose leech heal
+        return new EnemyIntent
+        {
             type = EnemyIntentType.LeechHeal,
             magnitude = 0,
-            label = $"Leech (+{cfg.enemyLeechHeal})"
+            label = $"Leech (+{enemy.LeechHeal})"
         };
     }
 }

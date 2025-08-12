@@ -103,13 +103,14 @@ public class BattleManager : MonoBehaviour
     private int _playerMendUsesLeft;
 
     private int _enemyHP;
+    private EnemySO _enemyData;           // data for the current enemy
 
     private EnemyIntent _nextEnemyIntent;
 
     private bool _playerTurn; // simple flag for whose turn it is
 
-    // Cheap link to our tiny enemy AI
-    private EnemyAI _enemy;
+    // Reference to pluggable enemy AI strategy
+    private IEnemyAI _enemyAI;
 
     [Header("Dependencies")]
     [Tooltip("Reference to a GameManager implementing IGameManager.")]
@@ -135,9 +136,6 @@ public class BattleManager : MonoBehaviour
         {
             Debug.LogError("BattleManager: Missing BattleConfigSO. Assign one in the Inspector.");
         }
-        _enemy = GetComponent<EnemyAI>();
-        if (_enemy == null) _enemy = gameObject.AddComponent<EnemyAI>(); // safe default
-
         // Instantiate reward service with injected GameManager dependency.
         _rewards = new BattleRewardService(GM);
 
@@ -179,10 +177,20 @@ public class BattleManager : MonoBehaviour
             }
         }
 
-        _enemyHP = config.enemyMaxHP;
+        // Cache enemy data and AI from config so encounters can swap enemies easily
+        _enemyData = config.enemy;
+        if (_enemyData == null)
+        {
+            Debug.LogError("BattleManager: No enemy assigned in BattleConfig.");
+            return;
+        }
+        _enemyAI = _enemyData.AIStrategy;
+        if (_enemyAI == null) _enemyAI = ScriptableObject.CreateInstance<EnemyAI>(); // safe default
+
+        _enemyHP = _enemyData.MaxHP;
 
         // First enemy intent is rolled up-front so the player can see it
-        _nextEnemyIntent = _enemy.DecideNextIntent(config);
+        _nextEnemyIntent = _enemyAI.DecideNextIntent(_enemyData);
 
         // Notify UI of initial values
         PushPlayerStats();
@@ -324,8 +332,8 @@ public class BattleManager : MonoBehaviour
                 break;
 
             case EnemyIntentType.LeechHeal:
-                // Enemy heals itself; magnitude stored in config
-                _enemyHP = Mathf.Min(config.enemyMaxHP, _enemyHP + config.enemyLeechHeal);
+                // Enemy heals itself using its configured amount
+                _enemyHP = Mathf.Min(_enemyData.MaxHP, _enemyHP + _enemyData.LeechHeal);
                 break;
         }
         // Add new EnemyIntentType cases above and update EnemyIntent enum accordingly.
@@ -342,7 +350,7 @@ public class BattleManager : MonoBehaviour
         }
 
         // 5) Preview next enemy move so player can plan
-        _nextEnemyIntent = _enemy.DecideNextIntent(config);
+        _nextEnemyIntent = _enemyAI.DecideNextIntent(_enemyData);
         OnEnemyIntentChanged?.Invoke(_nextEnemyIntent);
 
         // 6) Tick statuses and return control to player
@@ -404,7 +412,7 @@ public class BattleManager : MonoBehaviour
     private void PushPlayerStats() => OnPlayerStatsChanged?.Invoke(_playerHP, config.playerMaxHP, _playerArmor);
 
     /// <summary>Push current enemy stats to any UI listeners.</summary>
-    private void PushEnemyStats()  => OnEnemyStatsChanged?.Invoke(_enemyHP, config.enemyMaxHP);
+    private void PushEnemyStats()  => OnEnemyStatsChanged?.Invoke(_enemyHP, _enemyData.MaxHP);
 }
 
 /// <summary>Simple, serializable intent so UI can show the enemy's plan.</summary>

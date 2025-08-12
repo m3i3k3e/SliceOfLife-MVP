@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f4e2011020f467a888277b9e9b2c97f, type: 3}
+  m_Name: BasicEnemy
+  m_EditorClassIdentifier:
+  maxHP: 18
+  lightDamage: 4
+  heavyDamage: 7
+  leechHeal: 3
+  lightWeight: 60
+  heavyWeight: 30
+  leechWeight: 10
+  ai: {fileID: 11400000, guid: 428e2d25e0b044d3a51729364430465b, type: 2}

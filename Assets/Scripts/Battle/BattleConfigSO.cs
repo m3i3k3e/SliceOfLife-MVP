@@ -12,10 +12,8 @@ public class BattleConfigSO : ScriptableObject
     // Card tuning now lives on CardEffect assets; attack/guard/mend numbers removed.
 
     [Header("Enemy")]
-    public int enemyMaxHP = 18;
-    public int enemyLightDamage = 4;
-    public int enemyHeavyDamage = 7;
-    public int enemyLeechHeal = 3;        // Enemy heal amount when it uses "Leech"
+    [Tooltip("Reference to the enemy definition used for this battle.")]
+    public EnemySO enemy;                 // defines HP, damages, and AI
 
     [Header("Rewards")]
     public int baseEssenceReward = 20;    // Essence granted on win (before any future multipliers)
