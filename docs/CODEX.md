@@ -166,7 +166,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
    
    - **Debuff Access**: `GameManager.TempNextDayClickDebuff` reveals the click-cap reduction that will apply on the next day.
    - **Scene Tracking**: `GameManager.CurrentScene` and `GameManager.SpawnPointId` record the last scene and spawn point for persistence.
-   - **Persistence**: `SaveSystem` v2 writes a single `SaveModelV2` JSON file instead of sectioned blobs. Core managers expose an `ApplyLoadedState(SaveModelV2 data)` hook so loading can hydrate each system without string keys. The model now includes `lastScene` and `spawnPointId` fields so the world can restore to the previous location. `SaveSystem` offers `HasAnySave()`, `Delete()`, `Save(GameManager, TaskService)`, and `Load(GameManager, TaskService)` APIs (task service parameter is optional if `GameManager` already has one injected). **Test**: move to another scene in play mode, call `SaveSystem.Save`, restart, then `Load` and confirm `GameManager.CurrentScene` and `SpawnPointId` match the prior session.
+  - **Persistence**: `SaveSystem` v2 writes a single `SaveModelV2` JSON file instead of sectioned blobs. `GameManager` no longer tracks a registry of `ISaveable` systems; the model pulls state directly from each manager's capture/apply methods. The model now includes `lastScene` and `spawnPointId` fields so the world can restore to the previous location. `SaveSystem` offers `HasAnySave()`, `Delete()`, `Save(GameManager, TaskService)`, and `Load(GameManager, TaskService)` APIs (task service parameter is optional if `GameManager` already has one injected). **Test**: move to another scene in play mode, call `SaveSystem.Save`, restart, then `Load` and confirm `GameManager.CurrentScene` and `SpawnPointId` match the prior session.
 \- **Test**: Call `Stations.UnlockStation("farm")` or `Stations.RecruitCompanion("alice")` in play mode and watch the console/UI react via the event bus (`StationUnlocked` or `CompanionRecruited`).
   Trigger a station's `OnProductionComplete` to see `MinigameCompleted` propagate.
 
@@ -369,6 +369,8 @@ flowchart LR
 3\) Third-party packs live under `Assets/ThirdParty/PackName/` (ignored if solo; use LFS if shared).
 
 \## Recent Changes
+- 2025-08-13: Removed `GameManager` saveables registry; `SaveModelV2` now captures state directly from managers.
+  - How to test: run the game, call `SaveSystem.Save` then `SaveSystem.Load`, and confirm progress persists without registering systems.
 - 2025-08-10: Added `SceneLoader` service and migrated `LoadSceneButton`/`DungeonGateButton` to use it.
   - How to test: assign `SceneLoader` in Start scene and click the gate to load `Battle`.
 - 2025-08-10: Added `UpgradeIds` static class to centralize upgrade ID strings.

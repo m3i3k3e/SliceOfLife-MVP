@@ -1,10 +1,9 @@
 /*
  * GameManager.cs
  * Role: Central orchestrator for high-level game state and persistence.
- * Expansion: Register new ISaveable systems here and forward new global events via IEventBus.
+ * Expansion: Forward new global events via IEventBus.
  */
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -19,7 +18,7 @@ public class GameManager : MonoBehaviour, IGameManager
     public static GameManager Instance { get; private set; }
     /// <summary>
     /// Unity lifecycle: first entry point. Establishes the singleton instance
-    /// and registers core systems so persistence knows about them early.
+    /// and captures the starting scene for persistence.
     /// </summary>
     private void Awake()
     {
@@ -30,20 +29,8 @@ public class GameManager : MonoBehaviour, IGameManager
         _currentScene = SceneManager.GetActiveScene().name;
         _spawnPointId = string.Empty; // default until a spawn point sets this
 
-        // Register core systems for saving. Doing this in Awake ensures the list
-        // is ready before any save/load operations occur.
-        RegisterSaveable(this); // GameManager persists its own day counter
-
-        // Economy and progression modules
-        if (essenceManager != null) RegisterSaveable(essenceManager);      // primary currency
-        if (upgradeManager != null) RegisterSaveable(upgradeManager);      // purchased upgrades
-        if (stationManager != null) RegisterSaveable(stationManager);      // unlocked stations/companions
-        if (inventoryManager != null) RegisterSaveable(inventoryManager);  // item stacks
-        if (resourceManager != null) RegisterSaveable(resourceManager);    // raw resource counts
-        if (recipeManager != null) RegisterSaveable(recipeManager);        // known crafting recipes
-        if (dungeonProgression != null) RegisterSaveable(dungeonProgression); // floor milestones
-        if (skillTreeManager != null) RegisterSaveable(skillTreeManager);  // unlocked skills
-        // Add new saveable systems here by implementing ISaveable and registering them.
+        // SaveModelV2 pulls data directly from assigned managers so no explicit
+        // registration step is required here.
     }
 
     // -------- Core systems --------
@@ -77,26 +64,6 @@ public class GameManager : MonoBehaviour, IGameManager
         set => _spawnPointId = value;
     }
 
-    // ----- Saveable registration -----
-    // Maintain a list of participating systems so SaveSystem can iterate them generically.
-    private readonly List<ISaveable> _saveables = new();
-
-    /// <summary>Expose registered saveables to <see cref="SaveSystem"/>.</summary>
-    public IReadOnlyList<ISaveable> Saveables => _saveables;
-
-    /// <summary>Allow subsystems to enlist for persistence.</summary>
-    public void RegisterSaveable(ISaveable saveable)
-    {
-        if (saveable != null && !_saveables.Contains(saveable))
-            _saveables.Add(saveable);
-    }
-
-    /// <summary>Remove a saveable when it is destroyed/disabled.</summary>
-    public void UnregisterSaveable(ISaveable saveable)
-    {
-        if (saveable != null)
-            _saveables.Remove(saveable);
-    }
 
     [Header("Events")]
     [Tooltip("Reference to an event bus implementing IEventBus.")]
