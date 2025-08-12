@@ -9,6 +9,44 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
+/// Payload broadcast when a companion gets recruited.
+/// Bundles the companion reference and any starting data so
+/// other systems can initialize immediately without extra lookups.
+/// </summary>
+public readonly struct CompanionRecruitedPayload
+{
+    /// <summary>The companion that was just recruited.</summary>
+    public ICompanion Companion { get; }
+
+    /// <summary>
+    /// ID of the station the companion is assigned to.
+    /// Null when freshly recruited and not yet placed.
+    /// </summary>
+    public string StationId { get; }
+
+    /// <summary>Starting battle cards granted by the companion.</summary>
+    public IReadOnlyList<CardSO> Cards { get; }
+
+    /// <summary>Passive upgrades granted by the companion.</summary>
+    public IReadOnlyList<UpgradeSO> Upgrades { get; }
+
+    /// <summary>
+    /// Construct the payload with all relevant recruitment data.
+    /// </summary>
+    public CompanionRecruitedPayload(
+        ICompanion companion,
+        string stationId,
+        IReadOnlyList<CardSO> cards,
+        IReadOnlyList<UpgradeSO> upgrades)
+    {
+        Companion = companion;
+        StationId = stationId;
+        Cards = cards;
+        Upgrades = upgrades;
+    }
+}
+
+/// <summary>
 /// Central registry for stations and companions.
 /// Keeps runtime lists typed by interfaces so gameplay systems remain decoupled
 /// from specific ScriptableObject implementations.
@@ -44,11 +82,11 @@ public class StationManager : MonoBehaviour, ISaveParticipant
 
     /// <summary>
     /// Fired when the player recruits a companion.
-    /// The companion is added to our assignment list with no station.
-    /// Provides the companion's starting cards and passive buffs for systems
-    /// like battle and upgrades to consume immediately.
+    /// Event passes a <see cref="CompanionRecruitedPayload"/> containing the
+    /// companion's starting cards, passive upgrades and current station assignment
+    /// so battle and upgrade systems can react instantly.
     /// </summary>
-    public event Action<ICompanion, IReadOnlyList<CardSO>, IReadOnlyList<UpgradeSO>> OnCompanionRecruited;
+    public event Action<CompanionRecruitedPayload> OnCompanionRecruited;
 
     /// <summary>
     /// Unity Awake: build interface lists and capture default companion assignments
@@ -153,10 +191,19 @@ public class StationManager : MonoBehaviour, ISaveParticipant
         if (co == null || _companionAssignments.ContainsKey(id))
             return false; // invalid or already recruited
 
-        _companionAssignments[id] = null; // recruited, not yet assigned
+        const string stationId = null; // newly recruited companions start unassigned
+        _companionAssignments[id] = stationId;
+
+        // Build a payload bundling all relevant data so interested systems
+        // (battle, upgrades, etc.) can initialize without extra lookups.
+        var payload = new CompanionRecruitedPayload(
+            co,
+            stationId,
+            co.GetStartingCards(),
+            co.GetPassiveBuffs());
 
         // Fire event with companion loadout so listeners can update immediately
-        OnCompanionRecruited?.Invoke(co, co.GetStartingCards(), co.GetPassiveBuffs());
+        OnCompanionRecruited?.Invoke(payload);
 
         // Also notify the global bus for general awareness.
         GameManager.Instance?.Events?.RaiseCompanionRecruited(co);
