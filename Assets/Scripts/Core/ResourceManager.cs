@@ -16,14 +16,59 @@ public class ResourceManager : MonoBehaviour, ISaveParticipant
 {
     /// <summary>Catalog of all resource definitions used to resolve IDs during load.</summary>
     [Header("Catalog")]
-    [Tooltip("All resource definitions available. Used to resolve IDs during load.")]
+    [Tooltip("All resource definitions available. Used to resolve IDs during load.\n" +
+             "\u26a0\ufe0f New ResourceSO assets MUST be added here.")]
     [SerializeField] private List<ResourceSO> resourceCatalog = new();
+
+    /// <summary>
+    /// Fast lookup table mapping resource IDs to their ScriptableObject definitions.
+    /// Built once on <see cref="Awake"/> and whenever the catalog changes in the editor.
+    /// </summary>
+    private readonly Dictionary<string, ResourceSO> _catalogById = new();
 
     /// <summary>Internal lookup from resource to owned quantity.</summary>
     private readonly Dictionary<ResourceSO, int> _counts = new();
 
     /// <summary>Raised whenever a resource total changes. Payload = (resource, newAmount).</summary>
     public event Action<ResourceSO, int> OnResourceChanged;
+
+    private void Awake()
+    {
+        // Pre-build the ID lookup so runtime queries avoid linear scans.
+        BuildCatalogLookup();
+    }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        // Unity invokes this in the editor whenever inspector values change.
+        // Rebuild the cache so new catalog entries are immediately recognized.
+        BuildCatalogLookup();
+    }
+#endif
+
+    /// <summary>
+    /// Populate <see cref="_catalogById"/> from the serialized <see cref="resourceCatalog"/> list.
+    /// Called on <see cref="Awake"/> and <see cref="OnValidate"/>.
+    /// </summary>
+    private void BuildCatalogLookup()
+    {
+        _catalogById.Clear(); // start fresh in case catalog changed
+        for (int i = 0; i < resourceCatalog.Count; i++)
+        {
+            var res = resourceCatalog[i];
+            if (res == null) continue; // ignore empty slots
+
+            // Skip duplicates but warn so designers can fix the catalog.
+            if (_catalogById.ContainsKey(res.Id))
+            {
+                Debug.LogWarning($"Duplicate resource id '{res.Id}' in ResourceManager catalog.");
+                continue;
+            }
+
+            _catalogById[res.Id] = res; // cache by stable string ID
+        }
+    }
 
     /// <summary>Add the specified amount of a resource.</summary>
     public void AddResource(ResourceSO resource, int amount)
@@ -106,16 +151,14 @@ public class ResourceManager : MonoBehaviour, ISaveParticipant
         ApplyLoadedState(model);
     }
 
-    /// <summary>Lookup helper to resolve a resource ID from the catalog.</summary>
+    /// <summary>
+    /// Resolve a resource ID using the pre-built dictionary. This avoids
+    /// repeatedly scanning the serialized list during loads.
+    /// </summary>
     private ResourceSO FindResource(string id)
     {
-        if (string.IsNullOrEmpty(id)) return null;
-        for (int i = 0; i < resourceCatalog.Count; i++)
-        {
-            var res = resourceCatalog[i];
-            if (res != null && res.Id == id) return res;
-        }
-        return null;
+        if (string.IsNullOrEmpty(id)) return null; // invalid input guard
+        return _catalogById.TryGetValue(id, out var res) ? res : null;
     }
 }
 
