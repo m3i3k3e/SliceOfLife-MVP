@@ -56,6 +56,7 @@ public class SaveModelV2
     // ----- Dungeon -----
     public int currentFloor;
     public int maxFloorReached;
+    public List<int> unlockedDungeonMilestones = new();
 
     /// <summary>Simple ID+quantity pair used for inventory serialization.</summary>
     [Serializable]
