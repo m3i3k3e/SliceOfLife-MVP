@@ -200,9 +200,34 @@ public class BattleManager : MonoBehaviour
         // Init subsystems and start the fight
         _energy.SetMax(Mathf.Max(config.maxEnergy, config.energyPerTurn));
         _status.PushLabels();
-        _deck.BuildAndShuffle(startingDeck);   // build draw pile from starting deck
+
+        // Build the player's deck starting from the baseline list.
+        var deck = new List<CardSO>(startingDeck);
+        InjectBattleCompanions(deck); // add any cards from companions assigned to battle
+        _deck.BuildAndShuffle(deck);   // build draw pile from final deck
         BeginPlayerTurn();
 
+    }
+
+    /// <summary>
+    /// Add cards or buffs from companions assigned to the Battle role.
+    /// </summary>
+    private void InjectBattleCompanions(List<CardSO> deck)
+    {
+        var assignments = GM?.CurrentAssignments;
+        if (assignments == null) return; // no assignments today
+
+        foreach (var kvp in assignments)
+        {
+            if (kvp.Value != AssignmentRole.Battle || kvp.Key == null) continue;
+
+            // Append the companion's personal deck to today's battle deck.
+            var bonusCards = kvp.Key.GetStartingDeck();
+            for (int i = 0; i < bonusCards.Count; i++)
+                if (bonusCards[i] != null) deck.Add(bonusCards[i]);
+
+            // Future: apply stat buffs here (HP, energy, etc.).
+        }
     }
 
     /// <summary>Execute a specific card by reference. Used by CardView to keep the

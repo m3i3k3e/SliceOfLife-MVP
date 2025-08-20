@@ -80,6 +80,12 @@ public class StationManager : MonoBehaviour, ISaveParticipant
     /// <summary>Maps companion ID to the station ID they are assigned to.</summary>
     private readonly Dictionary<string, string> _companionAssignments = new();
 
+    /// <summary>Per-station production multipliers (1 = normal, 2 = boosted).</summary>
+    private readonly Dictionary<string, float> _stationMultipliers = new();
+
+    /// <summary>Caches delegates so we can unsubscribe from production events.</summary>
+    private readonly Dictionary<IStation, Action<MinigameResult>> _productionHandlers = new();
+
     /// <summary>
     /// Fired when the player recruits a companion.
     /// Event passes a <see cref="CompanionRecruitedPayload"/> containing the
@@ -101,7 +107,15 @@ public class StationManager : MonoBehaviour, ISaveParticipant
         // preserve inspector ordering for any UI that might rely on it.
         _stations.Clear();
         foreach (var so in stationAssets)
-            if (so != null) _stations.Add(so);
+        {
+            if (so != null)
+                _stations.Add(so);
+        }
+
+        // Initialize all station multipliers to 1x output.
+        _stationMultipliers.Clear();
+        for (int i = 0; i < _stations.Count; i++)
+            _stationMultipliers[_stations[i].Id] = 1f;
 
         _companions.Clear();
         _companionAssignments.Clear();
@@ -220,7 +234,13 @@ public class StationManager : MonoBehaviour, ISaveParticipant
     private void OnEnable()
     {
         for (int i = 0; i < _stations.Count; i++)
-            _stations[i].OnProductionComplete += HandleStationProductionComplete;
+        {
+            var station = _stations[i];
+            // Capture station reference in a local handler so we know who produced.
+            Action<MinigameResult> handler = result => HandleStationProductionComplete(station, result);
+            station.OnProductionComplete += handler;
+            _productionHandlers[station] = handler;
+        }
     }
 
     /// <summary>
@@ -228,16 +248,61 @@ public class StationManager : MonoBehaviour, ISaveParticipant
     /// </summary>
     private void OnDisable()
     {
-        for (int i = 0; i < _stations.Count; i++)
-            _stations[i].OnProductionComplete -= HandleStationProductionComplete;
+        foreach (var kvp in _productionHandlers)
+            kvp.Key.OnProductionComplete -= kvp.Value;
+        _productionHandlers.Clear();
     }
 
     /// <summary>
     /// Forward station production results to the global event bus.
     /// </summary>
-    private void HandleStationProductionComplete(MinigameResult result)
+    private void HandleStationProductionComplete(IStation station, MinigameResult result)
     {
-        GameManager.Instance?.Events?.RaiseMinigameCompleted(result);
+        if (station == null)
+        {
+            GameManager.Instance?.Events?.RaiseMinigameCompleted(result);
+            return;
+        }
+
+        // Look up multiplier for this station (defaults to 1x).
+        float mult = 1f;
+        if (_stationMultipliers.TryGetValue(station.Id, out var m))
+            mult = m;
+
+        var final = result;
+        if (mult > 1f)
+        {
+            final = result with
+            {
+                ResourcesGained = Mathf.RoundToInt(result.ResourcesGained * mult),
+                RewardQuantity = Mathf.RoundToInt(result.RewardQuantity * mult)
+            };
+        }
+
+        GameManager.Instance?.Events?.RaiseMinigameCompleted(final);
+    }
+
+    /// <summary>
+    /// Called when the GameManager assigns a companion a daily role.
+    /// If the role is <see cref="AssignmentRole.Station"/> and the companion
+    /// manages a station, that station's output is doubled for the day.
+    /// </summary>
+    public void NotifyAssignment(CompanionSO companion, AssignmentRole role)
+    {
+        if (companion == null) return;
+        if (!_companionAssignments.TryGetValue(companion.Id, out var stationId)) return;
+        if (string.IsNullOrEmpty(stationId)) return;
+
+        _stationMultipliers[stationId] = role == AssignmentRole.Station ? 2f : 1f;
+    }
+
+    /// <summary>
+    /// Reset all station multipliers to their baseline. Call at the start of a new day.
+    /// </summary>
+    public void ResetProductionMultipliers()
+    {
+        foreach (var id in _stationMultipliers.Keys)
+            _stationMultipliers[id] = 1f;
     }
 
     // ---- Save/Load via SaveModelV2 ----
