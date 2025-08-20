@@ -26,7 +26,13 @@ public class ItemCardSO : CardSO
 }
 
 /// <summary>High level buckets for different item behaviors.</summary>
-public enum ItemType { Material, Consumable, Quest }
+public enum ItemType
+{
+    Material,
+    Consumable,
+    Quest,
+    Shard // meta-currency pieces that combine into full cards
+}
 
 /// <summary>Simplified rarity ladder used by loot tables.</summary>
 public enum ItemRarity { Common, Rare, Epic }

@@ -16,4 +16,22 @@ public class CardSO : ScriptableObject
     [SerializeField] private CardEffect effect; // effect asset defining this card's behavior
     public CardEffect Effect => effect;
     public int cost = 0;              // For later (energy), ignored in MVP
+
+    // ------------------------------------------------------------------
+    // Rarity
+    // ------------------------------------------------------------------
+    // Cards now have a rarity tier. Designers can tune drop rates or
+    // combine rules based on this classification.
+    [Header("Progression")]
+    [SerializeField] private CardRarity rarity = CardRarity.Common;
+
+    /// <summary>
+    /// Rarity tier for this card. Read-only so runtime systems can't mutate
+    /// the ScriptableObject asset. DeckManager's CombineCards uses this
+    /// property to identify which cards can be fused into higher tiers.
+    /// </summary>
+    public CardRarity Rarity => rarity;
 }
+
+/// <summary>Simple rarity ladder for battle cards.</summary>
+public enum CardRarity { Common, Rare, Epic, Legendary }
