@@ -12,6 +12,10 @@ public class CompanionSO : ScriptableObject, ICompanion
     [SerializeField] private string id = "companion_id";
     [SerializeField] private string displayName = "New Companion";
 
+    [Header("Relationship")]
+    [Tooltip("Starting heart total for this companion. Reset on load so assets stay pristine.")]
+    [SerializeField] private int hearts;
+
     [Header("Assignment")]
     [Tooltip("Station this companion manages at start (optional).")]
     [SerializeField] private StationSO startingStation;
@@ -37,6 +41,7 @@ public class CompanionSO : ScriptableObject, ICompanion
     {
         // Reset runtime state each time the asset is loaded.
         _assignedStation = startingStation;
+        hearts = 0; // ensure consistent default each run
     }
 
     // ---- ICompanion implementation ----
@@ -74,6 +79,9 @@ public class CompanionSO : ScriptableObject, ICompanion
     /// Permanent buffs granted when this companion is recruited.
     /// </summary>
     public IReadOnlyList<UpgradeSO> GetPassiveBuffs() => passiveBuffs;
+
+    /// <summary>Default heart total exposed for systems like <see cref="HeartsManager"/>.</summary>
+    public int Hearts => hearts;
 
     /// <summary>
     /// Assign this companion to a station at runtime.

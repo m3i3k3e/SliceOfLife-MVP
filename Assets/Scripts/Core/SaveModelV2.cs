@@ -52,6 +52,8 @@ public class SaveModelV2
     // ----- Stations & Companions -----
     public List<string> unlockedStationIds = new();
     public Dictionary<string, string> companionAssignments = new();
+    /// <summary>Heart totals per companion, keyed by companion ID.</summary>
+    public Dictionary<string, int> companionHearts = new();
 
     // ----- Dungeon -----
     public int currentFloor;
