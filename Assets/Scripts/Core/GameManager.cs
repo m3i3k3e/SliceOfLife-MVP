@@ -58,6 +58,11 @@ public class GameManager : MonoBehaviour, IGameManager, ISaveParticipant
     [SerializeField] private TaskService taskService; // drives tutorial-style task progression
     [SerializeField] private string unlockUpgradeId = UpgradeIds.UnlockBattle; // default to constant to avoid typos
 
+    // -------- Daily companion assignments --------
+    // Runtime-only map of companions to their roles for the current day.
+    // Cleared each morning in <see cref="AdvanceDay"/>.
+    private readonly Dictionary<CompanionSO, AssignmentRole> _dailyAssignments = new();
+
     [Header("Scene Tracking")]
     [SerializeField] private string _currentScene;
     [SerializeField] private string _spawnPointId;
@@ -109,6 +114,9 @@ public class GameManager : MonoBehaviour, IGameManager, ISaveParticipant
     /// <summary>Access to the tutorial task service.</summary>
     public TaskService Tasks => taskService;
 
+    /// <summary>Read-only view of today's companion role assignments.</summary>
+    public IReadOnlyDictionary<CompanionSO, AssignmentRole> CurrentAssignments => _dailyAssignments;
+
     /// <summary>Allow the bootstrapper to inject a TaskService instance at runtime.</summary>
     public void InjectTaskService(TaskService svc)
     {
@@ -146,6 +154,23 @@ public class GameManager : MonoBehaviour, IGameManager, ISaveParticipant
     {
         if (participant == null) return;
         _saveParticipants.Remove(participant);
+    }
+
+    // -------- Daily companion assignments --------
+    /// <summary>
+    /// Assign a companion a role for the current day.
+    /// Returns false if the companion already has an assignment.
+    /// </summary>
+    public bool AssignWaifu(CompanionSO companion, AssignmentRole role)
+    {
+        if (companion == null || _dailyAssignments.ContainsKey(companion))
+            return false; // invalid or already assigned
+
+        _dailyAssignments[companion] = role; // record today's role
+
+        // Allow interested systems to react (e.g., stations applying multipliers)
+        stationManager?.NotifyAssignment(companion, role);
+        return true;
     }
 
     // ---- ISaveParticipant implementation ----
@@ -516,6 +541,10 @@ public class GameManager : MonoBehaviour, IGameManager, ISaveParticipant
 
         // New day → must attempt again if you want (for flavor), but Sleep gate uses keys now.
         DungeonAttemptedToday = false;
+
+        // New day clears any temporary companion roles and station bonuses.
+        _dailyAssignments.Clear();
+        stationManager?.ResetProductionMultipliers();
 
         // Inform listeners of the new day index.
         Events?.RaiseDayChanged(Day);

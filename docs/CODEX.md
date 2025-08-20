@@ -177,6 +177,8 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 - **Hearts**: `GameManager.Hearts` exposes the `HeartsManager` for relationship tracking. Listen to `HeartsManager.OnHeartsChanged(CompanionSO, int)` to update UI. **Test**: call `GM.Hearts.AddHearts(companion, 1)` in play mode and watch the HUD reflect the new total.
 
+- **Daily Assignments**: `GameManager.AssignWaifu(companion, role)` tags companions with a role (e.g., `Station`, `Battle`) for the current day. Query `GameManager.CurrentAssignments` to drive station bonuses or battle deck setup. **Test**: call `GM.AssignWaifu(companion, AssignmentRole.Battle)` and confirm the assignment appears in `AssignmentListView`.
+
 - **Tasks**: `TaskService.CurrentTaskTitle` exposes the active tutorial step's title. Useful for HUDs that want to display guidance.
   - *New*: Task requirements are modular `TaskConditionSO` assets (e.g., `CollectItemCondition`, `InteractCondition`). Each overrides `IsMet(TaskService)`.
   - **Test**: Create a `CollectItemCondition` asset, assign it to a `TaskSO`, then collect the referenced item in play mode and observe the task advance.

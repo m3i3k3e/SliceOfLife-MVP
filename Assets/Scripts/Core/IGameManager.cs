@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 /// <summary>
 /// Public surface for the central game orchestrator.
 /// Exposes core systems and day progression without
@@ -53,5 +55,14 @@ public interface IGameManager
     /// <summary>Apply defeat repercussions immediately.</summary>
     void ApplyDungeonLossPenalty();
 
+    // -------- Daily companion assignments --------
+    /// <summary>
+    /// Record a companion's role for the current day.
+    /// Returns false if the companion already has an assignment.
+    /// </summary>
+    bool AssignWaifu(CompanionSO companion, AssignmentRole role);
+
+    /// <summary>Read-only map of companions to their current daily roles.</summary>
+    IReadOnlyDictionary<CompanionSO, AssignmentRole> CurrentAssignments { get; }
 }
 
