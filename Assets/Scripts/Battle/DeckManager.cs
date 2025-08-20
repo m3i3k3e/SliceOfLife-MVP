@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Reflection; // for setting private card rarity when combining
 
 /// <summary>
 /// Owns the player's deck for a single battle.
@@ -58,6 +59,61 @@ public class DeckManager
     {
         if (card == null) return false;
         return _battleDeck.Remove(card);
+    }
+
+    /// <summary>
+    /// Combine duplicate cards of a given rarity into a single card of the
+    /// next tier. Consumes <paramref name="rarity"/> cards in batches of ten.
+    /// Each upgrade effectively costs exponentially more base cards because
+    /// players must fuse repeatedly to climb the ladder (10 commons → 1 rare,
+    /// then 10 rares → 1 epic, etc.).
+    /// </summary>
+    /// <returns>True if the combine succeeded and a new card was created.</returns>
+    public bool CombineCards(CardRarity rarity)
+    {
+        const int batchSize = 10; // fixed combine cost
+
+        // Can't upgrade past Legendary.
+        if (rarity == CardRarity.Legendary)
+            return false;
+
+        // Gather candidates of the requested rarity.
+        var matches = new List<CardSO>();
+        foreach (var card in _battleDeck)
+        {
+            if (card != null && card.Rarity == rarity)
+                matches.Add(card);
+            if (matches.Count >= batchSize) break; // early exit once enough
+        }
+
+        // Not enough cards to perform the fusion.
+        if (matches.Count < batchSize)
+            return false;
+
+        // Remove the consumed cards from the deck.
+        for (int i = 0; i < batchSize; i++)
+            _battleDeck.Remove(matches[i]);
+
+        // Create the upgraded card by cloning one of the consumed cards and
+        // bumping its rarity. In a real game you'd look up a specific card
+        // asset; cloning keeps this example self-contained.
+        var template = matches[0];
+        var upgraded = ScriptableObject.Instantiate(template);
+        SetCardRarity(upgraded, rarity + 1);
+        _battleDeck.Add(upgraded);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Helper used by <see cref="CombineCards"/> to modify the private rarity
+    /// field on a cloned <see cref="CardSO"/>. Reflection avoids exposing a
+    /// public setter on the asset.
+    /// </summary>
+    private static void SetCardRarity(CardSO card, CardRarity rarity)
+    {
+        var field = typeof(CardSO).GetField("rarity", BindingFlags.NonPublic | BindingFlags.Instance);
+        field?.SetValue(card, rarity);
     }
 
     /// <summary>

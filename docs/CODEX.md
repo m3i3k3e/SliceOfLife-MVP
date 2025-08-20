@@ -362,7 +362,7 @@ flowchart LR
 
 \- **UpgradeSO**: `id, title, cost, effect (IUpgradeEffect asset)`
 
-\- \*\*CardSO\*\*: `id, title, description, effect (CardEffect), cost (reserved for energy later)`
+\- \*\*CardSO\*\*: `id, title, description, effect (CardEffect), cost (reserved for energy later), rarity (CardRarity)`
 
 
 
@@ -425,6 +425,9 @@ flowchart LR
   - How to test: place a `Canvas` with a `TMP_Text` and `InteractionPromptUI`, assign it to `InteractionController`'s **Prompt UI** field, then look at and click interactables to watch the label update.
 - 2025-08-12: Added screen fade transitions to `SceneLoader` via `CanvasGroup` fader.
   - How to test: in a scene with `SceneLoader`, assign a full-screen `CanvasGroup` to its **Fader** field, set a duration, then trigger a scene change and observe fade to black and back.
+
+- 2025-08-20: Added `CardRarity` on `CardSO`, shard resources (`ResourceManager.AddShards`/`GetShardCount`), and `DeckManager.CombineCards` for upgrading cards. `ShardsHUDPanel` shows shard totals.
+  - How to test: create a `ShardCardSO` and shard `ResourceSO`, register the resource in `ResourceManager`, run a battle, and verify the shard count updates in the HUD after victory or defeat.
 
 ## Commenting Style
 

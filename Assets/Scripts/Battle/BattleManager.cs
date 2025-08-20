@@ -367,6 +367,7 @@ public class BattleManager : MonoBehaviour
     {
         // Calculate the reward synchronously.
         int reward = _rewards.GrantVictoryReward(config);
+        _rewards.DropShards(); // shards drop win or lose
 
         OnInfoChanged?.Invoke($"Victory! +{reward} Essence");
         OnBattleEnded?.Invoke(true, reward);
@@ -383,6 +384,7 @@ public class BattleManager : MonoBehaviour
     private void Defeat()
     {
         OnInfoChanged?.Invoke("Defeat! Returning to tavern...");
+        _rewards.DropShards();
         OnBattleEnded?.Invoke(false, 0);
 
         // Apply the loss penalty (immediate essence loss + next-day click debuff)

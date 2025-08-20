@@ -20,6 +20,9 @@ public class ResourceManager : MonoBehaviour, ISaveParticipant
              "\u26a0\ufe0f New ResourceSO assets MUST be added here.")]
     [SerializeField] private List<ResourceSO> resourceCatalog = new();
 
+    [Tooltip("Resource representing shard fragments dropped from battles.")]
+    [SerializeField] private ResourceSO shardResource;
+
     /// <summary>
     /// Fast lookup table mapping resource IDs to their ScriptableObject definitions.
     /// Built once on <see cref="Awake"/> and whenever the catalog changes in the editor.
@@ -44,6 +47,11 @@ public class ResourceManager : MonoBehaviour, ISaveParticipant
         // Unity invokes this in the editor whenever inspector values change.
         // Rebuild the cache so new catalog entries are immediately recognized.
         BuildCatalogLookup();
+
+        // Ensure the shard resource is always present in the catalog so it
+        // participates in save/load lookups.
+        if (shardResource != null && !resourceCatalog.Contains(shardResource))
+            resourceCatalog.Add(shardResource);
     }
 #endif
 
@@ -111,6 +119,19 @@ public class ResourceManager : MonoBehaviour, ISaveParticipant
         if (resource == null) return 0;
         return _counts.TryGetValue(resource, out int value) ? value : 0;
     }
+
+    // ------------------------------------------------------------------
+    // Shard helpers
+    // ------------------------------------------------------------------
+
+    /// <summary>The ResourceSO used to track shard fragments.</summary>
+    public ResourceSO ShardResource => shardResource;
+
+    /// <summary>Add shards and notify listeners via <see cref="OnResourceChanged"/>.</summary>
+    public void AddShards(int amount) => AddResource(shardResource, amount);
+
+    /// <summary>Retrieve the current shard total.</summary>
+    public int GetShardCount() => GetCount(shardResource);
 
     // ---- Save/Load via SaveModelV2 ----
 

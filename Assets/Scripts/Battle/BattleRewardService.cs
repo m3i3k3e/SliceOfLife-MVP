@@ -59,5 +59,19 @@ public class BattleRewardService
 
         return reward;
     }
+
+    /// <summary>
+    /// Grant shard drops after a battle. Shards act as a meta-currency that
+    /// accumulates even on defeat to ensure runs always feel productive.
+    /// </summary>
+    /// <param name="amount">How many shards to award.</param>
+    public void DropShards(int amount = 1)
+    {
+        var resources = _gameManager?.Resources;
+        if (resources == null) return; // dependency missing
+
+        // ResourceManager handles event broadcasting and persistence.
+        resources.AddShards(Mathf.Max(0, amount));
+    }
 }
 
