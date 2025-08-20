@@ -120,6 +120,8 @@ This file is the source of truth for design + tech. Keep it short and link out t
 
 | \*\*Resources\*\* | Stub | `ResourceManager` tracks material counts; saved as `resources[]` in `SaveModelV2`. |
 
+| \*\*Hearts\*\* | Stub | `HeartsManager` tracks per-companion heart totals; saved as `companionHearts{}` in `SaveModelV2`. |
+
 | \*\*Recipes\*\* | Stub | `RecipeManager` unlocks craftables; IDs persisted in `unlockedRecipeIds`. |
 
 | \*\*Skills\*\* | Stub | `SkillManager` exposes unlocked ability IDs; persisted via `unlockedSkillIds`. |
@@ -173,6 +175,8 @@ This file is the source of truth for design + tech. Keep it short and link out t
   - **Test**: Call `Recipes.UnlockRecipe("someId")` or `Dungeon.AdvanceFloor()` in play mode and watch subscribed panels respond.
 \- \*\*Other events\*\*: `OnClicksLeftChanged`, `OnBattleEnded`, `OnPlayerStatsChanged`, `OnEnemyStatsChanged` remain on their respective systems.
 
+- **Hearts**: `GameManager.Hearts` exposes the `HeartsManager` for relationship tracking. Listen to `HeartsManager.OnHeartsChanged(CompanionSO, int)` to update UI. **Test**: call `GM.Hearts.AddHearts(companion, 1)` in play mode and watch the HUD reflect the new total.
+
 - **Tasks**: `TaskService.CurrentTaskTitle` exposes the active tutorial step's title. Useful for HUDs that want to display guidance.
   - *New*: Task requirements are modular `TaskConditionSO` assets (e.g., `CollectItemCondition`, `InteractCondition`). Each overrides `IsMet(TaskService)`.
   - **Test**: Create a `CollectItemCondition` asset, assign it to a `TaskSO`, then collect the referenced item in play mode and observe the task advance.
@@ -181,7 +185,7 @@ This file is the source of truth for design + tech. Keep it short and link out t
    
    - **Debuff Access**: `GameManager.TempNextDayClickDebuff` reveals the click-cap reduction that will apply on the next day.
    - **Scene Tracking**: `GameManager.CurrentScene` and `GameManager.SpawnPointId` record the last scene and spawn point for persistence.
-  - **Persistence**: `SaveSystem` writes a single `SaveModelV2` JSON file. Legacy `ISaveable` sections were removed; only `ISaveParticipant` systems contribute via `Capture`/`Apply` and register through `GameManager.RegisterSaveParticipant(...)`. `SaveModelV2` now stores resource stacks, unlocked recipe and skill IDs, station unlocks, and companion assignments alongside existing fields. APIs: `HasAnySave()`, `Delete()`, `Save(GameManager)`, `Load(GameManager)`. **Test**: move to another scene, call `SaveSystem.Save`, restart, then `Load` and confirm `GameManager.CurrentScene` and `SpawnPointId` restore.
+  - **Persistence**: `SaveSystem` writes a single `SaveModelV2` JSON file. Legacy `ISaveable` sections were removed; only `ISaveParticipant` systems contribute via `Capture`/`Apply` and register through `GameManager.RegisterSaveParticipant(...)`. `SaveModelV2` now stores resource stacks, unlocked recipe and skill IDs, station unlocks, companion assignments, and companion heart totals alongside existing fields. APIs: `HasAnySave()`, `Delete()`, `Save(GameManager)`, `Load(GameManager)`. **Test**: move to another scene, call `SaveSystem.Save`, restart, then `Load` and confirm `GameManager.CurrentScene` and `SpawnPointId` restore.
 \- **Test**: Call `Stations.UnlockStation("farm")` or `Stations.RecruitCompanion("alice")` in play mode and watch the console/UI react via the event bus (`StationUnlocked` or `CompanionRecruited`).
   Trigger a station's `OnProductionComplete` to see `MinigameCompleted` propagate.
 

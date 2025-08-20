@@ -37,6 +37,7 @@ public class GameManager : MonoBehaviour, IGameManager, ISaveParticipant
         RegisterSaveParticipant(inventoryManager);
         RegisterSaveParticipant(taskService);
         RegisterSaveParticipant(resourceManager);
+        RegisterSaveParticipant(heartsManager);
         RegisterSaveParticipant(recipeManager);
         RegisterSaveParticipant(skillTreeManager);
         RegisterSaveParticipant(stationManager);
@@ -51,6 +52,7 @@ public class GameManager : MonoBehaviour, IGameManager, ISaveParticipant
     [SerializeField] private DungeonProgression dungeonProgression; // tracks dungeon floors
     [SerializeField] private InventoryManager inventoryManager; // holds items
     [SerializeField] private ResourceManager resourceManager; // tracks generic resources
+    [SerializeField] private HeartsManager heartsManager; // tracks companion hearts
     [SerializeField] private SkillTreeManager skillTreeManager; // governs skill unlocks
     [SerializeField] private RecipeManager recipeManager; // crafting recipes
     [SerializeField] private TaskService taskService; // drives tutorial-style task progression
@@ -88,6 +90,9 @@ public class GameManager : MonoBehaviour, IGameManager, ISaveParticipant
 
     /// <summary>Access to global resource counts.</summary>
     public ResourceManager Resources => resourceManager;
+
+    /// <summary>Access to per-companion heart totals.</summary>
+    public HeartsManager Hearts => heartsManager;
 
     /// <summary>Access to unlocked crafting recipes.</summary>
     public RecipeManager Recipes => recipeManager;
@@ -232,6 +237,10 @@ public class GameManager : MonoBehaviour, IGameManager, ISaveParticipant
         // Notify listeners when deeper dungeon floors are reached.
         if (dungeonProgression != null)
             dungeonProgression.OnFloorReached += HandleFloorReached;
+
+        // Watch heart totals to check for relationship milestones.
+        if (heartsManager != null)
+            heartsManager.OnHeartsChanged += HandleHeartsChanged;
     }
 
     /// <summary>
@@ -314,6 +323,23 @@ public class GameManager : MonoBehaviour, IGameManager, ISaveParticipant
     /// </summary>
     private void HandleFloorReached(int floor)
         => Events?.RaiseFloorReached(floor);
+
+    /// <summary>
+    /// React to companion heart changes and evaluate milestone rewards.
+    /// </summary>
+    private void HandleHeartsChanged(CompanionSO companion, int total)
+    {
+        // Heart milestones may unlock content in the future.
+        CheckHeartMilestones();
+    }
+
+    /// <summary>
+    /// Placeholder for future heart-based milestone logic.
+    /// </summary>
+    private void CheckHeartMilestones()
+    {
+        // TODO: implement milestone checks (e.g., recruit bonuses).
+    }
 
     /// <summary>Read-only access to the currency system via its interface.</summary>
     public IEssenceProvider Essence => essenceManager;
@@ -553,6 +579,9 @@ public class GameManager : MonoBehaviour, IGameManager, ISaveParticipant
 
         if (dungeonProgression != null)
             dungeonProgression.OnFloorReached -= HandleFloorReached;
+
+        if (heartsManager != null)
+            heartsManager.OnHeartsChanged -= HandleHeartsChanged;
     }
 
     /// <summary>
